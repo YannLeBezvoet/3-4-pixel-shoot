@@ -1,0 +1,44 @@
+# CLAUDE.md
+
+Entry point for every session. Keep it short and current.
+
+## Project
+
+Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960×540 internal resolution). Solo vs bots now, authoritative multiplayer up to 64 later. Themes are data; behaviors and modes are code. Full vision: [docs/VISION.md](docs/VISION.md).
+
+## Current state
+
+- **Planning.** No code yet. Vision, architecture proposal, decision records (all *Proposed*), roadmap and open questions written on branch `docs/project-planning`.
+- **Next step:** wait for the owner to approve the M0 plan ([docs/ROADMAP.md](docs/ROADMAP.md)) and answer the M0 open questions. Do not start M0 before that.
+
+## Where to find what
+
+| Need | File |
+|---|---|
+| What the game must be | [docs/VISION.md](docs/VISION.md) |
+| Modules, dependencies, data flow | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| Why each technology / structure | [docs/decisions/](docs/decisions/) |
+| Milestones, tasks, success criteria | [docs/ROADMAP.md](docs/ROADMAP.md) |
+| Undecided points and their proposals | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) |
+| Owner guides (sprites, maps, themes, modes, languages) | `docs/guides/` (from M0) |
+| Palette | `resurrect-64.gpl` (moves to `palette/` in M0) |
+
+## Working rules
+
+- Priorities: modular architecture > up-to-date docs > speed.
+- Never start a milestone without the owner's approval of its plan.
+- Never decide an unspecified point silently: propose, and add it to `docs/OPEN_QUESTIONS.md`.
+- Every structural choice gets a decision record in `docs/decisions/` (template in its README).
+- Everything in the repository is in English. The owner converses in French.
+- No displayed text in code: translation keys only.
+- Every code change updates the affected docs **in the same commit**.
+
+## Git
+
+- Small commits, one change each, Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `test:`, `refactor:`, `ci:`).
+- One branch per milestone (`milestone/<n>-<name>`) or feature.
+- **Never merge into `main` and never push without the owner's approval.**
+
+## Commands
+
+None yet. Milestone 0 adds them here (`npm run dev`, `npm run check`, …).
