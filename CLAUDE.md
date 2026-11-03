@@ -33,6 +33,7 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 - Everything in the repository is in English. The owner converses in French.
 - No displayed text in code: translation keys only.
 - Every code change updates the affected docs **in the same commit**.
+- Tests live next to the code as `*.test.ts`. Boundary rules are proven by `tools/src/boundaries/boundaries.test.ts`.
 
 ## Git
 
@@ -47,6 +48,8 @@ Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
 | Command | What it does |
 |---|---|
 | `npm install` | Install all workspaces |
-| `npm run typecheck` | Type-check every package (`tsc -b`, project references) |
+| `npm run typecheck` | Type-check every package (`tsc -b`, project references), then tests (`tsconfig.test.json`) |
 | `npm run lint` | ESLint, including module boundary rules |
 | `npm run format` / `format:check` | Prettier on code and config (not on `themes/`, `locales/`, Markdown) |
+| `npm run test` / `test:watch` / `coverage` | Vitest, all workspaces |
+| `npm run check` | **Everything CI runs.** Must pass before every commit |
