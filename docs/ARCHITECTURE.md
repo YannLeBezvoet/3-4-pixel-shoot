@@ -155,20 +155,22 @@ interface GameModeInstance {
 
 Decision [0006](decisions/0006-themes-as-data.md).
 
-### 8.1 Theme folder (draft, finalized in milestone 0)
+### 8.1 Theme folder
+
+Files have fixed names; the ones marked *planned* arrive with the milestone that needs them.
 
 ```
 themes/vietnam/
-├── theme.json        # manifest: id, format version, default language, factions, file references
+├── theme.json        # manifest: id, format version, default language, factions
 ├── characters.json   # archetypes: sprite set, collider radius, speed, hit points, default loadout
 ├── weapons.json      # weapon definitions: behavior id + parameters, sprite, sound cues
-├── projectiles.json  # projectile definitions: behavior id + parameters, sprite, effects
-├── effects.json      # visual effects: blood, explosions, muzzle flashes, flames (presentation only)
-├── sounds.json       # reserved: sound cue id → file (empty until the audio milestone)
+├── projectiles.json  # planned (M1): projectile definitions: behavior id + parameters, sprite, effects
+├── effects.json      # planned (M1–M2): visual effects: blood, explosions, muzzle flashes, flames
+├── sounds.json       # planned (audio milestone): sound cue id → file
 ├── locales/en.json · locales/fr.json
 ├── sprites/<category>/<name>.aseprite · .png · .json
-├── tilesets/<name>.tsj · .png (· .aseprite source)
-└── maps/<name>.tmj
+├── tilesets/<name>.tsj · .png (· .aseprite source)   # planned (M1)
+└── maps/<name>.tmj                                  # planned (M1)
 ```
 
 Example weapon entry (illustrative):
@@ -189,17 +191,21 @@ Example weapon entry (illustrative):
 
 1. **Schema validation** of every file (Zod), with errors pointing to the file and the JSON path.
 2. **Behavior parameters** validated against the schema registered by the chosen behavior.
-3. **Cross-references**: projectile ids, sprite files, animation tags, tilesets, translation keys, factions.
+3. **Cross-references**: factions, weapons, sprite files, animation tags, translation keys (later: projectiles, tilesets).
 4. **Asset rules**: frame sizes multiple of 48, required animation tags and directions present, required slices present.
 
 Errors are collected (not thrown one by one) and printed together, for example:
 
 ```
-themes/vietnam/weapons.json › weapons[2] ("m60") › params.projectile
-  Unknown projectile "heavy-bulet". Known projectiles: rifle-bullet, pistol-bullet, buckshot.
+error: themes/vietnam/weapons.json › weapons[2] ("m60").params.magazine
+  Too small: expected number to be >=1
+error: themes/vietnam/characters.json › characters[0] ("us-rifleman").weapon
+  Unknown weapon "m61". Known weapons (weapons.json): m16a1, ak47.
 ```
 
-The same validation runs in the browser (shown in a dev overlay), on the server at startup, and in the `validate:themes` command used by CI.
+The loader is `loadTheme` in `packages/content/src/theme/`; its tests list every kind of problem it reports.
+
+The same validation runs in the browser (shown in a dev overlay), on the server at startup, and in the `validate:themes` command used by CI. Texts missing from a non-default language are warnings: the default-language text is shown instead.
 
 ### 8.3 Gameplay content vs presentation content
 
