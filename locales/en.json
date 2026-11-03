@@ -5,9 +5,6 @@
   "app": {
     "title": "Pixel Shoot"
   },
-  "home": {
-    "status": "Work in progress: milestone 0, foundations."
-  },
   "settings": {
     "language": "Language"
   },
@@ -51,7 +48,9 @@
     "bot": "Bot {{n}}"
   },
   "mode": {
-    "sandbox": { "name": "Sandbox" },
+    "sandbox": {
+      "name": "Sandbox"
+    },
     "team-elimination": {
       "name": "Team elimination",
       "countdown": "Round {{round}} · {{seconds}}",
@@ -70,5 +69,46 @@
     "nw": "NW",
     "w": "W",
     "sw": "SW"
+  },
+  "menu": {
+    "solo": "Solo",
+    "settings": "Settings",
+    "back": "Back",
+    "fewer": "Fewer",
+    "more": "More",
+    "on": "On",
+    "off": "Off"
+  },
+  "solo": {
+    "title": "Solo",
+    "noMap": "No theme has a map for this mode.",
+    "theme": "Theme",
+    "map": "Map",
+    "side": "Your side",
+    "allies": "Allied bots",
+    "enemies": "Enemy bots",
+    "participants_one": "{{count}} participant",
+    "participants_other": "{{count}} participants",
+    "difficulty": "Bot difficulty",
+    "friendlyFire": "Friendly fire",
+    "start": "Start"
+  },
+  "difficulty": {
+    "easy": "Easy",
+    "normal": "Normal",
+    "hard": "Hard"
+  },
+  "pause": {
+    "title": "Paused",
+    "resume": "Resume",
+    "quit": "Quit to main menu"
+  },
+  "end": {
+    "player": "Player",
+    "team": "Team",
+    "kills": "Kills",
+    "deaths": "Deaths",
+    "again": "Play again",
+    "menu": "Main menu"
   }
 }

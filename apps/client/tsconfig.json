@@ -14,6 +14,9 @@
       "path": "../../packages/sim"
     },
     {
+      "path": "../../packages/bots"
+    },
+    {
       "path": "../../packages/content"
     },
     {

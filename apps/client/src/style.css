@@ -224,3 +224,97 @@ h3 {
 .scene-panel a {
   pointer-events: auto;
 }
+
+/* Menus (Q59). */
+.menu-screen {
+  overflow-y: auto;
+}
+
+.menu-screen fieldset {
+  margin: 8px 0;
+}
+
+.menu-buttons {
+  margin-top: 16px;
+}
+
+.menu-buttons.vertical button {
+  display: block;
+  width: 100%;
+  margin-right: 0;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--letterbox);
+}
+
+button:disabled {
+  opacity: 1;
+  color: var(--muted);
+  cursor: default;
+}
+
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.hint {
+  color: var(--muted);
+  margin: 8px 0 16px;
+}
+
+.stepper output {
+  display: inline-block;
+  min-width: 24px;
+  margin-right: 8px;
+  text-align: center;
+}
+
+/* Over a match: the mouse goes through to the game except on panels. */
+.overlay {
+  pointer-events: none;
+}
+
+.panel {
+  pointer-events: auto;
+  background: var(--panel);
+  border: 2px solid var(--button-border);
+  padding: 16px;
+}
+
+.menu-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 240px;
+}
+
+.end-panel {
+  width: 560px;
+}
+
+.scoreboard {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+
+.scoreboard th {
+  font-weight: normal;
+  color: var(--muted);
+  text-align: left;
+}
+
+.scoreboard td,
+.scoreboard th {
+  padding: 2px 8px 2px 0;
+}
+
+.scoreboard tr.local td {
+  color: var(--accent);
+}

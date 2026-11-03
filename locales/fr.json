@@ -5,9 +5,6 @@
   "app": {
     "title": "Pixel Shoot"
   },
-  "home": {
-    "status": "En cours de développement : jalon 0, fondations."
-  },
   "settings": {
     "language": "Langue"
   },
@@ -53,7 +50,9 @@
     "bot": "Bot {{n}}"
   },
   "mode": {
-    "sandbox": { "name": "Bac à sable" },
+    "sandbox": {
+      "name": "Bac à sable"
+    },
     "team-elimination": {
       "name": "Élimination par équipes",
       "countdown": "Manche {{round}} · {{seconds}}",
@@ -72,5 +71,47 @@
     "nw": "NO",
     "w": "O",
     "sw": "SO"
+  },
+  "menu": {
+    "solo": "Solo",
+    "settings": "Réglages",
+    "back": "Retour",
+    "fewer": "Moins",
+    "more": "Plus",
+    "on": "Oui",
+    "off": "Non"
+  },
+  "solo": {
+    "title": "Solo",
+    "noMap": "Aucun thème n'a de carte pour ce mode.",
+    "theme": "Thème",
+    "map": "Carte",
+    "side": "Votre camp",
+    "allies": "Bots alliés",
+    "enemies": "Bots ennemis",
+    "participants_one": "{{count}} participant",
+    "participants_many": "{{count}} participants",
+    "participants_other": "{{count}} participants",
+    "difficulty": "Difficulté des bots",
+    "friendlyFire": "Tir ami",
+    "start": "Commencer"
+  },
+  "difficulty": {
+    "easy": "Facile",
+    "normal": "Normal",
+    "hard": "Difficile"
+  },
+  "pause": {
+    "title": "Pause",
+    "resume": "Reprendre",
+    "quit": "Quitter vers le menu"
+  },
+  "end": {
+    "player": "Joueur",
+    "team": "Équipe",
+    "kills": "Éliminations",
+    "deaths": "Morts",
+    "again": "Rejouer",
+    "menu": "Menu principal"
   }
 }

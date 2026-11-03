@@ -36,6 +36,8 @@ export interface HudFrame {
   readonly toScreen: (x: number, y: number) => { x: number; y: number };
   readonly texts: HudTexts;
   readonly deltaMs: number;
+  /** False while a menu is open over the match. */
+  readonly crosshair: boolean;
 }
 
 function clock(ticks: number): string {
@@ -188,7 +190,7 @@ export class Hud {
     this.#updateFeed(frame);
     this.#updateLabels(frame, me?.team);
     this.#crosshair.position.set(Math.round(frame.pointer.x), Math.round(frame.pointer.y));
-    this.#crosshair.visible = alive;
+    this.#crosshair.visible = alive && frame.crosshair;
   }
 
   /** Kill feed: killer, weapon, victim; the lines about the player are highlighted. */

@@ -7,9 +7,12 @@ import { createContentStore } from './content/content-store';
 import { fetchFileProvider } from './content/fetch-files';
 import { enableContentHotReload } from './content/hot-reload';
 import { createTranslator } from './i18n/translator';
+import { GameApp } from './game/game-app';
+import { loadPixelFont } from './render/pixel-text';
 import { createRenderer } from './render/renderer';
 import { createTestPattern } from './render/test-pattern';
-import { HomeScreen } from './ui/home-screen';
+import { App } from './ui/app';
+import { GameContext } from './ui/game-context';
 import { mountUi } from './ui/mount';
 import './style.css';
 
@@ -29,7 +32,12 @@ const renderer = await createRenderer(host);
 const layout = signal(renderer.layout());
 renderer.onLayout((next) => (layout.value = next));
 
-let page: ComponentChildren = <HomeScreen devPages={import.meta.env.DEV ? DEV_PAGES : []} />;
+const game = new GameApp(renderer, store, translator, await loadPixelFont());
+let page: ComponentChildren = (
+  <GameContext.Provider value={game}>
+    <App devPages={import.meta.env.DEV ? DEV_PAGES : []} />
+  </GameContext.Provider>
+);
 if (import.meta.env.DEV) {
   enableContentHotReload(store);
   if (location.pathname === '/dev/sprites') {
@@ -39,8 +47,6 @@ if (import.meta.env.DEV) {
   } else if (location.pathname === '/dev/scene') {
     const { createDevScene } = await import('./dev/scene/mount');
     page = await createDevScene(renderer, store, translator);
-  } else {
-    renderer.app.stage.addChild(createTestPattern(parseGpl(paletteText)));
   }
   const { ContentIssues } = await import('./dev/content-issues');
   page = (
