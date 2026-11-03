@@ -203,7 +203,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 #### Content, art, maps
 
 7. **Theme and map data.** Weapon and projectile entries for the new behaviors; character loadouts (Q61); Tiled properties `cover`, `hp`, `damageFilter`, `flammable`, `destroyedTile`, `burntTile`, `explosive` on tiles and objects; validation messages and broken fixtures; Tiled project file and behavior reference regenerated (C2.8).
-8. **Placeholder art and the Vietnam theme.** M26 and Type 67 grenades, M2A1-7 and LPO-50 flamethrowers and their troopers (Q61, Q23), burnt and destroyed tile variants, fuel barrel, smoke and fire effects, blood spray, decal and pool; the Vietnam map gains sandbag cover, destructible huts and fences, barrels and flammable tall grass (Q63); the example theme stays as it is.
+8. **Placeholder art and the Vietnam theme.** M26 and Type 67 grenades, M2A1-7 and LPO-50 flamethrowers and their troopers (Q61, Q23), burnt and destroyed tile variants, fuel barrel, smoke and fire effects, blood spray, decal and pool; the Vietnam map's sandbags (tile objects) become cover, destructible huts and fences, barrels and flammable tall grass (Q63); the example theme stays as it is.
 
 #### Presentation (client)
 

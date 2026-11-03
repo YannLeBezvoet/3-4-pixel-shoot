@@ -3,7 +3,7 @@
 // About 80×60 tiles. Spawn areas: team 1 in a western clearing, team 2 on the eastern edge.
 import { createRng } from '@pixel-shoot/shared';
 import type { GroundTile } from './tiles';
-import { GROUND_COLUMNS, GROUND_TILES, TREE_TRUNK } from './tiles';
+import { GROUND_COLUMNS, GROUND_TILES, SANDBAGS_FOOTPRINT, TREE_TRUNK } from './tiles';
 
 const T = 48;
 export const MAP_WIDTH = 80;
@@ -15,7 +15,6 @@ export const TILED = { version: '1.10', tiledversion: '1.11.2' };
 const SOLID: readonly GroundTile[] = [
   'stone-wall-top',
   'stone-wall-front',
-  'sandbags',
   'bamboo-wall',
   'crate',
   'fence',
@@ -78,19 +77,25 @@ export function groundTileset(name = 'jungle-ground'): string {
   );
 }
 
-export function treeTileset(): string {
+/** A tileset of one solid tile object (`name.png`) whose collision is `footprint`. */
+function objectTileset(
+  name: string,
+  width: number,
+  height: number,
+  footprint: { x: number; y: number; width: number; height: number },
+): string {
   return stringify(
     {
       type: 'tileset',
       ...TILED,
-      name: 'jungle-tree',
-      tilewidth: 2 * T,
-      tileheight: 3 * T,
+      name,
+      tilewidth: width,
+      tileheight: height,
       tilecount: 1,
       columns: 1,
-      image: 'jungle-tree.png',
-      imagewidth: 2 * T,
-      imageheight: 3 * T,
+      image: `${name}.png`,
+      imagewidth: width,
+      imageheight: height,
       margin: 0,
       spacing: 0,
       tiles: [
@@ -107,7 +112,7 @@ export function treeTileset(): string {
             visible: true,
             x: 0,
             y: 0,
-            objects: [{ id: 1, name: '', type: '', rotation: 0, visible: true, ...TREE_TRUNK }],
+            objects: [{ id: 1, name: '', type: '', rotation: 0, visible: true, ...footprint }],
           },
         },
       ],
@@ -115,6 +120,11 @@ export function treeTileset(): string {
     1,
   );
 }
+
+export const treeTileset = () => objectTileset('jungle-tree', 2 * T, 3 * T, TREE_TRUNK);
+
+/** Sandbags are solid until cover arrives (milestone 2). */
+export const sandbagsTileset = () => objectTileset('sandbags', T, T, SANDBAGS_FOOTPRINT);
 
 interface Rect {
   x: number;
@@ -246,7 +256,12 @@ export function vietnamMap(): string {
   fill({ x: 22, y: 37, w: 5, h: 1 }, 'stone-wall-front');
   set(24, 37, 'rubble');
   set(27, 37, 'rubble');
-  fill({ x: 45, y: 26, w: 3, h: 1 }, 'sandbags');
+  // Sandbags (tile objects) on dug earth, either side of a ruined bamboo wall.
+  const sandbags = [
+    { x: 45, y: 26 },
+    { x: 47, y: 26 },
+  ];
+  fill({ x: 45, y: 26, w: 3, h: 1 }, 'dirt');
   set(46, 26, 'bamboo-wall-destroyed');
 
   // Spawn areas stay clear.
@@ -291,6 +306,7 @@ export function vietnamMap(): string {
 
   const groundGid = (tile: GroundTile) => GROUND_TILES.indexOf(tile) + 1;
   const treeGid = GROUND_TILES.length + 1;
+  const sandbagsGid = treeGid + 1;
   let nextObjectId = 1;
   const treeObjects = trees.map(({ x, y }) => ({
     id: nextObjectId++,
@@ -304,6 +320,18 @@ export function vietnamMap(): string {
     y: y * T + T - 4,
     width: 2 * T,
     height: 3 * T,
+  }));
+  const sandbagObjects = sandbags.map(({ x, y }) => ({
+    id: nextObjectId++,
+    gid: sandbagsGid,
+    name: '',
+    type: '',
+    rotation: 0,
+    visible: true,
+    x: x * T,
+    y: (y + 1) * T,
+    width: T,
+    height: T,
   }));
   const spawnObjects = SPAWNS.map((spawn) => ({
     id: nextObjectId++,
@@ -356,16 +384,18 @@ export function vietnamMap(): string {
       height: H,
       tilewidth: T,
       tileheight: T,
-      nextlayerid: 5,
+      nextlayerid: 6,
       nextobjectid: nextObjectId,
       properties: [property('nameKey', 'string', 'map.river-village')],
       tilesets: [
         { firstgid: 1, source: '../tilesets/jungle-ground.tsj' },
         { firstgid: treeGid, source: '../tilesets/jungle-tree.tsj' },
+        { firstgid: sandbagsGid, source: '../tilesets/sandbags.tsj' },
       ],
       layers: [
         tileLayer(1, 'ground', 'ground', ground.map(groundGid)),
         objectLayer(2, 'trees', 'objects', treeObjects),
+        objectLayer(5, 'sandbags', 'objects', sandbagObjects),
         tileLayer(
           3,
           'roofs',

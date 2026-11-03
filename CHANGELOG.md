@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 
 ## [Unreleased]
 
+### Changed
+
+- Vietnam theme: sandbags are tile objects (tileset `sandbags.tsj`) placed over any ground, instead of ground tiles with dirt drawn in; the `river-village` map places them in a `sandbags` objects layer. The ground tileset keeps an empty slot in their place so later tile ids do not move.
+- Vietnam theme: the sandbags' collision shape covers exactly their redrawn picture, a column 32 px wide.
+
 ## [0.1.0] — 2026-11-03
 
 Milestone 1 (playable solo), merged into `main`.

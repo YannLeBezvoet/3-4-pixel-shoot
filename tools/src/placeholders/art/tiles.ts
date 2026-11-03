@@ -1,5 +1,5 @@
-// Placeholder jungle tileset (48×48 tiles, 8 columns) and a 2×3-tile tree.
-// Tilesets are used from milestone 1 (Tiled maps); they exist now so the palette check covers them.
+// Placeholder jungle tileset (48×48 tiles, 8 columns), a 2×3-tile tree and sandbags. The tree and
+// the sandbags are tile objects: drawn on a transparent background, placed over any ground.
 import { createRng } from '@pixel-shoot/shared';
 import { Canvas } from '../canvas';
 import type { Color, ColorPicker } from '../canvas';
@@ -33,7 +33,8 @@ export const GROUND_TILES = [
   'burnt-ground',
   'stone-wall-top',
   'stone-wall-front',
-  'sandbags',
+  // Formerly sandbags, now a tile object (drawSandbags); left empty so later tile ids keep their place.
+  'free',
   'bamboo-wall',
   'bamboo-wall-destroyed',
   'crate',
@@ -104,19 +105,6 @@ export function drawGroundTileset(p: ColorPicker): Canvas {
       c.rect(x, y + row * 12 + 11, T, 1, p.hex('625565'));
       for (let col = 0; col < 3; col++)
         c.rect(x + ((col * 16 + (row % 2) * 8) % T), y + row * 12, 1, 11, p.hex('625565'));
-    }
-  }
-  {
-    const [x, y] = at('sandbags');
-    noise(c, x, y, dirt, [p.hex('7a3045')], 'sandbag-ground');
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 3; col++) {
-        const bx = x + 2 + col * 15 + (row % 2) * 7;
-        const by = y + 8 + row * 12;
-        c.ellipse(bx + 7, by + 5, 7, 5, p.hex('ab947a'));
-        c.ellipse(bx + 7, by + 7, 7, 3, p.hex('966c6c'), (_x, yy) => yy >= by + 8);
-        c.rect(bx + 1, by + 10, 13, 1, outline);
-      }
     }
   }
   {
@@ -248,5 +236,30 @@ export function drawJungleTree(p: ColorPicker): Canvas {
   for (let i = 0; i < 12; i++)
     c.ellipse(30 + rng.int(0, 36), 30 + rng.int(0, 30), 3, 2, leaves[3] as Color);
   c.outline(p.hex('2e222f'));
+  return c;
+}
+
+/** Collision of the sandbags: the whole tile, so a line of them leaves no gap. */
+export const SANDBAGS_FOOTPRINT = { x: 0, y: 0, width: T, height: T } as const;
+
+/**
+ * Sandbags filling one tile on a transparent background. Rows of three bags alternate with rows
+ * shifted by half a bag, so tiles placed side by side or one above the other join seamlessly.
+ */
+export function drawSandbags(p: ColorPicker): Canvas {
+  const c = new Canvas(T, T);
+  const top = p.hex('ab947a');
+  const side = p.hex('966c6c');
+  const outline = p.hex('2e222f');
+  for (let row = 0; row < 4; row++) {
+    const by = 1 + row * 12;
+    // Bags cut by the tile's edges are finished by the neighboring tile.
+    for (let bx = (row % 2) * -8; bx < T; bx += 16) {
+      c.ellipse(bx + 7, by + 5, 7, 5, top);
+      c.ellipse(bx + 7, by + 7, 7, 3, side, (_x, yy) => yy >= by + 8);
+      c.rect(bx + 1, by + 10, 13, 1, outline);
+    }
+  }
+  c.outline(outline);
   return c;
 }

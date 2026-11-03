@@ -13,9 +13,9 @@ import {
 } from './art/effects';
 import type { SoldierPose, SoldierStyle } from './art/soldier';
 import { drawSoldier } from './art/soldier';
-import { drawGroundTileset, drawJungleTree } from './art/tiles';
+import { drawGroundTileset, drawJungleTree, drawSandbags } from './art/tiles';
 import { exampleMap } from './art/example-map';
-import { groundTileset, treeTileset, vietnamMap } from './art/vietnam-map';
+import { groundTileset, sandbagsTileset, treeTileset, vietnamMap } from './art/vietnam-map';
 import type { WeaponArt } from './art/weapons';
 import { drawAk47, drawM16 } from './art/weapons';
 import { SheetBuilder, imageOnly } from './sheet';
@@ -191,8 +191,10 @@ export function vietnamPlaceholders(p: ColorPicker): PlaceholderFile[] {
     ),
     { path: `${root}/tilesets/jungle-ground.png`, content: imageOnly(drawGroundTileset(p)) },
     { path: `${root}/tilesets/jungle-tree.png`, content: imageOnly(drawJungleTree(p)) },
+    { path: `${root}/tilesets/sandbags.png`, content: imageOnly(drawSandbags(p)) },
     { path: `${root}/tilesets/jungle-ground.tsj`, content: groundTileset() },
     { path: `${root}/tilesets/jungle-tree.tsj`, content: treeTileset() },
+    { path: `${root}/tilesets/sandbags.tsj`, content: sandbagsTileset() },
     { path: `${root}/maps/river-village.tmj`, content: vietnamMap() },
   ];
 }

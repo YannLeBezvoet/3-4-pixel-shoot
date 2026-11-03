@@ -47,17 +47,6 @@
    ]
   },
   {
-   "id": 10,
-   "type": "tile",
-   "properties": [
-    {
-     "name": "solid",
-     "type": "bool",
-     "value": true
-    }
-   ]
-  },
-  {
    "id": 11,
    "type": "tile",
    "properties": [
