@@ -15,6 +15,15 @@
     },
     {
       "path": "../packages/content"
+    },
+    {
+      "path": "../packages/bots"
+    },
+    {
+      "path": "../packages/match"
+    },
+    {
+      "path": "../packages/modes"
     }
   ]
 }

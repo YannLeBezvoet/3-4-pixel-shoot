@@ -31,7 +31,8 @@
     "dev": "npm run dev -w @pixel-shoot/client",
     "build": "npm run build -w @pixel-shoot/client",
     "check:i18n": "tsx tools/src/check-i18n/cli.ts",
-    "sprites:export": "tsx tools/src/sprites-export/cli.ts"
+    "sprites:export": "tsx tools/src/sprites-export/cli.ts",
+    "bench:sim": "tsx tools/src/bench/cli.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

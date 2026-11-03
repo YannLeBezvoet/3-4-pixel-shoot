@@ -1,6 +1,6 @@
 # @pixel-shoot/match
 
-`MatchHost`: runs one match (simulation, game mode, bots, participants), identically in a browser tab and in a server room. `createMatchHost` exists; bot scheduling arrives later in milestone 1.
+`MatchHost`: runs one match (simulation, game mode, bots, participants), identically in a browser tab and in a server room. `createMatchHost` runs humans and bots.
 
 - **May depend on:** `shared`, `sim`, `bots`.
 - **Must never:** depend on a transport or a platform API.

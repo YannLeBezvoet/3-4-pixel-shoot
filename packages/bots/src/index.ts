@@ -11,3 +11,7 @@ export {
 export type { Clue, Sighting } from './perception';
 export { NavGrid, findPath, smoothPath } from './navigation';
 export type { Point } from './navigation';
+export { DIFFICULTIES, DIFFICULTY_LEVELS } from './difficulty';
+export type { Difficulty, DifficultyLevel } from './difficulty';
+export { BotBrain } from './brain';
+export type { BotSurroundings } from './brain';

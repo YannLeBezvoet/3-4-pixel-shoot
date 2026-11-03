@@ -1,6 +1,8 @@
 // MatchHost runs one match (ARCHITECTURE §6): the simulation, the game mode, the participants
-// and (from task 16) the bots. The same code runs in a browser tab for solo and in a server
+// and the bots. The same code runs in a browser tab for solo and in a server
 // room online; the caller provides the clock by calling `step` 60 times per second.
+import type { DifficultyLevel } from '@pixel-shoot/bots';
+import { BotBrain, DIFFICULTIES, NavGrid } from '@pixel-shoot/bots';
 import { createRng } from '@pixel-shoot/shared';
 import type {
   ActorState,
@@ -27,6 +29,8 @@ export interface ParticipantSetup {
   /** Character id in the catalog. */
   readonly character: string;
   readonly kind: 'human' | 'bot';
+  /** Bots only; normal by default. */
+  readonly difficulty?: DifficultyLevel;
 }
 
 export interface MatchSetup<Settings = unknown> {
@@ -74,6 +78,8 @@ export interface MatchHost {
 interface Participant extends ParticipantInfo {
   entity: EntityId | undefined;
   input: InputCommand | undefined;
+  /** Decides the input of a bot participant. */
+  brain: BotBrain | undefined;
   kills: number;
   deaths: number;
 }
@@ -92,6 +98,9 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
   const byEntity = new Map<EntityId, Participant>();
   let nextParticipant = 1;
   let started = false;
+  let navGrid: NavGrid | undefined;
+  /** Events of the last tick: what bots heard. */
+  let lastEvents: readonly SimEvent[] = [];
 
   const api: ModeApi = {
     map: setup.map,
@@ -155,11 +164,25 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
       if (!setup.catalog.characters.has(participantSetup.character))
         throw new Error(`Unknown character "${participantSetup.character}".`);
       const id = nextParticipant++;
+      const { difficulty = 'normal', ...info } = participantSetup;
+      navGrid ??= new NavGrid(sim.grid);
+      const brain =
+        info.kind === 'bot'
+          ? new BotBrain({
+              difficulty: DIFFICULTIES[difficulty],
+              random: root.fork(`bot:${id}`),
+              map: setup.map,
+              grid: sim.grid,
+              nav: navGrid,
+              thinkOffset: id,
+            })
+          : undefined;
       participants.set(id, {
-        ...participantSetup,
+        ...info,
         id,
         entity: undefined,
         input: undefined,
+        brain,
         kills: 0,
         deaths: 0,
       });
@@ -191,10 +214,21 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
 
     step() {
       const inputs = new Map<EntityId, InputCommand>();
-      for (const participant of participants.values())
-        if (participant.entity !== undefined && participant.input)
-          inputs.set(participant.entity, participant.input);
+      let actors: readonly ActorState[] | undefined;
+      for (const participant of participants.values()) {
+        if (participant.entity === undefined) continue;
+        if (participant.brain) {
+          actors ??= sim.actors();
+          const self = actors.find((a) => a.id === participant.entity);
+          if (self)
+            inputs.set(
+              participant.entity,
+              participant.brain.update({ self, actors, events: lastEvents, tick: sim.tick }),
+            );
+        } else if (participant.input) inputs.set(participant.entity, participant.input);
+      }
       const events = sim.step(inputs);
+      lastEvents = events;
       for (const event of events) {
         if (event.type !== 'killed') continue;
         const victim = byEntity.get(event.victim);

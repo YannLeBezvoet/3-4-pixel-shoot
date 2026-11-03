@@ -66,5 +66,6 @@ Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
 | `npm run schemas` / `check:schemas` | Regenerate / verify the generated files: `schemas/*.json`, the Tiled project file, `docs/reference/behaviors.md` (run after changing a Zod schema, a behavior or a map property) |
 | `npm run sprites:export [-- --watch]` | Export every `.aseprite` file (needs `ASEPRITE_PATH`) |
 | `npm run assets:placeholders` / `assets:report` | (Re)generate placeholder art; list placeholders still in use |
+| `npm run bench:sim [-- --rounds N]` | Headless bot-only rounds on the Vietnam map: round endings, blind shots, tick time (default 100 rounds, about 15 s) |
 | `npm run check:i18n` | Key parity with English, `{{variables}}`, and font coverage of every text |
 | `npm run check` | **Everything CI runs** (`.github/workflows/check.yml`, plus a REUSE licensing check). Must pass before every commit |

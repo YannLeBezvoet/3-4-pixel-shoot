@@ -2,7 +2,7 @@
 
 Command-line tools for development and CI. Each tool lives in its own folder under `src/` and is run through a root `npm run` script (see [CLAUDE.md](../CLAUDE.md#commands)).
 
-- **May depend on:** `shared`, `sim`, `content`, Node APIs.
+- **May depend on:** `shared`, `sim`, `content`, `bots`, `match`, `modes` (headless matches), Node APIs.
 - **Must never:** be imported by the game itself.
 
 | Folder | Script | Purpose |
@@ -16,4 +16,5 @@ Command-line tools for development and CI. Each tool lives in its own folder und
 | `sprites-export/` | `sprites:export [-- --watch]` | Exports every `.aseprite` file with the Aseprite CLI (`ASEPRITE_PATH`) as PNG + JSON next to it |
 | `../aseprite/` | (Aseprite script) | `new-character.lua`: creates a character file with the palette, all tags and the `hand` slice |
 | `content/` | — | Node `FileProvider` and theme/language discovery shared by the tools |
+| `bench/` | `bench:sim [-- --rounds N]` | Plays bot-only team-elimination rounds (8 vs 8) on the Vietnam map: how rounds end, shots without an enemy in sight, tick time (C1.6, C1.10) |
 | `palette-check/` | `check:palette` | Every PNG uses only Resurrect 64 colors, with pixels fully opaque or fully transparent (Q6) |

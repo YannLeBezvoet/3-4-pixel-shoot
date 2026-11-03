@@ -1,0 +1,139 @@
+// Headless team-elimination rounds between bots on a real theme map (C1.6, C1.10): how rounds
+// end, whether any bot fired with no enemy in sight, and how long a simulation tick takes.
+import { cpus } from 'node:os';
+import { performance } from 'node:perf_hooks';
+import { DIFFICULTY_LEVELS, canSee } from '@pixel-shoot/bots';
+import type { DifficultyLevel } from '@pixel-shoot/bots';
+import { buildCatalog, loadMap, loadTheme } from '@pixel-shoot/content';
+import { createMatchHost } from '@pixel-shoot/match';
+import { COUNTDOWN_TICKS, teamElimination } from '@pixel-shoot/modes';
+import type { Catalog, MapData } from '@pixel-shoot/sim';
+import { TICK_RATE, buildCollisionGrid, builtInBehaviors } from '@pixel-shoot/sim';
+import { listLanguages, nodeFileProvider } from '../content/node-files';
+import { repoRoot } from '../paths';
+
+export const ROUND_SECONDS = 180;
+/** A shot counts as aimed at a seen enemy when one is within this angle of it. */
+const SIGHT_CONE = (35 * Math.PI) / 180;
+
+export interface RoundResult {
+  readonly seed: string;
+  /** How the round ended: a team eliminated, or the time limit. */
+  readonly end: 'elimination' | 'time';
+  /** Seconds of play after the countdown. */
+  readonly seconds: number;
+  readonly shots: number;
+  /** Shots fired by a bot with no living enemy in sight within the shot's cone. */
+  readonly blindShots: number;
+  readonly tickMs: readonly number[];
+}
+
+export async function loadArena(
+  themeId = 'vietnam',
+  mapRef = 'maps/river-village',
+  root = repoRoot,
+) {
+  const files = nodeFileProvider(root);
+  const { theme, issues } = await loadTheme(files, themeId, {
+    behaviors: builtInBehaviors,
+    languages: await listLanguages(root),
+  });
+  if (!theme)
+    throw new Error(`Theme "${themeId}" is invalid: ${issues.map((i) => i.message).join('; ')}`);
+  const loaded = await loadMap(files, theme, mapRef);
+  if (!loaded.map) throw new Error(`Map "${mapRef}" is invalid.`);
+  const characterOf = (team: number) =>
+    [...theme.characters.values()].find((c) => c.faction === theme.factions[team - 1]?.id)?.id ??
+    '';
+  return {
+    map: loaded.map,
+    catalog: buildCatalog(theme),
+    characters: [characterOf(1), characterOf(2)],
+  };
+}
+
+/** Plays the first round of a bot-only team elimination match. */
+export function playRound(
+  arena: { map: MapData; catalog: Catalog; characters: readonly string[] },
+  seed: string,
+  perTeam = 8,
+  difficulty: DifficultyLevel = 'normal',
+): RoundResult {
+  const host = createMatchHost({
+    map: arena.map,
+    catalog: arena.catalog,
+    mode: teamElimination,
+    settings: { roundSeconds: ROUND_SECONDS },
+    seed,
+  });
+  const bots = new Set<number>();
+  for (const team of [1, 2])
+    for (let n = 0; n < perTeam; n++)
+      bots.add(
+        host.addParticipant({
+          name: { key: 'participant.bot', params: { n } },
+          team,
+          character: arena.characters[team - 1] ?? '',
+          kind: 'bot',
+          difficulty,
+        }),
+      );
+  host.start();
+  const grid = buildCollisionGrid(arena.map);
+  const tickMs: number[] = [];
+  let shots = 0;
+  let blindShots = 0;
+  const limit = COUNTDOWN_TICKS + ROUND_SECONDS * TICK_RATE + 2;
+  for (let tick = 0; tick < limit; tick++) {
+    const before = host.view().actors;
+    const start = performance.now();
+    const events = host.step();
+    tickMs.push(performance.now() - start);
+    for (const event of events) {
+      if (event.type !== 'shotFired') continue;
+      const shooter = before.find((a) => a.id === event.shooter);
+      if (!shooter) continue;
+      shots++;
+      const seen = before.some((enemy) => {
+        if (!enemy.alive || enemy.team === shooter.team) return false;
+        const angle = Math.atan2(enemy.y - shooter.y, enemy.x - shooter.x);
+        const off = Math.abs(
+          Math.atan2(Math.sin(angle - event.angle), Math.cos(angle - event.angle)),
+        );
+        return off < SIGHT_CONE && canSee(shooter, enemy.x, enemy.y, grid);
+      });
+      if (!seen) blindShots++;
+    }
+    const banner = host.view().mode.banner;
+    if (banner && 'key' in banner && /round(Won|Draw)$/.test(banner.key)) {
+      const seconds = (host.tick - COUNTDOWN_TICKS) / TICK_RATE;
+      return {
+        seed,
+        end: seconds < ROUND_SECONDS ? 'elimination' : 'time',
+        seconds,
+        shots,
+        blindShots,
+        tickMs,
+      };
+    }
+  }
+  return { seed, end: 'time', seconds: ROUND_SECONDS, shots, blindShots, tickMs };
+}
+
+export function summarize(results: readonly RoundResult[]): string[] {
+  const ticks = results.flatMap((r) => r.tickMs).sort((a, b) => a - b);
+  const average = ticks.reduce((s, t) => s + t, 0) / Math.max(1, ticks.length);
+  const p99 = ticks[Math.floor(ticks.length * 0.99)] ?? 0;
+  const eliminations = results.filter((r) => r.end === 'elimination').length;
+  const seconds = results.map((r) => r.seconds);
+  return [
+    `Rounds: ${results.length} (8 vs 8 bots, normal difficulty)`,
+    `Ended by elimination before ${ROUND_SECONDS} s: ${eliminations} (${((100 * eliminations) / Math.max(1, results.length)).toFixed(0)} %)`,
+    `Round length: average ${(seconds.reduce((s, x) => s + x, 0) / Math.max(1, seconds.length)).toFixed(1)} s, longest ${Math.max(...seconds).toFixed(1)} s`,
+    `Shots: ${results.reduce((s, r) => s + r.shots, 0)}, with no enemy in sight: ${results.reduce((s, r) => s + r.blindShots, 0)}`,
+    `Tick (16 participants): average ${average.toFixed(3)} ms, p99 ${p99.toFixed(3)} ms, ${ticks.length} ticks`,
+    `Hardware: ${cpus()[0]?.model ?? 'unknown CPU'}, Node ${process.version}`,
+  ];
+}
+
+export { DIFFICULTY_LEVELS };
