@@ -9,7 +9,7 @@
 | Milestone | Scope | Status |
 |---|---|---|
 | M0 | Foundations | **Done** — version 0.0.0, merged into `main` on 2026-11-03 (C0.10 to be checked by the owner; CI runs once pushed) |
-| M1 | Playable solo | **In progress** — plan approved on 2026-11-03 |
+| M1 | Playable solo | **Done** — version 0.1.0 on branch `milestone/1-playable-solo` (2026-11-03); merging into `main` awaits the owner's decision; C1.12 also runs on CI once pushed |
 | M2 | Combat | Not started |
 | M3 | Multiplayer | Not started |
 | M4 | Civilians, 64 participants, match settings | Not started |
@@ -97,7 +97,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 
 ### Tasks (one or a few commits each)
 
-*Approved on 2026-11-03.* The order gives a first playable scene early (end of task 13: walking and shooting on the Vietnam map), then the match, the bots and the interface. Each commit updates the docs it affects; task 24 is the final pass.
+*Approved on 2026-11-03; all done.* The order gives a first playable scene early (end of task 13: walking and shooting on the Vietnam map), then the match, the bots and the interface. Each commit updates the docs it affects; task 24 is the final pass.
 
 #### Simulation (`sim`)
 
@@ -143,18 +143,30 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 
 ### Success criteria
 
-- [ ] **C1.1** From the main menu: Solo → choose bots per team (up to 16 participants, Q24) → the match starts on the Vietnam map; a full match plays to a winner and returns to the menu.
-- [ ] **C1.2** ZQSD on AZERTY and WASD on QWERTY move the player with no setting (physical keys). The character faces the cursor in 8 directions; the weapon follows the exact mouse angle.
-- [ ] **C1.3** Y-sorting: a dev scene shows the player walking around a tree; the player is hidden by the tree when above its base and drawn over it when below (screenshot check, and a unit test on sort keys).
-- [ ] **C1.4** Simulation tests (ASCII maps): bullets never cross `solid` tiles over a 360° sweep of angles at max projectile speed; a character never overlaps a `solid` tile after 10,000 random-input ticks; damage and death follow weapon parameters.
-- [ ] **C1.5** Determinism: same seed and inputs give the same state hash after 10,000 ticks.
-- [ ] **C1.6** Headless bot rounds: in 100 seeded bot-only rounds (8 vs 8) run in Node, ≥ 95 end by elimination before the 3-minute limit; bots never fire at an enemy they have no line of sight to (asserted from events). *(Reworded with the plan: the original said "matches", but the time limit applies to rounds.)*
-- [ ] **C1.7** Map hot reload: saving the map in Tiled updates the running game within 2 seconds without a page reload (tiles, collision); an invalid change shows the error overlay naming map, layer and object, and the previous map stays active.
-- [ ] **C1.8** The `example` theme, added as files only, passes validation, appears in the solo setup, and plays.
-- [ ] **C1.9** Every visible text is translated in French and English; `check:i18n`, font coverage check and literal-string lint pass.
-- [ ] **C1.10** Performance on the reference machine (Q25): 60 FPS sustained with 16 participants; average simulation tick < 1 ms (benchmark script output recorded in the milestone report, with the hardware used).
-- [ ] **C1.11** Line coverage ≥ 80 % for `sim`, `content`, `match`, `modes`, `bots`.
-- [ ] **C1.12** A Playwright smoke test starts a solo match and checks there is no console error for 10 seconds.
+- [x] **C1.1** From the main menu: Solo → choose bots per team (up to 16 participants, Q24) → the match starts on the Vietnam map; a full match plays to a winner and returns to the menu.
+  **Result:** checked in Chromium: Solo → Start (3 allied and 4 enemy bots, player idle) → the match on `river-village` ended after 117 s (PAVN & Viet Cong 3–0), the end screen showed the winner, the score and every participant's kills and deaths, and "Main menu" returned to the menu. The setup accepts up to 16 participants (measured with 16 in C1.10).
+- [x] **C1.2** ZQSD on AZERTY and WASD on QWERTY move the player with no setting (physical keys). The character faces the cursor in 8 directions; the weapon follows the exact mouse angle.
+  **Result:** input reads `KeyboardEvent.code` (`KeyW/A/S/D`, the same physical keys as ZQSD on AZERTY) and the arrows (`key-map.test.ts`); the browser scripts drive the player with those codes. The character view picks the octant of the aim and draws the weapon at the exact angle (M0, C0.3); the local player's weapon uses the live mouse angle (captures in `/dev/scene`).
+- [x] **C1.3** Y-sorting: a dev scene shows the player walking around a tree; the player is hidden by the tree when above its base and drawn over it when below (screenshot check, and a unit test on sort keys).
+  **Result:** `depth.test.ts` covers both cases and ties. Captures in Chromium on `/dev/scene?theme=vietnam`: walking down between trees, the player is hidden by a canopy while standing above that tree's base, and drawn over the trunk of a tree once its base is just above the player's feet.
+- [x] **C1.4** Simulation tests (ASCII maps): bullets never cross `solid` tiles over a 360° sweep of angles at max projectile speed; a character never overlaps a `solid` tile after 10,000 random-input ticks; damage and death follow weapon parameters.
+  **Result:** `combat.test.ts`: 4,320 shots (360° in 0.25° steps from 3 positions) at 6,000 px/s, every segment clear, every impact on an obstacle's edge; `movement.test.ts`: 8 characters, 10,000 random-input ticks, no overlap with tiles or footprints (more than 10,000 contacts with obstacles); `damage.test.ts`: 4 hits of 28 kill (72, 44, 16, 0).
+- [x] **C1.5** Determinism: same seed and inputs give the same state hash after 10,000 ticks.
+  **Result:** `damage.test.ts`: 8 characters fighting with random inputs, same hash after 10,000 ticks (more than 1,000 shots and several kills), different hash for another seed or other inputs; bot rounds replay identically from their seed (`bot-rounds.test.ts`).
+- [x] **C1.6** Headless bot rounds: in 100 seeded bot-only rounds (8 vs 8) run in Node, ≥ 95 end by elimination before the 3-minute limit; bots never fire at an enemy they have no line of sight to (asserted from events). *(Reworded with the plan: the original said "matches", but the time limit applies to rounds.)*
+  **Result:** `npm run bench:sim`: 98 of 100 rounds ended by elimination (average 33.0 s; rounds 20 and 23 reached the limit); 13,172 shots, none without a living enemy in sight within 35° of the shot. A 10-round version runs in the tests.
+- [x] **C1.7** Map hot reload: saving the map in Tiled updates the running game within 2 seconds without a page reload (tiles, collision); an invalid change shows the error overlay naming map, layer and object, and the previous map stays active.
+  **Result:** checked in headless Chromium on `/dev/scene`: a wall written into `river-village.tmj` was drawn after 1.67 s and stopped the player, with no page reload; an invalid change (a resized tree) showed "themes/vietnam/maps/river-village.tmj › layer "trees" › object 1 at (264, 188)" after 1.64 s while the previous map stayed in play; restoring the file cleared the overlay.
+- [x] **C1.8** The `example` theme, added as files only, passes validation, appears in the solo setup, and plays.
+  **Result:** its commit (`feat(themes): add the example theme, as files only`) touches only `themes/example/` (22 files); `validate:themes` passes; in Chromium it appears in the solo setup ("Training", map "Arena") and a match starts. Bot rounds also run on its arena (tests). Playing it revealed a client bug, fixed separately: a map without tile objects failed to start.
+- [x] **C1.9** Every visible text is translated in French and English; `check:i18n`, font coverage check and literal-string lint pass.
+  **Result:** `check:i18n` (keys, variables, coverage by the interface font and the HUD font) and the lint rule pass; menus, HUD and end screen checked in both languages. Content diagnostics in the development overlay stay in English, as decided in M0.
+- [x] **C1.10** Performance on the reference machine (Q25): 60 FPS sustained with 16 participants; average simulation tick < 1 ms (benchmark script output recorded in the milestone report, with the hardware used).
+  **Result:** on the owner's machine (AMD Ryzen 7 3700X, AMD Radeon RX 5700 XT, Linux, Chromium 151 driven by Playwright with the GPU through ANGLE/OpenGL, 1920×1080, palette pass on): 60 FPS average and minimum over 20 s of a solo match with 16 participants. `npm run bench:sim`: average tick 0.053 ms, p99 0.90 ms with 16 bots (Node 24). Not yet measured on an Iris Xe-class laptop.
+- [x] **C1.11** Line coverage ≥ 80 % for `sim`, `content`, `match`, `modes`, `bots`.
+  **Result:** sim 99.8 %, content 96.1 %, match 100 %, modes 96.1 %, bots 99.6 %; `npm run check` now fails below 80 %.
+- [x] **C1.12** A Playwright smoke test starts a solo match and checks there is no console error for 10 seconds.
+  **Result:** `npm run test:e2e` passes locally (11.7 s); the CI job runs once the branch is pushed.
 
 ---
 
