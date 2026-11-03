@@ -1,6 +1,6 @@
-// Builds the dev scene: a sandbox match on the first map of the first theme that has one, the
-// local player in team 1 against three bots in team 2, who come looking for it. Everyone comes
-// back 2 seconds after dying.
+// Builds the dev scene: a sandbox match on a map (?theme=<id>&map=<ref>, by default the first
+// map of the first theme that has one), the local player in team 1 against three bots in
+// team 2, who come looking for it. Everyone comes back 2 seconds after dying.
 import { signal } from '@preact/signals';
 import { buildCatalog } from '@pixel-shoot/content';
 import { createMatchHost } from '@pixel-shoot/match';
@@ -26,14 +26,17 @@ export async function createDevScene(
 
   const begin = () => {
     if (controller) return;
+    const query = new URLSearchParams(location.search);
+    const wanted = query.get('theme');
     const assets: ThemeAssets | undefined = [...store.themes.value.values()].find(
-      (a) => a.maps.size > 0,
+      (a) => a.maps.size > 0 && (!wanted || a.theme.id === wanted),
     );
     if (!assets) {
       status.value = store.themes.value.size > 0 ? 'no-map' : 'loading';
       return;
     }
-    const [mapRef, map] = [...assets.maps][0]!;
+    const [mapRef, map] =
+      [...assets.maps].find(([ref]) => ref === query.get('map')) ?? [...assets.maps][0]!;
     const { theme } = assets;
     const catalog = buildCatalog(theme);
     const characterOf = (team: number) =>
