@@ -39,6 +39,15 @@
       "warnings_other": "{{count}} avertissements de contenu."
     }
   },
+  "hud": {
+    "reloading": "Rechargement",
+    "ammoReserve": "{{rounds}} / {{spare}}",
+    "score": "{{team1}} {{score1}} - {{score2}} {{team2}}",
+    "round": "Manche {{round}}",
+    "survivors": "Debout : {{team1}} contre {{team2}}",
+    "kill": "{{killer}} [{{weapon}}] {{victim}}",
+    "spectating": "Vous suivez {{name}}"
+  },
   "participant": {
     "you": "Vous",
     "bot": "Bot {{n}}"

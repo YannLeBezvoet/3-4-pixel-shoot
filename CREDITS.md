@@ -6,6 +6,7 @@
 |---|---|---|---|
 | Resurrect 64 palette | Kerrie Lake ([Lospec](https://lospec.com/palette-list/resurrect-64)) | See `LICENSES/LicenseRef-Resurrect64-Palette.txt` | `palette/resurrect-64.gpl` |
 | Press Start 2P font | CodeMan38, The Press Start 2P Project Authors | SIL Open Font License 1.1 | `apps/client/src/assets/fonts/` |
+| "Pixel Shoot HUD" bitmap font, generated from Press Start 2P (decision 0014) | CodeMan38, The Press Start 2P Project Authors | SIL Open Font License 1.1 | `apps/client/src/assets/fonts/hud-font.png`, `hud-font.json` |
 
 ## Inspiration
 

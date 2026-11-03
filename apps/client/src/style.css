@@ -30,6 +30,11 @@ body {
   image-rendering: pixelated;
 }
 
+/* In a match the HUD draws a crosshair instead of the system cursor (Q53). */
+.game-canvas.in-match {
+  cursor: none;
+}
+
 @font-face {
   font-family: 'Press Start 2P';
   src: url('./assets/fonts/PressStart2P-Regular.ttf') format('truetype');

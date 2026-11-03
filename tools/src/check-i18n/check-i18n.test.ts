@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { formatIssues } from '@pixel-shoot/content';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { HUD_FONT_JSON, HUD_FONT_PNG } from '../hud-font/hud-font';
 import { fromRoot } from '../paths';
 import { UI_FONT, checkI18n } from './cli';
 
@@ -15,10 +16,11 @@ describe('checkI18n', () => {
   beforeEach(async () => {
     root = await mkdtemp(path.join(os.tmpdir(), 'pixel-shoot-i18n-'));
     await mkdir(path.join(root, path.dirname(UI_FONT)), { recursive: true });
-    await writeFile(
-      path.join(root, UI_FONT),
-      await import('node:fs/promises').then((fs) => fs.readFile(fromRoot(UI_FONT))),
-    );
+    for (const file of [UI_FONT, HUD_FONT_PNG, HUD_FONT_JSON])
+      await writeFile(
+        path.join(root, file),
+        await import('node:fs/promises').then((fs) => fs.readFile(fromRoot(file))),
+      );
     await write('locales/en.json', {
       _meta: { name: 'English' },
       menu: { play: 'Play', kills: '{{count}} kills', kills_one: '{{count}} kill' },
@@ -67,5 +69,13 @@ describe('checkI18n', () => {
     );
     expect(text).toContain('error: locales/ja.json › menu.play');
     expect(text).not.toContain('Ωmega');
+  });
+
+  it('reports a HUD font that is missing or out of date', async () => {
+    await writeFile(path.join(root, HUD_FONT_JSON), '{}');
+    const issues = await checkI18n(root);
+    expect(formatIssues(issues.issues)).toContain(
+      'The HUD font is missing or out of date: run "npm run assets:font".',
+    );
   });
 });

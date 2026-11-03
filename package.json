@@ -28,6 +28,7 @@
     "check:schemas": "tsx tools/src/schemas/cli.ts --check",
     "assets:placeholders": "tsx tools/src/placeholders/cli.ts",
     "assets:report": "tsx tools/src/placeholders/cli.ts --report",
+    "assets:font": "tsx tools/src/hud-font/cli.ts",
     "dev": "npm run dev -w @pixel-shoot/client",
     "build": "npm run build -w @pixel-shoot/client",
     "check:i18n": "tsx tools/src/check-i18n/cli.ts",

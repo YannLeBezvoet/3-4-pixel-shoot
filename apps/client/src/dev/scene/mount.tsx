@@ -7,7 +7,11 @@ import { createMatchHost } from '@pixel-shoot/match';
 import { sandbox } from '@pixel-shoot/modes';
 import type { Catalog } from '@pixel-shoot/sim';
 import type { ContentStore, ThemeAssets } from '../../content/content-store';
+import { hudTexts } from '../../i18n/hud-texts';
+import type { Translator } from '../../i18n/translator';
 import { createGameInput } from '../../input/game-input';
+import { Hud } from '../../render/hud';
+import { loadPixelFont } from '../../render/pixel-text';
 import type { Renderer } from '../../render/renderer';
 import { INTERNAL_HEIGHT, INTERNAL_WIDTH } from '../../render/screen-layout';
 import { SheetTextures } from '../../render/sheet-textures';
@@ -19,7 +23,13 @@ import { ScenePage } from './scene-page';
 
 const BOTS = 3;
 
-function startMatch(assets: ThemeAssets): { session: Session; catalog: Catalog } | undefined {
+interface Match {
+  readonly session: Session;
+  readonly catalog: Catalog;
+  readonly assets: ThemeAssets;
+}
+
+function startMatch(assets: ThemeAssets): Match | undefined {
   const [map] = assets.maps.values();
   if (!map) return undefined;
   const { theme } = assets;
@@ -43,15 +53,21 @@ function startMatch(assets: ThemeAssets): { session: Session; catalog: Catalog }
       kind: 'bot',
     });
   host.start();
-  return { session: createLocalSession(host, me), catalog };
+  return { session: createLocalSession(host, me), catalog, assets };
 }
 
-export function createDevScene(renderer: Renderer, store: ContentStore) {
+export async function createDevScene(
+  renderer: Renderer,
+  store: ContentStore,
+  translator: Translator,
+) {
   const scene = new WorldScene(new SheetTextures());
-  renderer.app.stage.addChild(scene.root);
+  const hud = new Hud(await loadPixelFont());
+  renderer.app.stage.addChild(scene.root, hud.root);
+  renderer.app.canvas.classList.add('in-match');
   const input = createGameInput(renderer.layout);
   const status = signal<'loading' | 'no-map' | 'playing'>('loading');
-  let match: { session: Session; catalog: Catalog } | undefined;
+  let match: Match | undefined;
 
   const begin = () => {
     if (match) return;
@@ -72,7 +88,7 @@ export function createDevScene(renderer: Renderer, store: ContentStore) {
 
   renderer.app.ticker.add((ticker) => {
     if (!match) return;
-    const { session, catalog } = match;
+    const { session, catalog, assets } = match;
     const view = session.frame().current;
     const entity = view.participants.find((p) => p.id === session.localParticipant)?.entity;
     const actor = view.actors.find((a) => a.id === entity);
@@ -83,10 +99,21 @@ export function createDevScene(renderer: Renderer, store: ContentStore) {
     const command = input.command(origin);
     session.sendInput(command);
     const events = session.advance(ticker.deltaMS);
-    scene.playEvents(events, session.frame());
-    scene.draw(session.frame(), ticker.deltaMS, {
+    const frame = session.frame();
+    scene.playEvents(events, frame);
+    scene.draw(frame, ticker.deltaMS, {
       focus: entity,
       ...(entity !== undefined && actor?.alive && { liveAim: { entity, angle: command.aim } }),
+    });
+    hud.update({
+      view: frame.current,
+      local: session.localParticipant,
+      followed: entity,
+      events,
+      pointer: input.pointer(),
+      toScreen: (x, y) => scene.toScreen(x, y),
+      texts: hudTexts(translator, assets.theme),
+      deltaMs: ticker.deltaMS,
     });
   });
 

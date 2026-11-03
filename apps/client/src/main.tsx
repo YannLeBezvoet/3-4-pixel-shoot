@@ -38,7 +38,7 @@ if (import.meta.env.DEV) {
     page = createSpriteViewer(renderer, store);
   } else if (location.pathname === '/dev/scene') {
     const { createDevScene } = await import('./dev/scene/mount');
-    page = createDevScene(renderer, store);
+    page = await createDevScene(renderer, store, translator);
   } else {
     renderer.app.stage.addChild(createTestPattern(parseGpl(paletteText)));
   }
