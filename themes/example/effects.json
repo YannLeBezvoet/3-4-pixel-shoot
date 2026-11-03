@@ -1,0 +1,7 @@
+{
+  "$schema": "../../schemas/effects.schema.json",
+  "effects": [
+    { "id": "muzzle-flash", "sprite": "sprites/effects/muzzle-flash" },
+    { "id": "impact", "sprite": "sprites/effects/impact" }
+  ]
+}

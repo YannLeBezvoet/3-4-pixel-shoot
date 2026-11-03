@@ -1,0 +1,11 @@
+{
+  "$schema": "../../schemas/theme.schema.json",
+  "formatVersion": 1,
+  "id": "example",
+  "nameKey": "theme.name",
+  "defaultLanguage": "en",
+  "factions": [
+    { "id": "red", "nameKey": "faction.red" },
+    { "id": "blue", "nameKey": "faction.blue" }
+  ]
+}
