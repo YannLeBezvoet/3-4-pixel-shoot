@@ -8,7 +8,8 @@ import { createCatalog } from '../world/catalog';
 export interface TestCatalogOptions {
   readonly character?: Partial<Omit<CharacterStats, 'id' | 'weapon'>>;
   readonly weapon?: Partial<FirearmParams>;
-  readonly muzzleDistance?: number;
+  /** Grip-to-muzzle length; the test character's hand reach is 0 unless overridden. */
+  readonly barrelLength?: number;
   readonly bullet?: Partial<BulletParams>;
 }
 
@@ -22,6 +23,7 @@ export function testCatalog(options: TestCatalogOptions = {}): Catalog {
         radius: 10,
         hitPoints: 100,
         gunHeight: 20,
+        handReach: 0,
         ...options.character,
         weapon: 'rifle',
       },
@@ -41,7 +43,7 @@ export function testCatalog(options: TestCatalogOptions = {}): Catalog {
           ...options.weapon,
         },
         projectile: 'bullet',
-        muzzleDistance: options.muzzleDistance ?? 24,
+        barrelLength: options.barrelLength ?? 24,
       },
     ],
     projectiles: [

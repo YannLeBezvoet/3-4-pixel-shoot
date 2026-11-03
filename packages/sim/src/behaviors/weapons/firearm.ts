@@ -74,8 +74,9 @@ function shoot(world: WorldState, id: EntityId, actor: Actor, stats: WeaponStats
   const angle = actor.aim + (spread > 0 ? world.random('weapons').range(-spread, spread) : 0);
   const dirX = Math.cos(angle);
   const dirY = Math.sin(angle);
-  const muzzleX = position.x + dirX * stats.muzzleDistance;
-  const muzzleY = position.y + dirY * stats.muzzleDistance;
+  const muzzleDistance = character.handReach + stats.barrelLength;
+  const muzzleX = position.x + dirX * muzzleDistance;
+  const muzzleY = position.y + dirY * muzzleDistance;
   const z = character.gunHeight;
   const shot = {
     kind: projectile.id,

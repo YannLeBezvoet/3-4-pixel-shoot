@@ -14,6 +14,8 @@ export interface CharacterStats {
   readonly weapon: string;
   /** Height of the hands above the ground point: projectiles fly at this height. */
   readonly gunHeight: number;
+  /** How far ahead of the ground point the hands hold the weapon, in world units. */
+  readonly handReach: number;
 }
 
 export interface WeaponStats {
@@ -22,8 +24,8 @@ export interface WeaponStats {
   /** Parameters validated by the behavior's schema, defaults applied. */
   readonly params: FirearmParams;
   readonly projectile: string;
-  /** Distance from the holder's ground point to the muzzle, along the aim, in world units. */
-  readonly muzzleDistance: number;
+  /** Distance from the grip to the muzzle, in world units. Shots start at hand reach + barrel. */
+  readonly barrelLength: number;
 }
 
 export interface ProjectileStats {

@@ -133,7 +133,10 @@ describe('firearm', () => {
   });
 
   it('starts the shot at the muzzle, at gun height', () => {
-    const { sim, shooter } = setup({ muzzleDistance: 30, character: { gunHeight: 18 } });
+    const { sim, shooter } = setup({
+      barrelLength: 20,
+      character: { gunHeight: 18, handReach: 10 },
+    });
     const [shot] = ofType(run(sim, new Map([[shooter, aim(Math.PI / 2, FIRE)]]), 1), 'shotFired');
     expect(shot).toMatchObject({ shooter, weapon: 'rifle', z: 18, angle: Math.PI / 2 });
     expect(shot?.x).toBeCloseTo(96, 9);
@@ -200,7 +203,7 @@ describe('bullet', () => {
   });
 
   it('stops at once when the muzzle is past a wall', () => {
-    const { sim, shooter } = setup({ muzzleDistance: 40 });
+    const { sim, shooter } = setup({ barrelLength: 40 });
     // Walk against the left wall: the muzzle, 40 units ahead, is then inside it.
     run(sim, new Map([[shooter, { move: { x: -1, y: 0 }, aim: Math.PI, buttons: 0 }]]), 30);
     expect(sim.actor(shooter)?.x).toBeCloseTo(58, 9);
