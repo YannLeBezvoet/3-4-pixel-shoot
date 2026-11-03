@@ -154,4 +154,21 @@ describe('MatchHost', () => {
     expect(api().characterOf(red)).toBeUndefined();
     expect(host.view().actors).toEqual([]);
   });
+
+  it('replaces the map of a running match, bots included', () => {
+    const { host, api } = match();
+    host.start();
+    const walled = asciiMap(`
+      ############
+      #11...#..22#
+      #11...#..22#
+      ############
+    `);
+    host.replaceMap(walled);
+    expect(host.map).toBe(walled);
+    expect(api().map).toBe(walled);
+    // The bot keeps playing on the new map without error.
+    for (let i = 0; i < 120; i++) host.step();
+    expect(host.view().actors.every((a) => a.x < 6 * 48 || a.x > 7 * 48)).toBe(true);
+  });
 });

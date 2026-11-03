@@ -12,6 +12,8 @@ export interface SessionFrame {
 
 export interface Session {
   readonly map: MapData;
+  /** Swaps the map of the running match (development hot reload). */
+  replaceMap(map: MapData): void;
   /** The participant this tab controls. */
   readonly localParticipant: ParticipantId;
   /** The input held from now on, until replaced. */

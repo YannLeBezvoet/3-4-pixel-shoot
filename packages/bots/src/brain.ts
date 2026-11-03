@@ -52,9 +52,9 @@ interface Action {
 export class BotBrain {
   readonly #difficulty: Difficulty;
   readonly #random: Rng;
-  readonly #map: MapData;
-  readonly #grid: CollisionGrid;
-  readonly #nav: NavGrid;
+  #map: MapData;
+  #grid: CollisionGrid;
+  #nav: NavGrid;
   readonly #thinkOffset: number;
   readonly #memory = new Memory();
   #action: ActionId = 'wander';
@@ -97,6 +97,15 @@ export class BotBrain {
     this.#grid = options.grid;
     this.#nav = options.nav;
     this.#thinkOffset = options.thinkOffset;
+  }
+
+  /** Uses a new map (development hot reload): current paths are dropped. */
+  setWorld(world: { map: MapData; grid: CollisionGrid; nav: NavGrid }): void {
+    this.#map = world.map;
+    this.#grid = world.grid;
+    this.#nav = world.nav;
+    this.#path = [];
+    this.#destination = undefined;
   }
 
   /** The action chosen at the last decision, for tests and debugging. */

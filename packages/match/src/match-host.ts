@@ -61,6 +61,8 @@ export interface WorldView {
 
 export interface MatchHost {
   readonly map: MapData;
+  /** Swaps the map in place (development hot reload): collision, bot navigation, stuck characters. */
+  replaceMap(map: MapData): void;
   readonly tick: number;
   /** True once the mode has declared a result. */
   readonly finished: boolean;
@@ -103,7 +105,9 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
   let lastEvents: readonly SimEvent[] = [];
 
   const api: ModeApi = {
-    map: setup.map,
+    get map() {
+      return sim.map;
+    },
     get tick() {
       return sim.tick;
     },
@@ -127,8 +131,8 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
       const spot = spawnRandom.pick(spots);
       // Face the middle of the map.
       const aim = Math.atan2(
-        (setup.map.height * TILE_SIZE) / 2 - spot.y,
-        (setup.map.width * TILE_SIZE) / 2 - spot.x,
+        (sim.map.height * TILE_SIZE) / 2 - spot.y,
+        (sim.map.width * TILE_SIZE) / 2 - spot.x,
       );
       const entity = sim.spawnActor({ team: participant.team, character: stats.id, ...spot, aim });
       participant.entity = entity;
@@ -152,7 +156,15 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
   }
 
   return {
-    map: setup.map,
+    get map() {
+      return sim.map;
+    },
+    replaceMap(map) {
+      sim.replaceMap(map);
+      navGrid = new NavGrid(sim.grid);
+      for (const participant of participants.values())
+        participant.brain?.setWorld({ map, grid: sim.grid, nav: navGrid });
+    },
     get tick() {
       return sim.tick;
     },
@@ -171,7 +183,7 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
           ? new BotBrain({
               difficulty: DIFFICULTIES[difficulty],
               random: root.fork(`bot:${id}`),
-              map: setup.map,
+              map: sim.map,
               grid: sim.grid,
               nav: navGrid,
               thinkOffset: id,

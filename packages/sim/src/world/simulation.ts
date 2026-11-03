@@ -11,7 +11,7 @@ import { createFirearmState } from '../behaviors/weapons/firearm';
 import type { CollisionGrid } from '../map/collision-grid';
 import { buildCollisionGrid } from '../map/collision-grid';
 import type { MapData } from '../map/map-data';
-import { spawnSpots } from '../map/spawn';
+import { nearestFreeSpot, spawnSpots } from '../map/spawn';
 import type { Catalog } from './catalog';
 import type { Rules, WorldState } from './state';
 import {
@@ -86,6 +86,12 @@ export interface Simulation {
   readonly map: MapData;
   readonly grid: CollisionGrid;
   readonly rules: Rules;
+  /**
+   * Swaps the map in place (development hot reload): new tiles and collision; living actors
+   * left inside an obstacle move to the nearest free spot. Spawn areas apply from the next
+   * spawn.
+   */
+  replaceMap(map: MapData): void;
   /** While frozen (a countdown), actors may aim but neither move nor fire. */
   frozen: boolean;
   /**
@@ -163,8 +169,12 @@ export function createSimulation(options: SimulationOptions): Simulation {
     get tick() {
       return world.tick;
     },
-    map: world.map,
-    grid: world.grid,
+    get map() {
+      return world.map;
+    },
+    get grid() {
+      return world.grid;
+    },
     rules: world.rules,
     get frozen() {
       return world.frozen;
@@ -206,6 +216,22 @@ export function createSimulation(options: SimulationOptions): Simulation {
       removeEntity(world, id);
       indexActors(world);
       world.events.push({ type: 'actorRemoved', entity: id });
+    },
+
+    replaceMap(map) {
+      world.map = map;
+      world.grid = buildCollisionGrid(map);
+      for (const [id, actor] of world.actor.entries()) {
+        const position = world.position.get(id);
+        const body = world.body.get(id);
+        if (!actor.alive || !position || !body) continue;
+        const spot = nearestFreeSpot(world.grid, position.x, position.y, body.radius);
+        if (spot) {
+          position.x = spot.x;
+          position.y = spot.y;
+        }
+      }
+      indexActors(world);
     },
 
     clear() {

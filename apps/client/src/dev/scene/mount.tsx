@@ -64,6 +64,7 @@ export async function createDevScene(
       session: createLocalSession(host, me),
       catalog,
       pausable: false,
+      store,
     });
     status.value = 'playing';
   };

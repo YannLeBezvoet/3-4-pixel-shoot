@@ -48,7 +48,7 @@ export type {
 export { circleBlocked, moveCircle } from './physics/move-circle';
 export { castSegment, lineOfSight } from './physics/raycast';
 export type { SegmentHit } from './physics/raycast';
-export { spawnSpots } from './map/spawn';
+export { nearestFreeSpot, spawnSpots } from './map/spawn';
 export { mapSuitsMode } from './modes/game-mode';
 export type {
   DisplayText,

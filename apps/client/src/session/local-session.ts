@@ -17,7 +17,10 @@ export function createLocalSession(host: MatchHost, localParticipant: Participan
   let input: InputCommand | undefined;
 
   return {
-    map: host.map,
+    get map() {
+      return host.map;
+    },
+    replaceMap: (map) => host.replaceMap(map),
     localParticipant,
     paused: false,
     sendInput(next) {

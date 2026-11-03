@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { createRng } from '@pixel-shoot/shared';
 import type { InputCommand } from '../core/input';
 import { Button } from '../core/input';
+import { BLOCKS_MOVEMENT } from '../map/map-data';
+import { circleBlocked } from '../physics/move-circle';
 import { asciiMap } from '../testing/ascii-map';
 import { testCatalog } from '../testing/test-catalog';
 import { createSimulation } from './simulation';
@@ -156,5 +158,28 @@ describe('createSimulation', () => {
       { x: 72, y: 120 },
     ]);
     expect(sim.freeSpawnSpots(3, 10)).toEqual([]);
+  });
+
+  it('swaps the map in place and moves actors out of new obstacles', () => {
+    const before = asciiMap(`
+      ######
+      #1...#
+      #....#
+      ######
+    `);
+    const after = asciiMap(`
+      ######
+      ##...#
+      #....#
+      ######
+    `);
+    const sim = createSimulation({ map: before, catalog, seed: 1 });
+    const id = sim.spawnActor({ team: 1, character: 'rifleman', x: 72, y: 72 });
+    sim.replaceMap(after);
+    expect(sim.map).toBe(after);
+    expect(sim.grid.flagsAt(1, 1)).toBe(1);
+    const moved = sim.actor(id)!;
+    expect(circleBlocked(sim.grid, moved.x, moved.y, moved.radius, BLOCKS_MOVEMENT)).toBe(false);
+    expect(Math.hypot(moved.x - 72, moved.y - 72)).toBeLessThanOrEqual(48);
   });
 });

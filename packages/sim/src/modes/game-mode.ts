@@ -47,6 +47,7 @@ export interface ModeState {
 
 /** The mode's only door into the match. */
 export interface ModeApi {
+  /** The current map (it may be replaced during development). */
   readonly map: MapData;
   /** Ticks since the match started. */
   readonly tick: number;

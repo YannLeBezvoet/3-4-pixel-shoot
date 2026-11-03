@@ -6,7 +6,7 @@ import type { ReadonlySignal } from '@preact/signals';
 import { signal } from '@preact/signals';
 import type { WorldView } from '@pixel-shoot/match';
 import type { Catalog, EntityId } from '@pixel-shoot/sim';
-import type { ThemeAssets } from '../content/content-store';
+import type { ContentStore, ThemeAssets } from '../content/content-store';
 import { hudTexts } from '../i18n/hud-texts';
 import type { Translator } from '../i18n/translator';
 import { createGameInput } from '../input/game-input';
@@ -33,6 +33,8 @@ export interface MatchControllerOptions {
   readonly catalog: Catalog;
   /** Whether Escape pauses the match (solo); development pages may keep it running. */
   readonly pausable?: boolean;
+  /** Content to watch for map hot reload (development). */
+  readonly store?: ContentStore;
 }
 
 export class MatchController {
@@ -44,6 +46,7 @@ export class MatchController {
   readonly #input;
   readonly #tick: (ticker: { deltaMS: number }) => void;
   readonly #keydown: (event: KeyboardEvent) => void;
+  readonly #unwatch: () => void;
   #spectated: EntityId | undefined;
 
   constructor(options: MatchControllerOptions) {
@@ -68,6 +71,29 @@ export class MatchController {
     window.addEventListener('keydown', this.#keydown);
     this.#tick = (ticker) => this.#frame(ticker.deltaMS);
     renderer.app.ticker.add(this.#tick);
+    this.#unwatch = this.#watchMap();
+  }
+
+  /**
+   * Hot reload (C1.7): when the content store holds a new version of the match's map or of the
+   * theme's images, the running match and the drawing switch to it. An invalid map keeps its
+   * last valid version in the store, so nothing changes here.
+   */
+  #watchMap(): () => void {
+    const { store, assets, mapRef, session } = this.#options;
+    if (!store) return () => undefined;
+    let map = assets.maps.get(mapRef);
+    let images = assets.images;
+    return store.themes.subscribe((themes) => {
+      const next = themes.get(assets.theme.id);
+      const nextMap = next?.maps.get(mapRef);
+      if (!next || !nextMap || (nextMap === map && next.images === images)) return;
+      map = nextMap;
+      images = next.images;
+      session.replaceMap(nextMap);
+      this.#scene.setMap(nextMap, next.images);
+      this.#scene.setLooks(themeLooks(next));
+    });
   }
 
   get phase(): ReadonlySignal<MatchPhase> {
@@ -96,6 +122,7 @@ export class MatchController {
   stop(): void {
     const { renderer } = this.#options;
     renderer.app.ticker.remove(this.#tick);
+    this.#unwatch();
     window.removeEventListener('keydown', this.#keydown);
     this.#input.dispose();
     renderer.app.canvas.classList.remove('in-match');

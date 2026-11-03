@@ -104,6 +104,7 @@ export class GameApp {
       mapRef: choices.mapRef,
       session: createLocalSession(host, local),
       catalog,
+      ...(import.meta.env.DEV && { store: this.store }),
     });
     this.#match.value = { controller, choices, assets, local };
     this.#screen.value = 'match';

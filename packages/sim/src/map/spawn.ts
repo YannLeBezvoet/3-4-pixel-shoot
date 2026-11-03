@@ -28,3 +28,31 @@ export function spawnSpots(
   }
   return spots;
 }
+
+/**
+ * The free spot nearest to a point for a circle of `radius`: the point itself when it is
+ * free, otherwise the closest tile center that is, searched up to `maxTiles` tiles away.
+ */
+export function nearestFreeSpot(
+  grid: CollisionGrid,
+  x: number,
+  y: number,
+  radius: number,
+  maxTiles = 8,
+): { x: number; y: number } | undefined {
+  if (!circleBlocked(grid, x, y, radius, BLOCKS_MOVEMENT)) return { x, y };
+  const tx = tileOf(x);
+  const ty = tileOf(y);
+  let best: { x: number; y: number; distance: number } | undefined;
+  for (let ring = 1; ring <= maxTiles && !best; ring++)
+    for (let dy = -ring; dy <= ring; dy++)
+      for (let dx = -ring; dx <= ring; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== ring) continue;
+        const cx = (tx + dx) * TILE_SIZE + TILE_SIZE / 2;
+        const cy = (ty + dy) * TILE_SIZE + TILE_SIZE / 2;
+        if (circleBlocked(grid, cx, cy, radius, BLOCKS_MOVEMENT)) continue;
+        const distance = Math.hypot(cx - x, cy - y);
+        if (!best || distance < best.distance) best = { x: cx, y: cy, distance };
+      }
+  return best && { x: best.x, y: best.y };
+}

@@ -105,8 +105,9 @@ export interface WorldState {
   nextEntity: EntityId;
   /** While frozen (a countdown), actors may aim but neither move nor fire. */
   frozen: boolean;
-  readonly map: MapData;
-  readonly grid: CollisionGrid;
+  /** Replaced in place by hot reload (development). */
+  map: MapData;
+  grid: CollisionGrid;
   readonly catalog: Catalog;
   readonly rules: Rules;
   /** A named random stream, independent of the others (decision 0011). */
