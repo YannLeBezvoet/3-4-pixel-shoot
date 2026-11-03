@@ -35,6 +35,8 @@ describe('createSimulation', () => {
       character: 'rifleman',
       x: 72,
       y: 80,
+      vx: 0,
+      vy: 0,
       aim: 1,
       radius: 10,
       hp: 100,
@@ -110,5 +112,49 @@ describe('createSimulation', () => {
     };
     expect(run(1, 7)).toBe(run(1, 7));
     expect(run(1, 7)).not.toBe(run(1, 8));
+  });
+
+  it('lets frozen actors aim but neither move nor fire', () => {
+    const sim = create();
+    const a = sim.spawnActor({ team: 1, character: 'rifleman', x: 72, y: 72 });
+    sim.frozen = true;
+    const events = sim.step(new Map([[a, { move: { x: 1, y: 0 }, aim: 2, buttons: Button.fire }]]));
+    expect(events.filter((e) => e.type === 'shotFired')).toEqual([]);
+    expect(sim.actor(a)).toMatchObject({ x: 72, aim: 2 });
+    sim.frozen = false;
+    sim.step(new Map([[a, { move: { x: 1, y: 0 }, aim: 2, buttons: 0 }]]));
+    expect(sim.actor(a)!.x).toBeGreaterThan(72);
+  });
+
+  it('clears every actor and projectile', () => {
+    const sim = create();
+    const a = sim.spawnActor({ team: 1, character: 'rifleman', x: 72, y: 72 });
+    sim.step(new Map([[a, { move: { x: 0, y: 0 }, aim: 0, buttons: Button.fire }]]));
+    expect(sim.projectiles()).toHaveLength(1);
+    sim.clear();
+    expect(sim.actors()).toEqual([]);
+    expect(sim.projectiles()).toEqual([]);
+    expect(sim.step()).toEqual([{ type: 'actorRemoved', entity: a }]);
+  });
+
+  it('finds free spawn spots, avoiding living actors', () => {
+    const arena = asciiMap(`
+      ######
+      #11#2#
+      #1o..#
+      ######
+    `);
+    const sim = createSimulation({ map: arena, catalog, seed: 1 });
+    expect(sim.freeSpawnSpots(1, 10)).toEqual([
+      { x: 72, y: 72 },
+      { x: 120, y: 72 },
+      { x: 72, y: 120 },
+    ]);
+    sim.spawnActor({ team: 1, character: 'rifleman', x: 75, y: 72 });
+    expect(sim.freeSpawnSpots(1, 10)).toEqual([
+      { x: 120, y: 72 },
+      { x: 72, y: 120 },
+    ]);
+    expect(sim.freeSpawnSpots(3, 10)).toEqual([]);
   });
 });

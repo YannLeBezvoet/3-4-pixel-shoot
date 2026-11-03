@@ -11,6 +11,7 @@ import { createFirearmState } from '../behaviors/weapons/firearm';
 import type { CollisionGrid } from '../map/collision-grid';
 import { buildCollisionGrid } from '../map/collision-grid';
 import type { MapData } from '../map/map-data';
+import { spawnSpots } from '../map/spawn';
 import type { Catalog } from './catalog';
 import type { Rules, WorldState } from './state';
 import {
@@ -48,6 +49,9 @@ export interface ActorState {
   readonly character: string;
   readonly x: number;
   readonly y: number;
+  /** Velocity, world units per second. */
+  readonly vx: number;
+  readonly vy: number;
   readonly aim: number;
   readonly radius: number;
   readonly hp: number;
@@ -82,12 +86,18 @@ export interface Simulation {
   readonly map: MapData;
   readonly grid: CollisionGrid;
   readonly rules: Rules;
+  /** While frozen (a countdown), actors may aim but neither move nor fire. */
+  frozen: boolean;
   /**
    * Adds an actor. Its `actorSpawned` event is returned by the step that follows (or by the
    * current one when called during a step).
    */
   spawnActor(spec: ActorSpec): EntityId;
   removeActor(id: EntityId): void;
+  /** Removes every actor (reported) and projectile (silently). */
+  clear(): void;
+  /** Free spots of a team's spawn areas for a character of `radius`, avoiding living actors. */
+  freeSpawnSpots(team: number, radius: number): { x: number; y: number }[];
   /** Advances one tick. Actors missing from `inputs` stand still and keep their aim. */
   step(inputs?: ReadonlyMap<EntityId, InputCommand>): readonly SimEvent[];
   actor(id: EntityId): ActorState | undefined;
@@ -103,6 +113,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
   const world: WorldState = {
     tick: 0,
     nextEntity: 1,
+    frozen: false,
     map: options.map,
     grid: buildCollisionGrid(options.map),
     catalog: options.catalog,
@@ -122,10 +133,11 @@ export function createSimulation(options: SimulationOptions): Simulation {
   const actorState = (id: EntityId): ActorState | undefined => {
     const actor = world.actor.get(id);
     const position = world.position.get(id);
+    const velocity = world.velocity.get(id);
     const body = world.body.get(id);
     const health = world.health.get(id);
     const weapon = world.weapon.get(id);
-    if (!actor || !position || !body || !health || !weapon) return undefined;
+    if (!actor || !position || !velocity || !body || !health || !weapon) return undefined;
     const { team, character, aim } = actor;
     return {
       id,
@@ -133,6 +145,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
       character,
       x: position.x,
       y: position.y,
+      vx: velocity.x,
+      vy: velocity.y,
       aim,
       radius: body.radius,
       hp: health.hp,
@@ -152,6 +166,12 @@ export function createSimulation(options: SimulationOptions): Simulation {
     map: world.map,
     grid: world.grid,
     rules: world.rules,
+    get frozen() {
+      return world.frozen;
+    },
+    set frozen(value) {
+      world.frozen = value;
+    },
 
     spawnActor(spec) {
       const stats = world.catalog.characters.get(spec.character);
@@ -186,6 +206,26 @@ export function createSimulation(options: SimulationOptions): Simulation {
       removeEntity(world, id);
       indexActors(world);
       world.events.push({ type: 'actorRemoved', entity: id });
+    },
+
+    clear() {
+      for (const id of [...world.actor.ids()]) this.removeActor(id);
+      for (const id of [...world.projectile.ids()]) removeEntity(world, id);
+    },
+
+    freeSpawnSpots(team, radius) {
+      const living = [...world.actor.entries()].filter(([, actor]) => actor.alive);
+      return spawnSpots(world.map, world.grid, team, radius).filter((spot) =>
+        living.every(([id]) => {
+          const position = world.position.get(id);
+          const body = world.body.get(id);
+          return (
+            !position ||
+            !body ||
+            Math.hypot(position.x - spot.x, position.y - spot.y) >= radius + body.radius
+          );
+        }),
+      );
     },
 
     step(inputs = new Map()) {

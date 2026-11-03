@@ -32,6 +32,9 @@
       "warnings_other": "{{count}} content warnings."
     }
   },
+  "mode": {
+    "sandbox": { "name": "Sandbox" }
+  },
   "direction": {
     "s": "S",
     "se": "SE",

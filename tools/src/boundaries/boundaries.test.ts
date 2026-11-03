@@ -108,6 +108,15 @@ describe('import lint rules', () => {
     expect(messages[0]).toContain("'pixi.js'");
   });
 
+  it('let tests, and only tests, use the packages declared as devDependencies', async () => {
+    const source =
+      "import { createMatchHost } from '@pixel-shoot/match';\nexport const x = createMatchHost;\n";
+    expect(await restrictedImports('packages/modes/src/probe.test.ts', source)).toEqual([]);
+    const messages = await restrictedImports('packages/modes/src/probe.ts', source);
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toContain('@pixel-shoot/modes may not depend on @pixel-shoot/match');
+  });
+
   it('allow declared dependencies', async () => {
     const messages = await restrictedImports(
       'packages/sim/src/probe.ts',

@@ -13,15 +13,22 @@ export type System = (world: WorldState) => void;
 
 /**
  * 1. Apply inputs. An actor without input this tick, or dead, stands still, holds no button
- * and keeps its aim.
+ * and keeps its aim. While the world is frozen, actors only aim.
  */
 export function applyInputs(world: WorldState, inputs: ReadonlyMap<EntityId, InputCommand>): void {
   for (const [id, actor] of world.actor.entries()) {
     const input = actor.alive ? inputs.get(id) : undefined;
-    actor.input = input ? sanitizeInput(input) : { move: vec2.ZERO, aim: actor.aim, buttons: 0 };
+    const clean = input ? sanitizeInput(input) : undefined;
+    actor.input =
+      clean && !world.frozen
+        ? clean
+        : { move: vec2.ZERO, aim: clean?.aim ?? actor.aim, buttons: 0 };
     actor.aim = actor.input.aim;
   }
 }
 
-/** Systems 2 to 10, in order (2, mode pre-tick, arrives with the game-mode API). */
+/**
+ * Systems 3 to 8, in order. Steps 2 and 9 (mode pre-tick and post-tick) are run by the match
+ * host around `step`, and step 10 (cleanup) by the systems themselves as they remove entities.
+ */
 export const SYSTEMS: readonly System[] = [movement, weapons, projectiles, damage];

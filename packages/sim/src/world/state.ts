@@ -103,6 +103,8 @@ export interface WorldState {
   /** Number of steps done. */
   tick: number;
   nextEntity: EntityId;
+  /** While frozen (a countdown), actors may aim but neither move nor fire. */
+  frozen: boolean;
   readonly map: MapData;
   readonly grid: CollisionGrid;
   readonly catalog: Catalog;

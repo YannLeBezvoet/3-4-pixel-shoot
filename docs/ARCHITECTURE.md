@@ -11,7 +11,9 @@
 | `shared` | Vectors, angles and octants, seeded RNG, `Result` | `packages/shared/src/` |
 | `sim` | World core: `createSimulation` (entity-component stores, 60 Hz `step()`, input commands, events, named random streams, state hash); `MapData` and the collision grid (tile flags `solid`, `impassable`; object footprints); ASCII maps for tests; behavior registry and the `firearm` parameter schema. Movement with acceleration (Q19), sliding collision against tiles and footprints, separation between characters (Q48), actor spatial hash, segment casts and line of sight; `firearm` weapon and `bullet` projectile behaviors; damage, deaths and corpses; determinism proven over 10,000 ticks. No game-mode API yet | `packages/sim/src/` |
 | `content` | Theme loading and validation (manifest, characters with gameplay values, weapons, projectiles, effects), conversion of a theme into the simulation catalog (`buildCatalog`), Tiled maps (`loadMap`, `MapSource`), Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
-| `modes`, `bots`, `match`, `protocol`, `apps/server` | Empty entry points | — |
+| `match` | `createMatchHost`: participants, inputs, mode lifecycle, kills and deaths, `WorldView`. No bots yet | `packages/match/src/` |
+| `modes` | Game-mode API in `sim` (`GameModeDefinition`, `ModeApi`, `ModeState`); the `sandbox` mode (development only) | `packages/sim/src/modes/`, `packages/modes/src/` |
+| `bots`, `protocol`, `apps/server` | Empty entry points | — |
 | Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages | `apps/client/` |
 | Tools | Palette check, theme validation, JSON Schemas, i18n and font check, placeholder generator, Aseprite export, Lua character template | `tools/` |
 | Content | Vietnam theme (2 factions, 2 characters, 2 rifles, a rifle bullet, 5 effects, the `river-village` map with its 2 tilesets, placeholder art, EN/FR texts); EN/FR interface | `themes/vietnam/`, `locales/` |
@@ -103,7 +105,7 @@ flowchart TD
 | `shared` | Vector math, angles, seeded PRNG, ids, `Result`, logger interface | — | Import anything from the project |
 | `sim` | World state, entities and components, fixed-tick systems, collision, behavior registry, events, `GameMode` API, `MapData` type | `shared`, `zod` | Use DOM, Node APIs, timers, `Math.random`, wall-clock time; know about files, Tiled, Aseprite, rendering, network |
 | `content` | Theme/locale schemas, cross-reference validation, error formatting, adapters (Tiled → `MapData`, Aseprite JSON → animation sets), `FileProvider` interface | `sim`, `shared`, `zod` | Read files directly (it receives a `FileProvider`) |
-| `modes` | One folder per game mode, plus the list of built-in modes | `sim` (public API) | Reach into sim internals |
+| `modes` | One folder per game mode, plus the list of built-in modes | `sim` (public API), `zod` | Reach into sim internals |
 | `bots` | Bot controllers that turn perception into `InputCommand`s | `sim` (public API) | Read state a bot could not perceive |
 | `match` | `MatchHost`: participants, input routing, mode lifecycle, bot scheduling, tick loop driven by a clock it is given | `sim`, `bots` | Depend on a transport or a platform |
 | `protocol` | Message types, binary codec, quantization, snapshot and delta encoding | `sim`, `shared` | Contain game rules |
@@ -114,6 +116,7 @@ flowchart TD
 - Each package declares its dependencies in its `package.json`; TypeScript project references follow the same graph.
 - Platform-agnostic packages compile with `lib: ["ES2023"]` and no ambient types: any use of `window`, `document` or Node built-ins fails type-checking.
 - ESLint import rules (`eslint.config.js`), **generated from each package's declared dependencies**, forbid imports that cross the table above: an undeclared project package, a deep import into another package's files, a Node or presentation library in a platform-agnostic package, PixiJS outside `apps/client/src/render`.
+- Test files may also import Node (to read fixtures) and the packages declared as `devDependencies`: `modes` tests run modes inside a real `match` host, which production code of `modes` may not import.
 
 ## 5. Simulation core (`packages/sim`) — *being built in milestone 1*
 
@@ -139,36 +142,37 @@ Decision [0002](decisions/0002-simulation-presentation-split.md).
 - **Behavior registry** (`src/behaviors/`, exists since M0 with the `firearm` parameter schema). Weapon behaviors (`firearm`, `thrown`, `flamethrower`, …), projectile behaviors (`bullet`, `grenade`, `flame`, …) and map-element behaviors (`destructible`, `flammable`, …) are engine code. Each one registers an id and a **parameter schema**; themes pick a behavior by id and supply parameters, which are validated against that schema.
 - **Visual references are ids.** The simulation knows `"character.us-rifleman"` or `"weapon.m16a1"`, never a texture. The client maps ids to loaded assets.
 
-## 6. Match host and sessions — *planned for milestone 1*
+## 6. Match host and sessions — *being built in milestone 1*
 
-- **`MatchHost`** (`packages/match`) owns one match: the world, the game-mode instance, the participants (human or bot), and the bot controllers. It exposes `addParticipant`, `submitInput`, `step`, `getWorldView(forParticipant)` and the event stream. The same class runs in a browser tab for solo and in a server room online.
+- **`MatchHost`** (`packages/match/src/match-host.ts`, exists) owns one match: the simulation, the game-mode instance, the participants (human or bot) and, from task 16, the bot controllers. `createMatchHost({ map, catalog, mode, settings, seed })` validates the mode settings and derives the simulation rules from them; the host exposes `addParticipant`, `removeParticipant`, `start`, `submitInput` (a human's input holds until replaced), `step` (one tick: simulation, then the mode's `onEvent` for each event and its `onTick`; returns the events) and `view()`, the `WorldView` presentation draws: actors, projectiles, participants with their character, kills and deaths, and the mode state. It implements the `ModeApi`: `spawn` places a character on a random free spot of the team's spawn areas (the match's `spawns` random stream) facing the middle of the map. The same code runs in a browser tab for solo and in a server room online. Per-participant views (`forParticipant`, interest management) arrive with multiplayer.
 - **`Session`** (client side) is what the UI and renderer talk to: `sendInput`, `getWorldView(alpha)` for interpolated drawing, `onEvent`, `getModeState`.
   - `LocalSession` runs a `MatchHost` in-process (milestone 1). It can move to a Web Worker later without changing its interface (see open questions).
   - `RemoteSession` (milestone 3) sends inputs to the server, predicts the local player's movement with the same simulation code, reconciles on snapshots and interpolates other entities.
 
-## 7. Game modes (`packages/modes`) — *planned for milestone 1*
+## 7. Game modes (`packages/modes`) — *being built in milestone 1*
 
-A mode is a folder implementing the `GameModeDefinition` interface exported by `sim`, then added to the built-in list. No change to `sim`, `match` or the apps is needed. Illustrative shape (final API defined in milestone 1):
+A mode is a folder implementing the `GameModeDefinition` interface exported by `sim` (`packages/sim/src/modes/game-mode.ts`, exists), then added to the built-in list (`packages/modes/src/built-in.ts`). No change to `sim`, `match` or the apps is needed. The guide is [add a mode](guides/add-a-mode.md).
 
 ```ts
 interface GameModeDefinition<Settings> {
-  id: string;                         // "team-elimination"
-  nameKey: string;                    // translation key
-  settings: SettingsSchema<Settings>; // validated, with defaults and label keys; drives a generic settings form
-  mapRequirements: MapRequirements;   // e.g. spawn points for 2 teams, zones of type "capture"
+  id: string;                          // "team-elimination"
+  nameKey: string;                     // translation key
+  settings: z.ZodType<Settings>;       // with defaults; drives a generic settings form (M4)
+  mapRequirements: MapRequirements;    // { teams: 2 }: spawn areas for teams 1 and 2
+  rules(settings: Settings): Partial<Rules>;  // e.g. friendly fire
   create(api: ModeApi, settings: Settings): GameModeInstance;
 }
 interface GameModeInstance {
   onMatchStart(): void;
-  onTick(): void;
-  onEvent(event: SimEvent): void;
+  onEvent(event: SimEvent): void;      // each event of the tick
+  onTick(): void;                      // then once per tick
   onParticipantJoined(id: ParticipantId): void;
   onParticipantLeft(id: ParticipantId): void;
-  getPublicState(): ModeState;        // scores, timers, round info; replicated to clients and drawn by generic HUD widgets
+  state(): ModeState;                  // round, timer, team scores, banner, result; drawn by generic HUD widgets
 }
 ```
 
-`ModeApi` is the only door into the world: spawn an actor at a spawn point, put a participant into spectating, read zones, start timers, announce a message (translation key + parameters), end a round or the match.
+`ModeApi` is the only door into the match: the map, the tick, the participants and their characters, `spawn` (on a free spot of the team's areas), `clearWorld` (new round), `setFrozen` (countdowns: characters aim but neither move nor fire) and the mode's own random stream. Displayed texts are `DisplayText`s: a translation key with parameters, never text (§12). Spectating is decided by the client in M1 (the camera follows a living teammate); the server will need it for interest management in M3.
 
 **Theme × mode compatibility.** A mode declares what it needs from a map; the lobby only offers maps that satisfy it, and the theme validator warns when a theme has no map for a registered mode.
 

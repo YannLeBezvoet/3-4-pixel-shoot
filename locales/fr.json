@@ -34,6 +34,9 @@
       "warnings_other": "{{count}} avertissements de contenu."
     }
   },
+  "mode": {
+    "sandbox": { "name": "Bac à sable" }
+  },
   "direction": {
     "s": "S",
     "se": "SE",

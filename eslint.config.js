@@ -64,9 +64,16 @@ const commonPatterns = [
   },
 ];
 
-/** Test files may use Node (to read fixtures); the code they test may not. */
+/**
+ * Test files may use Node (to read fixtures) and the packages declared as devDependencies
+ * (e.g. modes are tested inside a match host); the code they test may not.
+ */
 function restrictionsFor({ dir, pkg }, { tests = false } = {}) {
-  const allowed = new Set([pkg.name, ...Object.keys(pkg.dependencies ?? {})]);
+  const allowed = new Set([
+    pkg.name,
+    ...Object.keys(pkg.dependencies ?? {}),
+    ...(tests ? Object.keys(pkg.devDependencies ?? {}) : []),
+  ]);
   const forbiddenPackages = projectPackages.filter((name) => !allowed.has(name));
   const paths = forbiddenPackages.map((name) => ({
     name,
