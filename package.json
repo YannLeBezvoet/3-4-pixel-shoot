@@ -25,7 +25,9 @@
     "check:palette": "tsx tools/src/palette-check/cli.ts",
     "validate:themes": "tsx tools/src/validate-themes/cli.ts",
     "schemas": "tsx tools/src/schemas/cli.ts",
-    "check:schemas": "tsx tools/src/schemas/cli.ts --check"
+    "check:schemas": "tsx tools/src/schemas/cli.ts --check",
+    "assets:placeholders": "tsx tools/src/placeholders/cli.ts",
+    "assets:report": "tsx tools/src/placeholders/cli.ts --report"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

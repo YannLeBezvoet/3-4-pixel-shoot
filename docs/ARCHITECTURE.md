@@ -308,7 +308,7 @@ Decision [0012](decisions/0012-tooling.md).
 
 - **Dev server** (Vite) serves the client, `themes/` and `locales/`, and watches them. A small plugin pushes a message for each changed file; the client's asset manager reloads it in place (textures, animation sets, maps, translations). An invalid file shows the errors in a dev overlay and keeps the last valid version. In multiplayer development, the server watches the same folders.
 - **Palette check** (`check:palette`): scans every PNG; fails on any pixel whose color is not in Resurrect 64 (and, pending an open question, on partial transparency), reporting file, coordinates, color and nearest palette color.
-- **Placeholder generator**: writes PNG + JSON in Aseprite's export format (same tags, directions and slices as real art), so replacing a placeholder is a file swap. Placeholders are marked in their metadata; a report lists those still in use.
+- **Placeholder generator** (`tools/src/placeholders/`): writes PNG + JSON in Aseprite's export format (same tags, directions and slices as real art), so replacing a placeholder is a file swap. `tools/placeholders.json` records the hash of each generated file: a file that no longer matches has been replaced by real art and is never overwritten; `assets:report` lists the placeholders still in use.
 - **Aseprite helpers**: an export script for all `.aseprite` files (when Aseprite is installed) and a Lua script that creates a new character file with the right size, palette, tags and slices.
 - **Validators**: `validate:themes`, `check:i18n`, font coverage.
 - **Dev pages** in the client: sprite viewer (all directions and animations, weapon following the mouse), collision and area-of-interest debug drawing.

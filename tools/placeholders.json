@@ -1,0 +1,22 @@
+{
+  "files": {
+    "themes/vietnam/sprites/characters/pavn-rifleman.json": "ec3d212dde2edc0d19d4d90fcf4d8e1890851051e6d67384e591765111a08ce1",
+    "themes/vietnam/sprites/characters/pavn-rifleman.png": "04fe0dae986d2fe028b22d4d2f2b06ce04a1aa8fe52138916b17d20aea5ed1d7",
+    "themes/vietnam/sprites/characters/us-rifleman.json": "e733b0c5b9116ebaecc1f8a4ab615f0e54dcfc20fd1a0e2f6e611675dad35714",
+    "themes/vietnam/sprites/characters/us-rifleman.png": "29d458a6679bd477724906a84ba2f0d23e65bb6f97e0598b1c9f60295d3e9b5c",
+    "themes/vietnam/sprites/effects/blood-splat.json": "074577eb8a7bf604ef8d51485ec9f1776da68b32cec52874dc300de73d98a56a",
+    "themes/vietnam/sprites/effects/blood-splat.png": "8883316b34aeabecbc0e21085551e12fed7af59927887062539697322269f381",
+    "themes/vietnam/sprites/effects/explosion.json": "f117c899b2a05fc93fe637ebdc39c33f3bffd3c2f3b1640967bd0205864c4873",
+    "themes/vietnam/sprites/effects/explosion.png": "1e0219c52a4d3269d865c699d4c8b9c1440c09cfc3b7bc1426002d7ee8e5ca26",
+    "themes/vietnam/sprites/effects/flame.json": "bc161b10501bfb3e5e307053de30c005edbf49c00c2d6439107741802bb0f258",
+    "themes/vietnam/sprites/effects/flame.png": "3d3f1417dea8660da1690c0bbe05ab7fff017cf55923a70b6415e32acf8fd0fa",
+    "themes/vietnam/sprites/effects/muzzle-flash.json": "cb8b4db52528d966bc290dbcf40c8847166bb177eee49c8eb2da9f2d2f44250e",
+    "themes/vietnam/sprites/effects/muzzle-flash.png": "0f95406fa1f49fbb20e10bf6e9abef9018629098a41b1cdf9c52946e947da4da",
+    "themes/vietnam/sprites/weapons/ak47.json": "e4395abb7f7408d14c1eca2d731e5a8b2b76839b6ac1f41e529955c1ade1a1e1",
+    "themes/vietnam/sprites/weapons/ak47.png": "731d19e00788f48c8bc5b976bc556580c7a168c464e3fa254b28afe235531b96",
+    "themes/vietnam/sprites/weapons/m16a1.json": "0ef3973ebc2395cc512364fc913b61cd3f08e452832c8b06ce15dfb29bfb394f",
+    "themes/vietnam/sprites/weapons/m16a1.png": "4467dae343859a7067e26be257e0ebc80bfa317f9c0e86958f8c907279649e79",
+    "themes/vietnam/tilesets/jungle-ground.png": "66bb1e49e61064397427dfea640373f2adb7ae9abaa514045a8a5ac61515b1f6",
+    "themes/vietnam/tilesets/jungle-tree.png": "3b4f45082b76e6e34530d383015d4e3afe8a1202a297c1ee380287b06487395f"
+  }
+}
