@@ -30,3 +30,7 @@ We need a dev server with hot reload hooks for sprites, maps and translations; a
 - One command (`npm run check`) tells whether a change is ready to commit.
 - Vite-specific code (glob imports, hot reload API) stays in `apps/client`; packages remain bundler-agnostic.
 - Several tools to keep updated; Renovate or Dependabot can be added later (not proposed now).
+
+## Amendments
+
+- **2026-11-03.** Versions at milestone 0: Vite 8 (JSX through its Oxc transformer, configured for Preact), Vitest 5, ESLint 10 with typescript-eslint 8, Prettier 3, tsx 4. Vite loads `vite.config.ts` with Node, so the content plugin imports only types from workspace packages and uses explicit `.ts` import extensions. npm's install-script approval is used to deny esbuild's optional post-install script (`allowScripts` in `package.json`). Playwright arrives in milestone 1 as planned; milestone 0 browser checks were run by hand with it, outside the repository. `npm audit` reports a moderate `minimatch` advisory inside the ESLint toolchain only (development, never shipped); revisit when ESLint updates it.

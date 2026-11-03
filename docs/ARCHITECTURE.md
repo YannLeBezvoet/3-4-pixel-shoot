@@ -1,8 +1,21 @@
 # Architecture
 
-> **Status: accepted on 2026-11-03.** Implementation starts with milestone 0.
-> This file describes what exists and marks clearly what is still planned.
+> **Status: accepted on 2026-11-03; milestone 0 implemented.** §0 says what exists; sections describing later milestones are marked *planned*.
 > The reasons behind each choice are in [`decisions/`](decisions/). Open points are in [`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md).
+
+## 0. What exists (end of milestone 0)
+
+| Area | State | Where |
+|---|---|---|
+| Workspace, boundaries | Every package exists; boundaries enforced by `tsc -b` and lint, proven by a test | `packages/*`, `apps/*`, `tools/`, `tsconfig/`, `eslint.config.js` |
+| `shared` | Vectors, angles and octants, seeded RNG, `Result` | `packages/shared/src/` |
+| `sim` | Behavior registry and the `firearm` parameter schema only; no simulation yet | `packages/sim/src/behaviors/` |
+| `content` | Theme loading and validation, Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
+| `modes`, `bots`, `match`, `protocol`, `apps/server` | Empty entry points | — |
+| Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages | `apps/client/` |
+| Tools | Palette check, theme validation, JSON Schemas, i18n and font check, placeholder generator, Aseprite export, Lua character template | `tools/` |
+| Content | Vietnam theme (2 factions, 2 characters, 2 rifles, placeholder art, EN/FR texts); EN/FR interface | `themes/vietnam/`, `locales/` |
+| CI | `npm run check` + REUSE on GitHub Actions | `.github/workflows/check.yml` |
 
 ## 1. Forces that shape the design
 
@@ -102,7 +115,7 @@ flowchart TD
 - Platform-agnostic packages compile with `lib: ["ES2023"]` and no ambient types: any use of `window`, `document` or Node built-ins fails type-checking.
 - ESLint import rules (`eslint.config.js`), **generated from each package's declared dependencies**, forbid imports that cross the table above: an undeclared project package, a deep import into another package's files, a Node or presentation library in a platform-agnostic package, PixiJS outside `apps/client/src/render`.
 
-## 5. Simulation core (`packages/sim`)
+## 5. Simulation core (`packages/sim`) — *planned for milestone 1, except the behavior registry*
 
 Decision [0002](decisions/0002-simulation-presentation-split.md).
 
@@ -118,14 +131,14 @@ Decision [0002](decisions/0002-simulation-presentation-split.md).
 - **Behavior registry** (`src/behaviors/`, exists since M0 with the `firearm` parameter schema). Weapon behaviors (`firearm`, `thrown`, `flamethrower`, …), projectile behaviors (`bullet`, `grenade`, `flame`, …) and map-element behaviors (`destructible`, `flammable`, …) are engine code. Each one registers an id and a **parameter schema**; themes pick a behavior by id and supply parameters, which are validated against that schema.
 - **Visual references are ids.** The simulation knows `"character.us-rifleman"` or `"weapon.m16a1"`, never a texture. The client maps ids to loaded assets.
 
-## 6. Match host and sessions
+## 6. Match host and sessions — *planned for milestone 1*
 
 - **`MatchHost`** (`packages/match`) owns one match: the world, the game-mode instance, the participants (human or bot), and the bot controllers. It exposes `addParticipant`, `submitInput`, `step`, `getWorldView(forParticipant)` and the event stream. The same class runs in a browser tab for solo and in a server room online.
 - **`Session`** (client side) is what the UI and renderer talk to: `sendInput`, `getWorldView(alpha)` for interpolated drawing, `onEvent`, `getModeState`.
   - `LocalSession` runs a `MatchHost` in-process (milestone 1). It can move to a Web Worker later without changing its interface (see open questions).
   - `RemoteSession` (milestone 3) sends inputs to the server, predicts the local player's movement with the same simulation code, reconciles on snapshots and interpolates other entities.
 
-## 7. Game modes (`packages/modes`)
+## 7. Game modes (`packages/modes`) — *planned for milestone 1*
 
 A mode is a folder implementing the `GameModeDefinition` interface exported by `sim`, then added to the built-in list. No change to `sim`, `match` or the apps is needed. Illustrative shape (final API defined in milestone 1):
 
@@ -214,7 +227,7 @@ The same validation runs in the browser (shown in a dev overlay), on the server 
 
 `content` reads files through a `FileProvider` interface: `fetch` in the browser, the file system on the server and in tools, an in-memory map in tests.
 
-## 9. Maps
+## 9. Maps — *planned for milestone 1*
 
 Decision [0008](decisions/0008-tiled-maps.md).
 
@@ -229,7 +242,7 @@ Decision [0008](decisions/0008-tiled-maps.md).
 
 ## 10. Sprites and animation
 
-Decision [0007](decisions/0007-aseprite-pipeline.md). Convention draft, finalized in the "create a sprite" guide during milestone 0:
+Decision [0007](decisions/0007-aseprite-pipeline.md). The full convention, written for artists, is the guide [create a sprite](guides/create-a-sprite.md):
 
 - **One Aseprite file per visual entity**, exported next to its source as `<name>.png` + `<name>.json` (both committed, so the game builds without Aseprite).
 - **Tags** = animations. Name: `<action>.<direction>` for directional animations, `<action>` otherwise. Actions in lowercase kebab-case (`idle`, `walk`, `death`, `throw`, …).
@@ -258,10 +271,10 @@ Decision [0003](decisions/0003-rendering-pixijs.md).
 
 - **PixiJS** renders into a **960×540** canvas; the canvas is upscaled by CSS with the **largest integer factor** that fits, with `image-rendering: pixelated`, computed in device pixels (`render/screen-layout.ts`, `render/renderer.ts`). In development, a test pattern (palette swatches and a 1-pixel checkerboard) shows whether scaling is crisp. All textures use nearest-neighbor sampling; the camera snaps to whole pixels.
 - Rotating the weapon at internal resolution keeps every pixel a palette color (no interpolation happens).
-- **Layers:** ground (tile chunks baked to textures, re-baked when a tile changes; blood decals painted into them), **y-sorted world layer** (characters, map elements, multi-tile objects, corpses; sort key = ground y), overhead layer, screen-space effects, HUD.
-- **Interpolation:** the renderer draws the `WorldView` interpolated between the last two ticks, so 60 Hz simulation looks smooth at 144 Hz.
-- **Camera:** follows the local player with a look-ahead toward the cursor.
-- **Effects** (blood sprays, muzzle flashes, smoke, casings) are client-side particles driven by `SimEvent`s; they have no gameplay effect and are never sent over the network.
+- *Planned for milestone 1:* **Layers:** ground (tile chunks baked to textures, re-baked when a tile changes; blood decals painted into them), **y-sorted world layer** (characters, map elements, multi-tile objects, corpses; sort key = ground y), overhead layer, screen-space effects, HUD.
+- *Planned for milestone 1:* **Interpolation:** the renderer draws the `WorldView` interpolated between the last two ticks, so 60 Hz simulation looks smooth at 144 Hz.
+- *Planned for milestone 1:* **Camera:** follows the local player with a look-ahead toward the cursor.
+- *Planned for milestones 1–2:* **Effects** (blood sprays, muzzle flashes, smoke, casings) are client-side particles driven by `SimEvent`s; they have no gameplay effect and are never sent over the network.
 - **Palette at runtime:** assets are strictly in palette. A final full-screen pass that snaps every pixel to the nearest Resurrect 64 color is planned as an option, so blending effects (fades, smoke, transparency) stay in palette. See open questions.
 
 ## 12. UI and languages
@@ -269,13 +282,13 @@ Decision [0003](decisions/0003-rendering-pixijs.md).
 Decisions [0004](decisions/0004-ui.md) and [0009](decisions/0009-i18n.md).
 
 - **Menus** (main menu, solo setup, lobby, settings, room code entry) are DOM, built with Preact (`src/ui/`), in a 960×540 layer scaled with the same integer factor as the canvas, using the **Press Start 2P** pixel font (OFL) at multiples of 8 px.
-- **HUD** (health, ammo, grenades, kill feed, scores, timers, names) is drawn by PixiJS at internal resolution with a bitmap pixel font, so it is pixel-exact and in palette.
+- *Planned for milestone 1:* the **HUD** (health, ammo, grenades, kill feed, scores, timers, names) is drawn by PixiJS at internal resolution with a bitmap pixel font, so it is pixel-exact and in palette.
 - **Translations** with i18next (`src/i18n/`). UI strings in `locales/<lang>.json`; theme strings in `themes/<id>/locales/<lang>.json` (namespace `theme.<id>`). The language list comes from `/content-index.json`, which the Vite content plugin (`apps/client/vite/`) builds from the files found; the language's display name lives inside its file. Missing keys fall back to English and are reported by `check:i18n`.
-- **The server and the simulation never produce text**: they emit translation keys with parameters (`killfeed.eliminated` + killer id, victim id, weapon id); the client resolves names in the player's language.
+- *Rule for milestones 1 and 3:* **the server and the simulation never produce text**: they emit translation keys with parameters (`killfeed.eliminated` + killer id, victim id, weapon id); the client resolves names in the player's language.
 - A **font coverage check** (`check:i18n`) verifies that every character used in every locale exists in the interface font (and, from milestone 1, in the HUD bitmap font).
 - Keyboard input uses physical key codes, so ZQSD on AZERTY and WASD on QWERTY are the same keys with no setting.
 
-## 13. Networking (milestone 3)
+## 13. Networking — *planned for milestone 3*
 
 Decision [0005](decisions/0005-networking.md).
 
@@ -290,7 +303,7 @@ Decision [0005](decisions/0005-networking.md).
 - **Handshake** checks protocol version and a hash of the gameplay content, so a client with stale theme files gets a clear, translated error.
 - **Budget for 64 participants:** about 30 entities in view × ~10 bytes × 30 Hz ≈ 10 KB/s per client before deltas; server tick under 4 ms on average.
 
-## 14. Bots (`packages/bots`)
+## 14. Bots (`packages/bots`) — *planned for milestone 1*
 
 Decision [0011](decisions/0011-bots.md).
 
@@ -300,7 +313,7 @@ Decision [0011](decisions/0011-bots.md).
 - **Navigation:** A* on the tile grid with clearance for the character's radius, path smoothing, cached paths. Cover search samples nearby positions whose line of sight to the threat is blocked by a `cover` tile.
 - **Cost control:** bots think at about 10 Hz, staggered across ticks; aim smoothing runs every tick. Difficulty is a set of parameters (reaction time, aim error, think rate).
 
-## 15. Audio slots
+## 15. Audio slots — *names reserved in themes (`sounds`); the rest is planned*
 
 Out of scope, but reserved: behaviors declare sound cue names (`fire`, `reload`, `explode`, …); theme entries map them to cue ids; `sounds.json` maps cue ids to files; the simulation emits `soundCue` events; the client has an `AudioSystem` that resolves cues and, for now, does nothing.
 

@@ -8,7 +8,7 @@
 
 | Milestone | Scope | Status |
 |---|---|---|
-| M0 | Foundations | **In progress** (plan approved 2026-11-03) |
+| M0 | Foundations | **Done, awaiting the owner's review** (C0.10 to be checked by the owner; CI runs once pushed) |
 | M1 | Playable solo | Not started |
 | M2 | Combat | Not started |
 | M3 | Multiplayer | Not started |
@@ -53,17 +53,28 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 
 ### Success criteria
 
-- [ ] **C0.1** On a clean clone, `npm ci && npm run check` exits with code 0. The CI workflow passes on the branch (once pushed, with the owner's approval).
-- [ ] **C0.2** The boundary test passes: a fixture using a DOM global inside a platform-agnostic package fails type-checking, and a fixture importing `pixi.js` from `packages/sim` fails lint.
-- [ ] **C0.3** `npm run dev`, then `/dev/sprites`: each placeholder soldier shows in 8 directions; the 3 left-facing ones are mirrored copies of the drawn right-facing ones (facing marker visible); every tag plays with its Aseprite frame durations; the rifle stays attached to the `hand` point, rotates to follow the mouse, flips so it is never upside down, and is drawn behind the body when aiming up.
-- [ ] **C0.4** Scaling: unit tests confirm factor ×2 for a 1920×1080 device-pixel viewport, ×4 for 3840×2160, ×1 for 1366×768, with centered letterboxing. In the browser at ×2, a screenshot shows every source pixel as a 2×2 block of one color (no smoothing).
-- [ ] **C0.5** Hot reload: overwriting a placeholder's PNG + JSON while the viewer is open updates it within 2 seconds, without a page reload, keeping the selected animation. Writing invalid JSON shows the error overlay with the file and the problem; fixing the file clears it.
-- [ ] **C0.6** `npm run check:palette` passes on every image in the repository. On fixtures with one off-palette pixel and one semi-transparent pixel, it fails and prints file, coordinates, color and nearest palette color (covered by tests).
-- [ ] **C0.7** `npm run validate:themes` passes on `vietnam`. Tests cover at least 10 broken fixtures (missing file, unknown reference, frame size not a multiple of 48, missing direction tag, missing `hand` slice, invalid weapon parameter, unknown `formatVersion`, missing translation key, duplicate id, unknown faction), each asserting the exact message.
-- [ ] **C0.8** `npm run assets:placeholders` is deterministic: running it twice leaves `git status` clean. Generated files pass the palette check and theme validation.
-- [ ] **C0.9** The viewer's UI text is in French or English, switchable, and the choice survives a reload; first visit follows the browser language. Adding a fixture `locales/xx.json` with a `_meta.name` makes it appear in the language menu with no code change. `npm run check:i18n` fails when a key is missing in `fr.json`. ESLint reports a string literal in a UI component.
+- [x] **C0.1** On a clean clone, `npm ci && npm run check` exits with code 0. The CI workflow passes on the branch (once pushed, with the owner's approval).
+  **Result:** `npm ci && npm run check` on a fresh clone of the branch exits with 0 (93 tests). CI: runs once the branch is pushed.
+- [x] **C0.2** The boundary test passes: a fixture using a DOM global inside a platform-agnostic package fails type-checking, and a fixture importing `pixi.js` from `packages/sim` fails lint.
+  **Result:** `tools/src/boundaries/boundaries.test.ts` passes (DOM/Node globals rejected by the agnostic settings; `pixi.js`, `node:fs`, undeclared packages, deep imports and PixiJS outside `render/` rejected by lint).
+- [x] **C0.3** `npm run dev`, then `/dev/sprites`: each placeholder soldier shows in 8 directions; the 3 left-facing ones are mirrored copies of the drawn right-facing ones (facing marker visible); every tag plays with its Aseprite frame durations; the rifle stays attached to the `hand` point, rotates to follow the mouse, flips so it is never upside down, and is drawn behind the body when aiming up.
+  **Result:** checked in Chromium at `/dev/sprites`: `walk.side` when aiming right, mirrored `walk.up-side` when aiming up-left, weapon behind the body for NE, N, NW; the backpack switches sides in the mirrored directions.
+- [x] **C0.4** Scaling: unit tests confirm factor ×2 for a 1920×1080 device-pixel viewport, ×4 for 3840×2160, ×1 for 1366×768, with centered letterboxing. In the browser at ×2, a screenshot shows every source pixel as a 2×2 block of one color (no smoothing).
+  **Result:** unit tests pass; in Chromium the 1-pixel checkerboard of the dev test pattern gives uniform N×N blocks at ×1 (1366×768, letterboxed at 203,114), ×2 (1920×1080), ×4 (3840×2160 and 1920×1080 at 200 %).
+- [x] **C0.5** Hot reload: overwriting a placeholder's PNG + JSON while the viewer is open updates it within 2 seconds, without a page reload, keeping the selected animation. Writing invalid JSON shows the error overlay with the file and the problem; fixing the file clears it.
+  **Result:** checked in Chromium: replacing the M16A1 PNG + JSON showed after 280 ms with no page reload and the selection kept; broken JSON showed the overlay after 161 ms, fixing it cleared it after 215 ms.
+- [x] **C0.6** `npm run check:palette` passes on every image in the repository. On fixtures with one off-palette pixel and one semi-transparent pixel, it fails and prints file, coordinates, color and nearest palette color (covered by tests).
+  **Result:** passes on the 10 repository images; tests cover the off-palette and semi-transparent cases with exact messages.
+- [x] **C0.7** `npm run validate:themes` passes on `vietnam`. Tests cover at least 10 broken fixtures (missing file, unknown reference, frame size not a multiple of 48, missing direction tag, missing `hand` slice, invalid weapon parameter, unknown `formatVersion`, missing translation key, duplicate id, unknown faction), each asserting the exact message.
+  **Result:** `vietnam` valid; `load-theme.test.ts` covers 16 problems, each with its exact message.
+- [x] **C0.8** `npm run assets:placeholders` is deterministic: running it twice leaves `git status` clean. Generated files pass the palette check and theme validation.
+  **Result:** a second run leaves `git status` clean; generated files pass both checks (tests).
+- [x] **C0.9** The viewer's UI text is in French or English, switchable, and the choice survives a reload; first visit follows the browser language. Adding a fixture `locales/xx.json` with a `_meta.name` makes it appear in the language menu with no code change. `npm run check:i18n` fails when a key is missing in `fr.json`. ESLint reports a string literal in a UI component.
+  **Result:** checked in Chromium: French browser → French; clicking English → English, kept after reload; a new `locales/xx.json` appeared in the menu after 158 ms without reload. `check:i18n` and the lint rule are covered by tests.
 - [ ] **C0.10** *(checked by the owner, Aseprite required)* With `ASEPRITE_PATH` set, `npm run sprites:export` re-exports every `.aseprite` file. A character created with `new-character.lua`, then exported, passes validation and appears in the viewer with no other change.
-- [ ] **C0.11** `reuse lint` passes. All files listed in task 16 exist and describe the current state; `ARCHITECTURE.md` marks what is still planned.
+  **Pending:** Aseprite is not installed on the development machine. The export arguments are unit-tested and the Lua script compiles; the owner checks the rest.
+- [x] **C0.11** `reuse lint` passes. All files listed in task 16 exist and describe the current state; `ARCHITECTURE.md` marks what is still planned.
+  **Result:** `reuse lint`: compliant with REUSE 3.3 (every file has copyright and license information). Documentation updated in each commit.
 
 ---
 
