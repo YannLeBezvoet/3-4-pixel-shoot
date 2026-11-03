@@ -63,7 +63,8 @@ export class WorldScene {
     this.#map = createMapView(map, images, this.#images);
     this.#ground.addChild(this.#map.ground);
     this.#overhead.addChild(this.#map.overhead);
-    this.#world.addChild(...this.#map.objects);
+    // A map may have no objects; PixiJS refuses addChild() without a child.
+    if (this.#map.objects.length > 0) this.#world.addChild(...this.#map.objects);
   }
 
   setLooks(looks: ThemeLooks): void {

@@ -4,7 +4,7 @@ A theme is a folder of files: no code. This guide covers what themes contain: fa
 
 **Format changes during development (Q56).** The theme format stays version `1` throughout the 0.x versions, even when files or fields are added. The themes in this repository are updated in the same change, and this guide always describes the current format.
 
-The Vietnam theme (`themes/vietnam/`) is a complete example to copy from.
+Two themes are there to copy from: `themes/example/` is the smallest complete theme (two factions, one rifle shared by both, one arena map, Q60); `themes/vietnam/` is the full one. The example theme was added without any change outside its folder: a theme needs no code.
 
 ## 1. Create the folder
 

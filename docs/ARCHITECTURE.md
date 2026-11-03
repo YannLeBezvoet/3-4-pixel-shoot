@@ -17,7 +17,7 @@
 | `protocol`, `apps/server` | Empty entry points | — |
 | Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, menus (main menu, solo setup, settings, pause, end of match), sprite viewer (`/dev/sprites`), hot reload of themes and languages; `LocalSession` (fixed 60 Hz step, interpolation), match input (physical keys, mouse aim), world rendering (map chunks, depth-sorted world layer, interpolation, centered camera), event-driven effects, HUD with its bitmap font, test scene (`/dev/scene`); the content store also loads maps and tileset images | `apps/client/` |
 | Tools | Palette check, theme validation, JSON Schemas, i18n and font check, placeholder generator, Aseprite export, Lua character template | `tools/` |
-| Content | Vietnam theme (2 factions, 2 characters, 2 rifles, a rifle bullet, 5 effects, the `river-village` map with its 2 tilesets, placeholder art, EN/FR texts); EN/FR interface | `themes/vietnam/`, `locales/` |
+| Content | Vietnam theme (2 factions, 2 characters, 2 rifles, a rifle bullet, 5 effects, the `river-village` map with its 2 tilesets, placeholder art, EN/FR texts); `example` theme (Red and Blue, one rifle, a 40×30 arena, Q60), added as files only; EN/FR interface | `themes/vietnam/`, `themes/example/`, `locales/` |
 | CI | `npm run check` + REUSE on GitHub Actions | `.github/workflows/check.yml` |
 
 ## 1. Forces that shape the design

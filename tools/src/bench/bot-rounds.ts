@@ -18,6 +18,8 @@ const SIGHT_CONE = (35 * Math.PI) / 180;
 
 export interface RoundResult {
   readonly seed: string;
+  /** Bots in each team. */
+  readonly perTeam: number;
   /** How the round ended: a team eliminated, or the time limit. */
   readonly end: 'elimination' | 'time';
   /** Seconds of play after the countdown. */
@@ -109,6 +111,7 @@ export function playRound(
       const seconds = (host.tick - COUNTDOWN_TICKS) / TICK_RATE;
       return {
         seed,
+        perTeam,
         end: seconds < ROUND_SECONDS ? 'elimination' : 'time',
         seconds,
         shots,
@@ -117,7 +120,7 @@ export function playRound(
       };
     }
   }
-  return { seed, end: 'time', seconds: ROUND_SECONDS, shots, blindShots, tickMs };
+  return { seed, perTeam, end: 'time', seconds: ROUND_SECONDS, shots, blindShots, tickMs };
 }
 
 export function summarize(results: readonly RoundResult[]): string[] {
@@ -127,11 +130,11 @@ export function summarize(results: readonly RoundResult[]): string[] {
   const eliminations = results.filter((r) => r.end === 'elimination').length;
   const seconds = results.map((r) => r.seconds);
   return [
-    `Rounds: ${results.length} (8 vs 8 bots, normal difficulty)`,
+    `Rounds: ${results.length} (${results[0]?.perTeam ?? 0} vs ${results[0]?.perTeam ?? 0} bots, normal difficulty)`,
     `Ended by elimination before ${ROUND_SECONDS} s: ${eliminations} (${((100 * eliminations) / Math.max(1, results.length)).toFixed(0)} %)`,
     `Round length: average ${(seconds.reduce((s, x) => s + x, 0) / Math.max(1, seconds.length)).toFixed(1)} s, longest ${Math.max(...seconds).toFixed(1)} s`,
     `Shots: ${results.reduce((s, r) => s + r.shots, 0)}, with no enemy in sight: ${results.reduce((s, r) => s + r.blindShots, 0)}`,
-    `Tick (16 participants): average ${average.toFixed(3)} ms, p99 ${p99.toFixed(3)} ms, ${ticks.length} ticks`,
+    `Tick (${2 * (results[0]?.perTeam ?? 0)} participants): average ${average.toFixed(3)} ms, p99 ${p99.toFixed(3)} ms, ${ticks.length} ticks`,
     `Hardware: ${cpus()[0]?.model ?? 'unknown CPU'}, Node ${process.version}`,
   ];
 }
