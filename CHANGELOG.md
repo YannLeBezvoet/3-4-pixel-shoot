@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to this project are documented here.
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning is proposed in [Q12](docs/OPEN_QUESTIONS.md).
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Q12](docs/OPEN_QUESTIONS.md): version `0.<n>.0` at the end of milestone n.
 
 ## [Unreleased]
 
