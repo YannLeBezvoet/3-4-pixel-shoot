@@ -59,6 +59,7 @@ Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
 | `npm run check:palette [files…]` | Palette and transparency check of every PNG (or the given files) |
 | `npm run validate:themes [ids…]` | Validate themes as the game loads them |
 | `npm run schemas` / `check:schemas` | Regenerate / verify `schemas/*.json` (run after changing a Zod schema) |
+| `npm run sprites:export [-- --watch]` | Export every `.aseprite` file (needs `ASEPRITE_PATH`) |
 | `npm run assets:placeholders` / `assets:report` | (Re)generate placeholder art; list placeholders still in use |
 | `npm run check:i18n` | Key parity with English, `{{variables}}`, and font coverage of every text |
 | `npm run check` | **Everything CI runs.** Must pass before every commit |

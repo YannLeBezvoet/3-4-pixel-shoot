@@ -12,5 +12,7 @@ Command-line tools for development and CI. Each tool lives in its own folder und
 | `placeholders/` | `assets:placeholders`, `assets:report` | Generates placeholder art in the palette and in Aseprite's export format; never overwrites replaced files (hashes in `tools/placeholders.json`) |
 | `check-i18n/` | `check:i18n` | Interface translations match English (keys, `{{variables}}`); every character of every text exists in the interface font |
 | `../eslint/` | (ESLint) | Local lint rule `no-literal-ui-text`: no literal displayed text in interface components |
+| `sprites-export/` | `sprites:export [-- --watch]` | Exports every `.aseprite` file with the Aseprite CLI (`ASEPRITE_PATH`) as PNG + JSON next to it |
+| `../aseprite/` | (Aseprite script) | `new-character.lua`: creates a character file with the palette, all tags and the `hand` slice |
 | `content/` | — | Node `FileProvider` and theme/language discovery shared by the tools |
 | `palette-check/` | `check:palette` | Every PNG uses only Resurrect 64 colors, with pixels fully opaque or fully transparent (Q6) |

@@ -63,7 +63,7 @@ File names are fixed. Each JSON file starts with a `$schema` line: VS Code then 
 }
 ```
 
-- `sprite` is a path inside the theme folder **without extension**: the game reads `<path>.png` and `<path>.json`, exported from Aseprite. A character sprite needs the animations `idle`, `walk` and `death` in the 5 drawn directions and a `hand` slice (`docs/guides/create-a-sprite.md`).
+- `sprite` is a path inside the theme folder **without extension**: the game reads `<path>.png` and `<path>.json`, exported from Aseprite. A character sprite needs the animations `idle`, `walk` and `death` in the 5 drawn directions and a `hand` slice ([create a sprite](create-a-sprite.md)).
 - `weapon` is the id of the character's default weapon in `weapons.json`.
 
 ## 4. `weapons.json`

@@ -30,7 +30,8 @@
     "assets:report": "tsx tools/src/placeholders/cli.ts --report",
     "dev": "npm run dev -w @pixel-shoot/client",
     "build": "npm run build -w @pixel-shoot/client",
-    "check:i18n": "tsx tools/src/check-i18n/cli.ts"
+    "check:i18n": "tsx tools/src/check-i18n/cli.ts",
+    "sprites:export": "tsx tools/src/sprites-export/cli.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
