@@ -1,5 +1,6 @@
-// Builds the dev scene: a sandbox match on the first map of the first theme that has one,
-// the local player in team 1 and three motionless targets in team 2 (bots arrive later).
+// Builds the dev scene: a sandbox match on the first map of the first theme that has one, the
+// local player and three motionless targets beside it (bots arrive later). The targets share
+// the player's spawn area, so friendly fire is on to make them shootable.
 import { signal } from '@preact/signals';
 import { buildCatalog } from '@pixel-shoot/content';
 import { createMatchHost } from '@pixel-shoot/match';
@@ -27,7 +28,13 @@ function startMatch(assets: ThemeAssets): { session: Session; catalog: Catalog }
     const faction = theme.factions[(team - 1) % theme.factions.length]?.id;
     return [...theme.characters.values()].find((c) => c.faction === faction)?.id ?? '';
   };
-  const host = createMatchHost({ map, catalog, mode: sandbox, seed: 'dev-scene' });
+  const host = createMatchHost({
+    map,
+    catalog,
+    mode: sandbox,
+    settings: { friendlyFire: true },
+    seed: 'dev-scene',
+  });
   const me = host.addParticipant({
     name: { key: 'participant.you' },
     team: 1,
@@ -37,7 +44,7 @@ function startMatch(assets: ThemeAssets): { session: Session; catalog: Catalog }
   for (let n = 1; n <= TARGETS; n++)
     host.addParticipant({
       name: { key: 'participant.bot', params: { n } },
-      team: 2,
+      team: 1,
       character: characterOf(2),
       kind: 'bot',
     });
@@ -81,7 +88,8 @@ export function createDevScene(renderer: Renderer, store: ContentStore) {
       : { x: INTERNAL_WIDTH / 2, y: INTERNAL_HEIGHT / 2 };
     const command = input.command(origin);
     session.sendInput(command);
-    session.advance(ticker.deltaMS);
+    const events = session.advance(ticker.deltaMS);
+    scene.playEvents(events, session.frame());
     scene.draw(session.frame(), ticker.deltaMS, {
       focus: entity,
       ...(entity !== undefined && actor?.alive && { liveAim: { entity, angle: command.aim } }),

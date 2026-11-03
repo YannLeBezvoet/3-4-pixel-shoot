@@ -292,7 +292,7 @@ Decision [0003](decisions/0003-rendering-pixijs.md).
 - **Interpolation** (exists): the scene draws the session frame interpolated between the last two ticks, so 60 Hz simulation looks smooth at 144 Hz. The local player's weapon uses the live mouse aim rather than the last tick's.
 - **Camera** (exists): keeps the followed character at the exact center of the screen (Q20), snapped to whole pixels; beyond the map edges, the background color shows.
 - **Looks** (`render/theme-looks.ts`): gameplay ids (characters, weapons, projectiles, effects) are turned into sprite sheets of the theme; a dead character's weapon is not drawn.
-- *Planned for milestones 1–2:* **Effects** (blood sprays, muzzle flashes, smoke, casings) are client-side particles driven by `SimEvent`s; they have no gameplay effect and are never sent over the network.
+- **Effects** (`render/effects.ts`, exist for M1): client-side animations driven by `SimEvent`s, never sent over the network and with no gameplay effect: the weapon's `fire` effect at the muzzle (rotated to the shot), the projectile's `impact` effect where it stops against an obstacle, the target character's `hit` effect (blood) where a projectile strikes. Each plays its `play` animation once in the depth-sorted world layer. Planned for M2: blood sprays and decals, smoke, casings.
 - **Palette at runtime:** assets are strictly in palette. A final full-screen pass that snaps every pixel to the nearest Resurrect 64 color is planned as an option, so blending effects (fades, smoke, transparency) stay in palette. See open questions.
 
 ## 12. UI and languages
@@ -345,7 +345,7 @@ Decision [0012](decisions/0012-tooling.md).
 - **Aseprite helpers**: an export script for all `.aseprite` files (when Aseprite is installed) and a Lua script that creates a new character file with the right size, palette, tags and slices.
 - **Validators**: `validate:themes` (themes, catalog conversion, maps), `check:i18n`, font coverage.
 - **Generated files** (`npm run schemas`, verified by `check:schemas`): editor JSON Schemas (`schemas/`), the Tiled project file (`tools/tiled/`) and the behavior reference ([`docs/reference/behaviors.md`](reference/behaviors.md)), all derived from the engine's definitions.
-- **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse); the test scene at `/dev/scene` (`src/dev/scene/`: a `sandbox` match on the first map of the first theme that has one, the player against three motionless targets). Planned: collision and area-of-interest debug drawing.
+- **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse); the test scene at `/dev/scene` (`src/dev/scene/`: a `sandbox` match on the first map of the first theme that has one, the player beside three motionless targets, friendly fire on so they can be shot; shots, impacts and hits show their effects). Planned: collision and area-of-interest debug drawing.
 - **CI** (GitHub Actions): type-check, lint, tests, validators, palette check on every push.
 
 ## 17. Testing

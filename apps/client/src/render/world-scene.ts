@@ -4,9 +4,11 @@
 // exact center of the screen (Q20) and snaps to whole pixels.
 import type { EntityId, MapData } from '@pixel-shoot/sim';
 import { Container } from 'pixi.js';
+import type { SimEvent } from '@pixel-shoot/sim';
 import type { SessionFrame } from '../session/session';
 import { CharacterView, SheetView } from './character-view';
 import { depthOf } from './depth';
+import { Effects } from './effects';
 import { ImageTextures } from './image-textures';
 import type { MapView } from './map-view';
 import { createMapView } from './map-view';
@@ -38,17 +40,19 @@ export class WorldScene {
   #looks: ThemeLooks | undefined;
   readonly #characters = new Map<EntityId, CharacterView>();
   readonly #projectiles = new Map<EntityId, SheetView>();
+  readonly #effects: Effects;
   /** Top-left corner of the screen in world pixels. */
   #camera = { x: 0, y: 0 };
 
   constructor(sheets: SheetTextures) {
     this.#sheets = sheets;
+    this.#effects = new Effects(this.#world, sheets);
     this.root.addChild(this.#ground, this.#corpses, this.#world, this.#overhead);
   }
 
-  /** The layer effects are added to: depth-sorted with characters. */
-  get worldLayer(): Container {
-    return this.#world;
+  /** Starts the visual effects of events (shots, impacts, hits) from the session. */
+  playEvents(events: readonly SimEvent[], frame: SessionFrame): void {
+    if (this.#looks && events.length > 0) this.#effects.play(events, frame.current, this.#looks);
   }
 
   setMap(map: MapData, images: ReadonlyMap<string, ImageBitmap>): void {
@@ -137,6 +141,8 @@ export class WorldScene {
         view.root.destroy();
         this.#projectiles.delete(id);
       }
+
+    this.#effects.update(deltaMs);
 
     // Camera: the followed character at the exact center of the screen (Q20).
     if (focus)
