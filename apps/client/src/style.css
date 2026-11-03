@@ -1,0 +1,24 @@
+/* Colors are Resurrect 64 palette colors. */
+:root {
+  --letterbox: #2e222f;
+  --text: #ffffff;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--letterbox);
+  color: var(--text);
+}
+
+#game {
+  position: fixed;
+  inset: 0;
+}
+
+.game-canvas {
+  position: absolute;
+  image-rendering: pixelated;
+}

@@ -26,6 +26,9 @@
       "path": "./apps/client"
     },
     {
+      "path": "./apps/client/tsconfig.vite.json"
+    },
+    {
       "path": "./apps/server"
     },
     {

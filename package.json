@@ -27,7 +27,9 @@
     "schemas": "tsx tools/src/schemas/cli.ts",
     "check:schemas": "tsx tools/src/schemas/cli.ts --check",
     "assets:placeholders": "tsx tools/src/placeholders/cli.ts",
-    "assets:report": "tsx tools/src/placeholders/cli.ts --report"
+    "assets:report": "tsx tools/src/placeholders/cli.ts --report",
+    "dev": "npm run dev -w @pixel-shoot/client",
+    "build": "npm run build -w @pixel-shoot/client"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
