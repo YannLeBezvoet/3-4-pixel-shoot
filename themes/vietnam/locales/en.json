@@ -1,0 +1,15 @@
+{
+  "theme": { "name": "Vietnam War" },
+  "faction": {
+    "us-army": "US Army",
+    "pavn": "PAVN & Viet Cong"
+  },
+  "character": {
+    "us-rifleman": "US rifleman",
+    "pavn-rifleman": "PAVN rifleman"
+  },
+  "weapon": {
+    "m16a1": { "name": "M16A1" },
+    "ak47": { "name": "AK-47" }
+  }
+}

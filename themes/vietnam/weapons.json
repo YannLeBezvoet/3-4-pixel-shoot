@@ -1,0 +1,35 @@
+{
+  "$schema": "../../schemas/weapons.schema.json",
+  "weapons": [
+    {
+      "id": "m16a1",
+      "nameKey": "weapon.m16a1.name",
+      "behavior": "firearm",
+      "params": {
+        "fireMode": "auto",
+        "roundsPerMinute": 750,
+        "damage": 28,
+        "spreadDeg": 3,
+        "magazine": 20,
+        "reloadMs": 2200
+      },
+      "sprite": "sprites/weapons/m16a1",
+      "sounds": { "fire": "m16a1-fire", "reload": "rifle-reload" }
+    },
+    {
+      "id": "ak47",
+      "nameKey": "weapon.ak47.name",
+      "behavior": "firearm",
+      "params": {
+        "fireMode": "auto",
+        "roundsPerMinute": 600,
+        "damage": 32,
+        "spreadDeg": 4,
+        "magazine": 30,
+        "reloadMs": 2600
+      },
+      "sprite": "sprites/weapons/ak47",
+      "sounds": { "fire": "ak47-fire", "reload": "rifle-reload" }
+    }
+  ]
+}

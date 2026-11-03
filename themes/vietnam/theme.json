@@ -1,0 +1,11 @@
+{
+  "$schema": "../../schemas/theme.schema.json",
+  "formatVersion": 1,
+  "id": "vietnam",
+  "nameKey": "theme.name",
+  "defaultLanguage": "en",
+  "factions": [
+    { "id": "us-army", "nameKey": "faction.us-army" },
+    { "id": "pavn", "nameKey": "faction.pavn" }
+  ]
+}

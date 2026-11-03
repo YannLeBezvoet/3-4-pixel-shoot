@@ -20,7 +20,8 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48Ã—48 grid, 960Ã
 | Why each technology / structure | [docs/decisions/](docs/decisions/) |
 | Milestones, tasks, success criteria | [docs/ROADMAP.md](docs/ROADMAP.md) |
 | Undecided points and their proposals | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) |
-| Owner guides (sprites, maps, themes, modes, languages) | `docs/guides/` (from M0) |
+| Owner guides (sprites, maps, themes, modes, languages) | [docs/guides/](docs/guides/) |
+| Themes (data only) | `themes/<id>/`; example: [themes/vietnam/](themes/vietnam/) |
 | Palette | [palette/resurrect-64.gpl](palette/resurrect-64.gpl) |
 | Editor JSON Schemas for theme files (generated) | `schemas/` |
 | A package's role and allowed dependencies | `packages/*/README.md`, `apps/*/README.md`, [tools/README.md](tools/README.md) |
