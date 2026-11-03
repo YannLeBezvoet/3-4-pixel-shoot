@@ -46,7 +46,9 @@ The renderer never talks to the simulation directly. It reads a **`WorldView`** 
 ├── CLAUDE.md                 # entry point for every session
 ├── README.md · CHANGELOG.md · LICENSE · LICENSE-ASSETS
 ├── package.json              # npm workspaces, top-level scripts
-├── palette/resurrect-64.gpl  # moved from the root in milestone 0
+├── tsconfig.json             # solution file: references every package
+├── tsconfig/                 # shared compiler settings: base, agnostic (no platform), browser, node
+├── palette/resurrect-64.gpl  # the Resurrect 64 palette
 ├── packages/
 │   ├── shared/               # math, seeded RNG, ids, Result type, logger interface
 │   ├── sim/                  # the engine: world, systems, collision, behaviors, events, GameMode API

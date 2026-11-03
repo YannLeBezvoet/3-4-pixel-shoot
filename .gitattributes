@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.png binary
+*.aseprite binary
+*.ase binary
+*.ttf binary
+*.woff binary
+*.woff2 binary

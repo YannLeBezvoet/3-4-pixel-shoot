@@ -1,0 +1,34 @@
+{
+  "extends": "../../tsconfig/browser.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist-types"
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ],
+  "references": [
+    {
+      "path": "../../packages/shared"
+    },
+    {
+      "path": "../../packages/sim"
+    },
+    {
+      "path": "../../packages/content"
+    },
+    {
+      "path": "../../packages/modes"
+    },
+    {
+      "path": "../../packages/match"
+    },
+    {
+      "path": "../../packages/protocol"
+    }
+  ]
+}

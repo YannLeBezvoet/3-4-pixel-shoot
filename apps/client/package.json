@@ -1,0 +1,17 @@
+{
+  "name": "@pixel-shoot/client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@pixel-shoot/content": "*",
+    "@pixel-shoot/match": "*",
+    "@pixel-shoot/modes": "*",
+    "@pixel-shoot/protocol": "*",
+    "@pixel-shoot/shared": "*",
+    "@pixel-shoot/sim": "*"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5"
+  }
+}

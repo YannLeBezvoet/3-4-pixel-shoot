@@ -1,0 +1,11 @@
+{
+  "name": "@pixel-shoot/tools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@pixel-shoot/shared": "*",
+    "@pixel-shoot/sim": "*",
+    "@pixel-shoot/content": "*"
+  }
+}

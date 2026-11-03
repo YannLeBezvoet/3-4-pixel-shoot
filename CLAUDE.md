@@ -21,7 +21,8 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 | Milestones, tasks, success criteria | [docs/ROADMAP.md](docs/ROADMAP.md) |
 | Undecided points and their proposals | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) |
 | Owner guides (sprites, maps, themes, modes, languages) | `docs/guides/` (from M0) |
-| Palette | `resurrect-64.gpl` (moves to `palette/` in M0) |
+| Palette | [palette/resurrect-64.gpl](palette/resurrect-64.gpl) |
+| A package's role and allowed dependencies | `packages/*/README.md`, `apps/*/README.md`, [tools/README.md](tools/README.md) |
 
 ## Working rules
 
@@ -41,4 +42,9 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 
 ## Commands
 
-None yet. Milestone 0 adds them here (`npm run dev`, `npm run check`, …).
+Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
+
+| Command | What it does |
+|---|---|
+| `npm install` | Install all workspaces |
+| `npm run typecheck` | Type-check every package (`tsc -b`, project references) |

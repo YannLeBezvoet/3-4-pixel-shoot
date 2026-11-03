@@ -1,0 +1,23 @@
+{
+  "name": "pixel-shoot",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser twin-stick shooter in pixel art.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "tools"
+  ],
+  "scripts": {
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "@types/node": "^24.19.2"
+  }
+}

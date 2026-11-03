@@ -1,0 +1,24 @@
+{
+  "extends": "../tsconfig/node.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist-types"
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/**/*.test.ts"
+  ],
+  "references": [
+    {
+      "path": "../packages/shared"
+    },
+    {
+      "path": "../packages/sim"
+    },
+    {
+      "path": "../packages/content"
+    }
+  ]
+}
