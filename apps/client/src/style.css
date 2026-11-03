@@ -1,0 +1,199 @@
+/* Colors are Resurrect 64 palette colors. */
+:root {
+  --letterbox: #2e222f;
+  --text: #ffffff;
+  --muted: #9babb2;
+  --button: #3e3546;
+  --button-border: #625565;
+  --accent: #f9c22b;
+  --panel: #3e3546;
+  --error: #e83b3b;
+  --warning: #f9c22b;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--letterbox);
+  color: var(--text);
+}
+
+#game {
+  position: fixed;
+  inset: 0;
+}
+
+.game-canvas {
+  position: absolute;
+  image-rendering: pixelated;
+}
+
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('./assets/fonts/PressStart2P-Regular.ttf') format('truetype');
+  font-display: block;
+}
+
+/* Interface layer: sizes are in game pixels (the layer is scaled like the canvas).
+   The font is drawn on an 8-pixel grid, so font sizes are multiples of 8. */
+.ui-layer {
+  position: absolute;
+  transform-origin: 0 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  line-height: 12px;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  padding: 24px;
+}
+
+h1 {
+  font-size: 16px;
+  line-height: 24px;
+  margin: 0 0 8px;
+  font-weight: normal;
+}
+
+h2,
+legend {
+  font-size: 8px;
+  font-weight: normal;
+  color: var(--muted);
+}
+
+button,
+a {
+  font: inherit;
+  color: var(--text);
+  background: var(--button);
+  border: 2px solid var(--button-border);
+  padding: 4px 8px;
+  margin: 0 8px 8px 0;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--letterbox);
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+}
+
+fieldset {
+  border: 2px solid var(--button-border);
+  padding: 8px 8px 0;
+  margin: 16px 0;
+  width: fit-content;
+}
+
+h3 {
+  font-size: 8px;
+  font-weight: normal;
+  color: var(--muted);
+  margin: 12px 0 4px;
+}
+
+.viewer-panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 296px;
+  padding: 16px;
+  overflow-y: auto;
+  background: var(--panel);
+}
+
+.viewer-panel h1 {
+  font-size: 8px;
+  line-height: 12px;
+}
+
+.viewer-panel button,
+.viewer-panel a {
+  margin: 0 4px 4px 0;
+  padding: 2px 4px;
+}
+
+.viewer-hint,
+.viewer-info,
+.viewer-row-title,
+.viewer-direction {
+  position: absolute;
+  margin: 0;
+  pointer-events: none;
+}
+
+.viewer-hint,
+.viewer-info {
+  width: 320px;
+  text-align: center;
+}
+
+.viewer-direction {
+  width: 48px;
+  text-align: center;
+}
+
+.viewer-direction small {
+  display: block;
+  font-size: 8px;
+  color: var(--muted);
+}
+
+.content-issues {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  max-height: 216px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--letterbox);
+  border: 2px solid var(--warning);
+}
+
+.content-issues.has-errors {
+  border-color: var(--error);
+}
+
+.content-issues h2 {
+  margin: 0 0 8px;
+  color: var(--text);
+}
+
+.content-issues ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.content-issues li {
+  margin-bottom: 8px;
+}
+
+.content-issues li strong {
+  display: block;
+  font-weight: normal;
+}
+
+.content-issues li.error strong {
+  color: var(--error);
+}
+
+.content-issues li.warning strong {
+  color: var(--warning);
+}

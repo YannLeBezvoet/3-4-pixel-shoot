@@ -1,0 +1,19 @@
+{
+  "$schema": "../../schemas/characters.schema.json",
+  "characters": [
+    {
+      "id": "us-rifleman",
+      "nameKey": "character.us-rifleman",
+      "faction": "us-army",
+      "sprite": "sprites/characters/us-rifleman",
+      "weapon": "m16a1"
+    },
+    {
+      "id": "pavn-rifleman",
+      "nameKey": "character.pavn-rifleman",
+      "faction": "pavn",
+      "sprite": "sprites/characters/pavn-rifleman",
+      "weapon": "ak47"
+    }
+  ]
+}

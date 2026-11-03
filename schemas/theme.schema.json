@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Path to the JSON Schema, for editor autocompletion.",
+      "type": "string"
+    },
+    "formatVersion": {
+      "type": "number",
+      "const": 1,
+      "description": "Version of the theme format."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Theme identifier; must match the theme folder name."
+    },
+    "nameKey": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*$",
+      "description": "Translation key of the theme name."
+    },
+    "defaultLanguage": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Z]{2})?$",
+      "description": "Language whose translation file must contain every text of the theme."
+    },
+    "factions": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
+          },
+          "nameKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*$",
+            "description": "Key of a text in the theme translation files (locales/<language>.json)."
+          }
+        },
+        "required": [
+          "id",
+          "nameKey"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Sides that teams play. Team 1 plays the first faction, team 2 the second, and so on."
+    }
+  },
+  "required": [
+    "formatVersion",
+    "id",
+    "nameKey",
+    "defaultLanguage",
+    "factions"
+  ],
+  "additionalProperties": false,
+  "title": "Theme manifest (theme.json)"
+}

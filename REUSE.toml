@@ -1,0 +1,29 @@
+# License of every file (https://reuse.software). When several entries match a file,
+# the last one wins: the general rule comes first, exceptions after it.
+version = 1
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Yann Le Bezvoet and contributors"
+SPDX-License-Identifier = "MIT"
+
+# Assets: art, maps and translations (decision 0013).
+[[annotations]]
+path = ["themes/**", "locales/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Pixel Shoot contributors"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# Third-party material.
+[[annotations]]
+path = "palette/resurrect-64.gpl"
+precedence = "override"
+SPDX-FileCopyrightText = "Kerrie Lake"
+SPDX-License-Identifier = "LicenseRef-Resurrect64-Palette"
+
+[[annotations]]
+path = "apps/client/src/assets/fonts/**"
+precedence = "override"
+SPDX-FileCopyrightText = "2012 The Press Start 2P Project Authors (cody@zone38.net)"
+SPDX-License-Identifier = "OFL-1.1"

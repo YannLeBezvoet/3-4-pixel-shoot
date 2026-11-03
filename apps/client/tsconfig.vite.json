@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig/node.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist-types/vite",
+    "allowImportingTsExtensions": true
+  },
+  "include": ["vite.config.ts", "vite"],
+  "exclude": ["vite/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../../packages/content"
+    }
+  ]
+}

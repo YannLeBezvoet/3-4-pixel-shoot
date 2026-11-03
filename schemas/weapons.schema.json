@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Path to the JSON Schema, for editor autocompletion.",
+      "type": "string"
+    },
+    "weapons": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
+          },
+          "nameKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*$",
+            "description": "Key of a text in the theme translation files (locales/<language>.json)."
+          },
+          "sprite": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
+            "description": "Weapon sprite, drawn pointing right, with \"grip\" and \"muzzle\" slices."
+          },
+          "sounds": {
+            "description": "Reserved for the audio milestone: sound cue name → sound id.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "behavior": {
+            "type": "string",
+            "const": "firearm",
+            "description": "A gun firing projectiles from a magazine, with a rate of fire, spread and reload time."
+          },
+          "params": {
+            "type": "object",
+            "properties": {
+              "fireMode": {
+                "type": "string",
+                "enum": [
+                  "auto",
+                  "semi"
+                ],
+                "description": "\"auto\" fires while the button is held; \"semi\" fires once per click."
+              },
+              "roundsPerMinute": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 3000,
+                "description": "Maximum rate of fire."
+              },
+              "damage": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Hit points removed by one projectile."
+              },
+              "spreadDeg": {
+                "default": 0,
+                "description": "Random deviation of each shot, in degrees on each side of the aim.",
+                "type": "number",
+                "minimum": 0,
+                "maximum": 45
+              },
+              "magazine": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991,
+                "description": "Rounds per magazine."
+              },
+              "reloadMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Reload duration in milliseconds."
+              },
+              "reserveMagazines": {
+                "default": null,
+                "description": "Spare magazines per life; null means unlimited.",
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "fireMode",
+              "roundsPerMinute",
+              "damage",
+              "magazine",
+              "reloadMs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "nameKey",
+          "sprite",
+          "behavior",
+          "params"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "weapons"
+  ],
+  "additionalProperties": false,
+  "title": "Theme weapons (weapons.json)"
+}

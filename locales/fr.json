@@ -1,0 +1,47 @@
+{
+  "_meta": {
+    "name": "Français"
+  },
+  "app": {
+    "title": "Pixel Shoot"
+  },
+  "home": {
+    "status": "En cours de développement : jalon 0, fondations."
+  },
+  "settings": {
+    "language": "Langue"
+  },
+  "dev": {
+    "tools": "Outils de développement",
+    "spriteViewer": "Visionneuse de sprites",
+    "back": "Retour",
+    "viewer": {
+      "characters": "Personnages",
+      "otherSprites": "Autres sprites",
+      "animations": "Animations",
+      "aimHint": "Bougez la souris pour viser.",
+      "directions": "Les 8 directions (3 en miroir)",
+      "mirrored": "miroir",
+      "frame": "{{tag}} · image {{frame}}",
+      "noTheme": "Aucun thème valide chargé."
+    },
+    "issues": {
+      "errors_one": "{{count}} erreur de contenu : la dernière version valide est affichée.",
+      "errors_many": "{{count}} erreurs de contenu : la dernière version valide est affichée.",
+      "errors_other": "{{count}} erreurs de contenu : la dernière version valide est affichée.",
+      "warnings_one": "{{count}} avertissement de contenu.",
+      "warnings_many": "{{count}} avertissements de contenu.",
+      "warnings_other": "{{count}} avertissements de contenu."
+    }
+  },
+  "direction": {
+    "s": "S",
+    "se": "SE",
+    "e": "E",
+    "ne": "NE",
+    "n": "N",
+    "nw": "NO",
+    "w": "O",
+    "sw": "SO"
+  }
+}

@@ -1,0 +1,14 @@
+# Generated or tool-written files
+package-lock.json
+**/dist/
+**/dist-types/
+**/coverage/
+schemas/
+
+# Content edited by people or by Aseprite and Tiled: checked by the validators, not reformatted
+themes/
+locales/
+**/fixtures/
+
+# Prose: tables and wrapping are kept as written
+*.md

@@ -1,0 +1,14 @@
+{
+  "name": "@pixel-shoot/content",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@pixel-shoot/shared": "*",
+    "@pixel-shoot/sim": "*",
+    "zod": "^4.6.7"
+  }
+}

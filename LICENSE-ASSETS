@@ -1,0 +1,9 @@
+Assets of Pixel Shoot (art, maps, translations) are licensed under the
+Creative Commons Attribution 4.0 International license (CC BY 4.0).
+Full text: LICENSES/CC-BY-4.0.txt — https://creativecommons.org/licenses/by/4.0/
+
+This covers everything under themes/ and locales/. Attribute as:
+"Pixel Shoot contributors (https://github.com/YannLeBezvoet/3-4-pixel-shoot)".
+
+Code is licensed under the MIT license (LICENSE). Third-party material keeps its own
+license: see CREDITS.md and REUSE.toml for the exact license of every file.

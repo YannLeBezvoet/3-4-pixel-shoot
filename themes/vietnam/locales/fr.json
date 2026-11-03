@@ -1,0 +1,15 @@
+{
+  "theme": { "name": "Guerre du Viêt Nam" },
+  "faction": {
+    "us-army": "Armée américaine",
+    "pavn": "APVN et Viet Cong"
+  },
+  "character": {
+    "us-rifleman": "Fusilier américain",
+    "pavn-rifleman": "Fusilier de l'APVN"
+  },
+  "weapon": {
+    "m16a1": { "name": "M16A1" },
+    "ak47": { "name": "AK-47" }
+  }
+}

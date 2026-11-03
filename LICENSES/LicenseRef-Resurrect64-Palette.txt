@@ -1,0 +1,8 @@
+Resurrect 64 palette
+
+The Resurrect 64 palette (palette/resurrect-64.gpl) was created by Kerrie Lake and is
+published on Lospec: https://lospec.com/palette-list/resurrect-64
+
+It is a list of 64 colors, included in this repository so that the game's art and the palette
+check use exactly the same colors. It is credited to its author in CREDITS.md. It is not covered
+by the project's MIT or CC BY 4.0 licenses; see the source page for its author's terms.
