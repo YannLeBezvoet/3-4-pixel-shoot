@@ -1,21 +1,24 @@
 # Architecture
 
-> **Status: accepted on 2026-11-03; milestone 0 implemented.** §0 says what exists; sections describing later milestones are marked *planned*.
+> **Status: accepted on 2026-11-03; milestones 0 and 1 implemented.** §0 says what exists; sections describing later milestones are marked *planned*.
 > The reasons behind each choice are in [`decisions/`](decisions/). Open points are in [`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md).
 
-## 0. What exists (end of milestone 0)
+## 0. What exists (end of milestone 1)
 
 | Area | State | Where |
 |---|---|---|
 | Workspace, boundaries | Every package exists; boundaries enforced by `tsc -b` and lint, proven by a test | `packages/*`, `apps/*`, `tools/`, `tsconfig/`, `eslint.config.js` |
 | `shared` | Vectors, angles and octants, seeded RNG, `Result` | `packages/shared/src/` |
-| `sim` | Behavior registry and the `firearm` parameter schema only; no simulation yet | `packages/sim/src/behaviors/` |
-| `content` | Theme loading and validation, Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
-| `modes`, `bots`, `match`, `protocol`, `apps/server` | Empty entry points | — |
-| Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages | `apps/client/` |
-| Tools | Palette check, theme validation, JSON Schemas, i18n and font check, placeholder generator, Aseprite export, Lua character template | `tools/` |
-| Content | Vietnam theme (2 factions, 2 characters, 2 rifles, placeholder art, EN/FR texts); EN/FR interface | `themes/vietnam/`, `locales/` |
-| CI | `npm run check` + REUSE on GitHub Actions | `.github/workflows/check.yml` |
+| `sim` | World core: `createSimulation` (entity-component stores, 60 Hz `step()`, input commands, events, named random streams, state hash); `MapData` and the collision grid (tile flags `solid`, `impassable`; object footprints); ASCII maps for tests; behavior registry and the `firearm` parameter schema. Movement with acceleration (Q19), sliding collision against tiles and footprints, separation between characters (Q48), actor spatial hash, segment casts and line of sight; `firearm` weapon and `bullet` projectile behaviors; damage, deaths and corpses; determinism proven over 10,000 ticks; the game-mode API; map replacement for hot reload | `packages/sim/src/` |
+| `content` | Theme loading and validation (manifest, characters with gameplay values, weapons, projectiles, effects), conversion of a theme into the simulation catalog (`buildCatalog`), Tiled maps (`loadMap`, `MapSource`), Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
+| `match` | `createMatchHost`: participants, inputs, bots, mode lifecycle, kills and deaths, `WorldView` | `packages/match/src/` |
+| `modes` | Game-mode API in `sim` (`GameModeDefinition`, `ModeApi`, `ModeState`); `team-elimination` (Q21, Q51) and `sandbox` (development only) | `packages/sim/src/modes/`, `packages/modes/src/` |
+| `bots` | Perception (sight, hearing, memory), navigation (A*, path smoothing), utility-AI brain (engage, reload, chase, wander) with easy / normal / hard difficulty; run by the match host for `bot` participants | `packages/bots/src/` |
+| `protocol`, `apps/server` | Empty entry points | — |
+| Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, menus (main menu, solo setup, settings, pause, end of match), sprite viewer (`/dev/sprites`), hot reload of themes and languages; `LocalSession` (fixed 60 Hz step, interpolation), match input (physical keys, mouse aim), world rendering (map chunks, depth-sorted world layer, interpolation, centered camera), event-driven effects, HUD with its bitmap font, test scene (`/dev/scene`); the content store also loads maps and tileset images | `apps/client/` |
+| Tools | Palette check, theme validation (themes, catalogs, maps), generated files (JSON Schemas, Tiled project, behavior reference), i18n and font check, HUD font generator, placeholder generator (art, tilesets, maps), headless bot benchmark, Aseprite export, Lua character template | `tools/` |
+| Content | Vietnam theme (2 factions, 2 characters, 2 rifles, a rifle bullet, 5 effects, the `river-village` map with its 2 tilesets, placeholder art, EN/FR texts); `example` theme (Red and Blue, one rifle, a 40×30 arena, Q60), added as files only; EN/FR interface | `themes/vietnam/`, `themes/example/`, `locales/` |
+| CI | `npm run check` (with coverage thresholds) + REUSE + Playwright smoke test on GitHub Actions | `.github/workflows/check.yml` |
 
 ## 1. Forces that shape the design
 
@@ -103,7 +106,7 @@ flowchart TD
 | `shared` | Vector math, angles, seeded PRNG, ids, `Result`, logger interface | — | Import anything from the project |
 | `sim` | World state, entities and components, fixed-tick systems, collision, behavior registry, events, `GameMode` API, `MapData` type | `shared`, `zod` | Use DOM, Node APIs, timers, `Math.random`, wall-clock time; know about files, Tiled, Aseprite, rendering, network |
 | `content` | Theme/locale schemas, cross-reference validation, error formatting, adapters (Tiled → `MapData`, Aseprite JSON → animation sets), `FileProvider` interface | `sim`, `shared`, `zod` | Read files directly (it receives a `FileProvider`) |
-| `modes` | One folder per game mode, plus the list of built-in modes | `sim` (public API) | Reach into sim internals |
+| `modes` | One folder per game mode, plus the list of built-in modes | `sim` (public API), `zod` | Reach into sim internals |
 | `bots` | Bot controllers that turn perception into `InputCommand`s | `sim` (public API) | Read state a bot could not perceive |
 | `match` | `MatchHost`: participants, input routing, mode lifecycle, bot scheduling, tick loop driven by a clock it is given | `sim`, `bots` | Depend on a transport or a platform |
 | `protocol` | Message types, binary codec, quantization, snapshot and delta encoding | `sim`, `shared` | Contain game rules |
@@ -114,10 +117,19 @@ flowchart TD
 - Each package declares its dependencies in its `package.json`; TypeScript project references follow the same graph.
 - Platform-agnostic packages compile with `lib: ["ES2023"]` and no ambient types: any use of `window`, `document` or Node built-ins fails type-checking.
 - ESLint import rules (`eslint.config.js`), **generated from each package's declared dependencies**, forbid imports that cross the table above: an undeclared project package, a deep import into another package's files, a Node or presentation library in a platform-agnostic package, PixiJS outside `apps/client/src/render`.
+- Test files may also import Node (to read fixtures) and the packages declared as `devDependencies`: `modes` tests run modes inside a real `match` host, which production code of `modes` may not import.
 
-## 5. Simulation core (`packages/sim`) — *planned for milestone 1, except the behavior registry*
+## 5. Simulation core (`packages/sim`) — *implemented in milestone 1; later behaviors planned*
 
 Decision [0002](decisions/0002-simulation-presentation-split.md).
+
+**What exists:** `createSimulation({ map, catalog, seed, rules })` returns a `Simulation` (`src/world/simulation.ts`): `spawnActor`, `removeActor`, `step(inputs)` returning the tick's events, read-only `actor`/`actors`, and `hash()`. Internally (`src/world/state.ts`) each component kind (`position`, `velocity`, `body`, `actor`, `health`) has its own store (`src/core/entities.ts`); systems (`src/world/systems.ts`) are functions over that state. The `Catalog` (`src/world/catalog.ts`) holds the gameplay content in engine units. Inputs are sanitized before use (`src/core/input.ts`); an actor with no input for a tick stands still and keeps its aim. Events produced between two steps (a spawn by the game mode) are returned by the next step.
+
+**Movement and collision (exist):** the movement system (`src/systems/movement.ts`) accelerates each actor toward the velocity its input asks for (full speed in 0.08 s, Q19), moves its circle with `moveCircle` (`src/physics/move-circle.ts`: sub-moves of at most half the radius, pushed out of blocking tiles and footprints; a sub-move that cannot be resolved is cancelled, so a character never ends inside an obstacle), then pushes overlapping actors apart, half each (Q48). The actor spatial hash (`src/physics/spatial-hash.ts`, one-tile cells) is rebuilt after movement. `castSegment` and `lineOfSight` (`src/physics/raycast.ts`) traverse the grid tile by tile and test footprints in each tile crossed.
+
+**Weapons and projectiles (exist):** each actor holds the default weapon of its character (Q17). The weapons and projectiles systems (`src/systems/combat.ts`) run, for each weapon or projectile, the updater of the behavior its catalog entry names: `firearm` (`src/behaviors/weapons/firearm.ts`: auto or semi fire, a fractional cooldown so any rate of fire is exact, spread drawn from the world's `weapons` random stream, magazine, reload on the button or when empty, spare magazines) and `bullet` (`src/behaviors/projectiles/bullet.ts`). A shot first traces from the shooter's ground point to the muzzle, so nobody fires through a wall they touch; a bullet then sweeps the segment it travels each tick (`src/world/trace.ts`) and stops at the first obstacle with the `solid` flag or character it meets: never its shooter, teammates only with friendly fire (Q49). Projectiles fly at the character's gun height `z`, used only for drawing. Events: `shotFired`, `reloadStarted`, `reloaded`, `projectileImpact`, `hit`.
+
+**Damage and deaths (exist):** a `hit` queues its damage; the damage system (`src/systems/damage.ts`, step 7) removes it from the target's hit points (Q15) and emits `damaged`, then `killed` (victim, killer, weapon, position) at 0. A dead actor (`alive: false`) is a corpse (Q28): it ignores input, leaves the actor index, so it blocks nobody and cannot be hit, and stays until the game mode removes it.
 
 - **Fixed tick at 60 Hz.** Time inside the simulation is counted in ticks (integers). The clock is external: the client's frame loop or the server's scheduler calls `step()`.
 - **Inputs, not actions.** Every actor is driven by an `InputCommand` per tick (movement vector, aim angle, button bits). Humans and bots produce the same structure, so bots get no privileged access and the network only carries inputs upstream.
@@ -131,36 +143,37 @@ Decision [0002](decisions/0002-simulation-presentation-split.md).
 - **Behavior registry** (`src/behaviors/`, exists since M0 with the `firearm` parameter schema). Weapon behaviors (`firearm`, `thrown`, `flamethrower`, …), projectile behaviors (`bullet`, `grenade`, `flame`, …) and map-element behaviors (`destructible`, `flammable`, …) are engine code. Each one registers an id and a **parameter schema**; themes pick a behavior by id and supply parameters, which are validated against that schema.
 - **Visual references are ids.** The simulation knows `"character.us-rifleman"` or `"weapon.m16a1"`, never a texture. The client maps ids to loaded assets.
 
-## 6. Match host and sessions — *planned for milestone 1*
+## 6. Match host and sessions — *implemented in milestone 1; `RemoteSession` planned for milestone 3*
 
-- **`MatchHost`** (`packages/match`) owns one match: the world, the game-mode instance, the participants (human or bot), and the bot controllers. It exposes `addParticipant`, `submitInput`, `step`, `getWorldView(forParticipant)` and the event stream. The same class runs in a browser tab for solo and in a server room online.
-- **`Session`** (client side) is what the UI and renderer talk to: `sendInput`, `getWorldView(alpha)` for interpolated drawing, `onEvent`, `getModeState`.
-  - `LocalSession` runs a `MatchHost` in-process (milestone 1). It can move to a Web Worker later without changing its interface (see open questions).
+- **`MatchHost`** (`packages/match/src/match-host.ts`, exists) owns one match: the simulation, the game-mode instance, the participants (human or bot) and the bot brains. `createMatchHost({ map, catalog, mode, settings, seed })` validates the mode settings and derives the simulation rules from them; the host exposes `addParticipant`, `removeParticipant`, `start`, `submitInput` (a human's input holds until replaced), `step` (one tick: simulation, then the mode's `onEvent` for each event and its `onTick`; returns the events) and `view()`, the `WorldView` presentation draws: actors, projectiles, participants with their character, kills and deaths, and the mode state. It implements the `ModeApi`: `spawn` places a character on a random free spot of the team's spawn areas (the match's `spawns` random stream) facing the middle of the map. The same code runs in a browser tab for solo and in a server room online. Per-participant views (`forParticipant`, interest management) arrive with multiplayer.
+- **`Session`** (client side, `apps/client/src/session/session.ts`, exists) is what the UI and renderer talk to: `sendInput` (held until replaced), `advance(deltaMs)` (lets real time pass and returns the events of the ticks run), `frame()` (the two latest `WorldView`s and the interpolation factor between them) and `paused`.
+  - `LocalSession` (`local-session.ts`, exists) runs a `MatchHost` in-process with a fixed-step accumulator: 60 ticks per second whatever the frame rate, at most 250 ms of catch-up after a stall (a hidden tab), nothing while paused. It can move to a Web Worker later without changing its interface (Q47).
   - `RemoteSession` (milestone 3) sends inputs to the server, predicts the local player's movement with the same simulation code, reconciles on snapshots and interpolates other entities.
 
-## 7. Game modes (`packages/modes`) — *planned for milestone 1*
+## 7. Game modes (`packages/modes`) — *implemented in milestone 1; further modes in milestone 5*
 
-A mode is a folder implementing the `GameModeDefinition` interface exported by `sim`, then added to the built-in list. No change to `sim`, `match` or the apps is needed. Illustrative shape (final API defined in milestone 1):
+A mode is a folder implementing the `GameModeDefinition` interface exported by `sim` (`packages/sim/src/modes/game-mode.ts`, exists), then added to the built-in list (`packages/modes/src/built-in.ts`). No change to `sim`, `match` or the apps is needed. The guide is [add a mode](guides/add-a-mode.md).
 
 ```ts
 interface GameModeDefinition<Settings> {
-  id: string;                         // "team-elimination"
-  nameKey: string;                    // translation key
-  settings: SettingsSchema<Settings>; // validated, with defaults and label keys; drives a generic settings form
-  mapRequirements: MapRequirements;   // e.g. spawn points for 2 teams, zones of type "capture"
+  id: string;                          // "team-elimination"
+  nameKey: string;                     // translation key
+  settings: z.ZodType<Settings>;       // with defaults; drives a generic settings form (M4)
+  mapRequirements: MapRequirements;    // { teams: 2 }: spawn areas for teams 1 and 2
+  rules(settings: Settings): Partial<Rules>;  // e.g. friendly fire
   create(api: ModeApi, settings: Settings): GameModeInstance;
 }
 interface GameModeInstance {
   onMatchStart(): void;
-  onTick(): void;
-  onEvent(event: SimEvent): void;
+  onEvent(event: SimEvent): void;      // each event of the tick
+  onTick(): void;                      // then once per tick
   onParticipantJoined(id: ParticipantId): void;
   onParticipantLeft(id: ParticipantId): void;
-  getPublicState(): ModeState;        // scores, timers, round info; replicated to clients and drawn by generic HUD widgets
+  state(): ModeState;                  // round, timer, team scores, banner, result; drawn by generic HUD widgets
 }
 ```
 
-`ModeApi` is the only door into the world: spawn an actor at a spawn point, put a participant into spectating, read zones, start timers, announce a message (translation key + parameters), end a round or the match.
+`ModeApi` is the only door into the match: the map, the tick, the participants and their characters, `spawn` (on a free spot of the team's areas), `clearWorld` (new round), `setFrozen` (countdowns: characters aim but neither move nor fire) and the mode's own random stream. Displayed texts are `DisplayText`s: a translation key with parameters, never text (§12); a parameter named `team` holds a team number, which the client shows as the team's faction name. Built-in modes: `team-elimination` (`packages/modes/src/team-elimination/`) and `sandbox`, kept out of the list offered to players. Spectating is decided by the client in M1 (the camera follows a living teammate); the server will need it for interest management in M3.
 
 **Theme × mode compatibility.** A mode declares what it needs from a map; the lobby only offers maps that satisfy it, and the theme validator warns when a theme has no map for a registered mode.
 
@@ -175,10 +188,10 @@ Files have fixed names; the ones marked *planned* arrive with the milestone that
 ```
 themes/vietnam/
 ├── theme.json        # manifest: id, format version, default language, factions
-├── characters.json   # archetypes: sprite set, collider radius, speed, hit points, default loadout
-├── weapons.json      # weapon definitions: behavior id + parameters, sprite, sound cues
-├── projectiles.json  # planned (M1): projectile definitions: behavior id + parameters, sprite, effects
-├── effects.json      # planned (M1–M2): visual effects: blood, explosions, muzzle flashes, flames
+├── characters.json   # archetypes: sprite, speed, collider radius, hit points, default weapon, hit effect
+├── weapons.json      # weapon definitions: behavior id + parameters, sprite, projectile, effects, sound cues
+├── projectiles.json  # projectile definitions: behavior id + parameters, sprite, impact effect
+├── effects.json      # visual effects (optional): id → sprite with a "play" animation
 ├── sounds.json       # planned (audio milestone): sound cue id → file
 ├── locales/en.json · locales/fr.json
 ├── sprites/<category>/<name>.aseprite · .png · .json
@@ -194,8 +207,10 @@ Example weapon entry (illustrative):
   "nameKey": "weapon.m16a1.name",
   "behavior": "firearm",
   "params": { "fireMode": "auto", "roundsPerMinute": 750, "damage": 28, "spreadDeg": 3,
-              "magazine": 20, "reloadMs": 2200, "projectile": "rifle-bullet" },
+              "magazine": 20, "reloadMs": 2200 },
   "sprite": "sprites/weapons/m16a1",
+  "projectile": "rifle-bullet",
+  "effects": { "fire": "muzzle-flash" },
   "sounds": { "fire": "weapon.m16a1.fire", "reload": "weapon.m16a1.reload" }
 }
 ```
@@ -204,7 +219,7 @@ Example weapon entry (illustrative):
 
 1. **Schema validation** of every file (Zod), with errors pointing to the file and the JSON path.
 2. **Behavior parameters** validated against the schema registered by the chosen behavior.
-3. **Cross-references**: factions, weapons, sprite files, animation tags, translation keys (later: projectiles, tilesets).
+3. **Cross-references**: factions, weapons, projectiles, effects, sprite files, animation tags, translation keys (later: tilesets).
 4. **Asset rules**: frame sizes multiple of 48, required animation tags and directions present, required slices present.
 
 Errors are collected (not thrown one by one) and printed together, for example:
@@ -216,7 +231,7 @@ error: themes/vietnam/characters.json › characters[0] ("us-rifleman").weapon
   Unknown weapon "m61". Known weapons (weapons.json): m16a1, ak47.
 ```
 
-The loader is `loadTheme` in `packages/content/src/theme/`; its tests list every kind of problem it reports.
+The loader is `loadTheme` in `packages/content/src/theme/`; its tests list every kind of problem it reports. `buildCatalog` (same folder) then turns a valid theme into the simulation's `Catalog`, measuring on the sprites how high and how far ahead each character holds its weapon (`hand` slice of the first `idle.side` frame) and each weapon's length from `grip` to `muzzle`; `validate:themes` runs it too.
 
 The same validation runs in the browser (shown in a dev overlay), on the server at startup, and in the `validate:themes` command used by CI. Texts missing from a non-default language are warnings: the default-language text is shown instead.
 
@@ -227,18 +242,21 @@ The same validation runs in the browser (shown in a dev overlay), on the server 
 
 `content` reads files through a `FileProvider` interface: `fetch` in the browser, the file system on the server and in tools, an in-memory map in tests.
 
-## 9. Maps — *planned for milestone 1*
+## 9. Maps — *implemented in milestone 1; zones and map elements planned*
 
 Decision [0008](decisions/0008-tiled-maps.md).
 
-- **`MapSource`** (interface): `load(request) → MapData`. Milestone 1 ships `TiledMapSource`; milestone 5 adds a procedural generator in its own package. Nothing else depends on Tiled.
-- **`MapData`** (defined in `sim`): size in tiles, tile layers referencing a tile catalog (gameplay flags + visual reference), placed objects (map elements with their behavior parameters), spawn points per team, zones (rectangles/polygons with a type), and visual-only layers.
-- **Tiled conventions (draft):** maps saved directly as Tiled JSON (`.tmj`), external tilesets (`.tsj`), 48×48 orthogonal tiles. Layer roles declared with Tiled's *class* field:
+- **`MapSource`** (interface, `packages/content/src/maps/load-map.ts`): `load(ref) → { map, issues }`. `tiledMapSource` reads a theme's Tiled files (exists); milestone 5 adds a procedural generator in its own package. Nothing else depends on Tiled.
+- **`loadMap`** (exists) reads a `.tmj` map and its external `.tsj` tilesets (`src/maps/tiled-json.ts` lists the fields read) and returns `MapData` or the problems found, each naming the file, the layer, the object and its position. Maps are discovered: every `maps/*.tmj` of a theme is listed in the content index and checked by `validate:themes`. The rules for map makers are in the guide [create a map](guides/create-a-map.md).
+- **`MapData`** (defined in `sim`, exists: `packages/sim/src/map/map-data.ts`): size in tiles, tile layers (`ground` with gameplay flags, `overhead` drawn on top) referencing a catalog of tile types (flags + picture), placed objects (picture, ground point, collision footprints), spawn areas per team (Q52). Planned: zones (rectangles/polygons with a type) and map elements with behavior parameters (M2).
+- **Collision grid** (`packages/sim/src/map/collision-grid.ts`): the flags of each tile combined from the ground layers, plus object footprints indexed by the tiles they touch; outside the map is solid. Flags: `solid` blocks movement, projectiles and sight; `impassable` blocks movement only (Q50); `cover` arrives in M2.
+- **ASCII maps** (`asciiMap` in `packages/sim/src/testing/`): `#` solid, `~` impassable, `o` solid object, `1`–`9` team spawn; used by the tests of every package.
+- **Tiled conventions:** maps saved directly as Tiled JSON (`.tmj`), external tilesets (`.tsj`) based on one image, 48×48 orthogonal tiles, CSV tile data. Layer roles declared with Tiled's *class* field:
   - `ground` tile layers: drawn below everything; carry tile flags.
   - `objects` object layer: tile objects (trees, huts, sandbags) sorted by their base; collision footprints from Tiled's collision editor.
   - `overhead` tile layer: always drawn on top (canopy, roofs).
-  - `gameplay` object layer: `spawn` points (with `team`), `zone` shapes (with `zoneType`); not drawn.
-- **Gameplay properties in Tiled:** set on tileset tiles (defaults) and overridable per object: `solid`, `cover`, `hp`, `flammable`, `destroyedTile`, … A Tiled project file in `tools/tiled/` defines these as typed custom classes, **generated from the engine's schemas** so Tiled and the engine never drift apart.
+  - `gameplay` object layer: `spawn` rectangles (with `team`, Q52); later `zone` shapes; not drawn.
+- **Gameplay properties in Tiled:** set on tileset tiles (defaults) and overridable per tile object: `solid`, `impassable` (exist); `cover`, `hp`, `flammable`, `destroyedTile`, … in M2. They are defined once in `packages/content/src/maps/properties.ts`. The Tiled project file `tools/tiled/pixel-shoot.tiled-project` defines them as typed custom classes (with the layer classes and the `spawn` object class), **generated from these definitions** by `npm run schemas`, so Tiled and the engine never drift apart; `check:schemas` fails when it is stale.
 
 ## 10. Sprites and animation
 
@@ -263,7 +281,7 @@ Aim angle → drawn direction:
 
 The weapon sprite rotates to the exact aim angle around its `grip` pivot, flipped vertically when aiming left so it never appears upside down. Slice points and origins are pixel corners; mirroring happens around the ground point (`render/weapon-pose.ts`, `render/character-view.ts`).
 
-On the client, the **content store** (`src/content/content-store.ts`) holds the loaded themes, every sprite sheet of each theme folder and their images (renderer-agnostic `ImageBitmap`s); `render/sheet-textures.ts` turns them into PixiJS textures. When a reload finds errors, the last valid version stays in use.
+On the client, the **content store** (`src/content/content-store.ts`) holds the loaded themes, every sprite sheet of each theme folder and their images, and each theme's maps with their tileset images (renderer-agnostic `ImageBitmap`s); `render/sheet-textures.ts` and `render/image-textures.ts` turn them into PixiJS textures. When a reload finds errors, the last valid version stays in use, for a whole theme or for a single map.
 
 ## 11. Rendering (`apps/client/src/render`)
 
@@ -271,22 +289,24 @@ Decision [0003](decisions/0003-rendering-pixijs.md).
 
 - **PixiJS** renders into a **960×540** canvas; the canvas is upscaled by CSS with the **largest integer factor** that fits, with `image-rendering: pixelated`, computed in device pixels (`render/screen-layout.ts`, `render/renderer.ts`). In development, a test pattern (palette swatches and a 1-pixel checkerboard) shows whether scaling is crisp. All textures use nearest-neighbor sampling; the camera snaps to whole pixels.
 - Rotating the weapon at internal resolution keeps every pixel a palette color (no interpolation happens).
-- *Planned for milestone 1:* **Layers:** ground (tile chunks baked to textures, re-baked when a tile changes; blood decals painted into them), **y-sorted world layer** (characters, map elements, multi-tile objects, corpses; sort key = ground y), overhead layer, screen-space effects, HUD.
-- *Planned for milestone 1:* **Interpolation:** the renderer draws the `WorldView` interpolated between the last two ticks, so 60 Hz simulation looks smooth at 144 Hz.
-- *Planned for milestone 1:* **Camera:** follows the local player with a look-ahead toward the cursor.
-- *Planned for milestones 1–2:* **Effects** (blood sprays, muzzle flashes, smoke, casings) are client-side particles driven by `SimEvent`s; they have no gameplay effect and are never sent over the network.
-- **Palette at runtime:** assets are strictly in palette. A final full-screen pass that snaps every pixel to the nearest Resurrect 64 color is planned as an option, so blending effects (fades, smoke, transparency) stay in palette. See open questions.
+- **Layers** (`render/world-scene.ts`, exists): ground (tile chunks of 16×16 tiles, each cached as one texture and hidden off screen, `render/map-view.ts`; blood decals painted into them in M2), corpses, the **depth-sorted world layer** (map objects such as trees, living characters, projectiles; draw order from `render/depth.ts`: larger ground y in front, ties by entity id), overhead tiles. Planned: screen-space effects and the HUD above them.
+- **Interpolation** (exists): the scene draws the session frame interpolated between the last two ticks, so 60 Hz simulation looks smooth at 144 Hz. The local player's weapon uses the live mouse aim rather than the last tick's.
+- **Camera** (exists): keeps the followed character at the exact center of the screen (Q20), snapped to whole pixels; beyond the map edges, the background color shows.
+- **Looks** (`render/theme-looks.ts`): gameplay ids (characters, weapons, projectiles, effects) are turned into sprite sheets of the theme; a dead character's weapon is not drawn.
+- **Effects** (`render/effects.ts`, exist for M1): client-side animations driven by `SimEvent`s, never sent over the network and with no gameplay effect: the weapon's `fire` effect at the muzzle (rotated to the shot), the projectile's `impact` effect where it stops against an obstacle, the target character's `hit` effect (blood) where a projectile strikes. Each plays its `play` animation once in the depth-sorted world layer. Planned for M2: blood sprays and decals, smoke, casings.
+- **Palette at runtime** (`render/palette-pass.ts`, exists, Q14): assets are strictly in palette, and a final full-screen filter on the stage snaps every pixel to the nearest Resurrect 64 color (the same "redmean" distance as the palette check), so blending effects (fades, smoke, transparency) stay in palette; mostly transparent pixels stay transparent so the background shows. On by default, switchable in the settings (`src/settings/preferences.ts`, kept in the browser). Written in GLSL for the WebGL renderer, PixiJS's default. The `/dev/sprites` test pattern has a strip of half-transparent swatches to check it. DOM menus are not filtered (decision 0004).
 
 ## 12. UI and languages
 
 Decisions [0004](decisions/0004-ui.md) and [0009](decisions/0009-i18n.md).
 
-- **Menus** (main menu, solo setup, lobby, settings, room code entry) are DOM, built with Preact (`src/ui/`), in a 960×540 layer scaled with the same integer factor as the canvas, using the **Press Start 2P** pixel font (OFL) at multiples of 8 px.
-- *Planned for milestone 1:* the **HUD** (health, ammo, grenades, kill feed, scores, timers, names) is drawn by PixiJS at internal resolution with a bitmap pixel font, so it is pixel-exact and in palette.
+- **Menus** (main menu, solo setup, settings, pause, end of match; later lobby and room code entry) are DOM, built with Preact (`src/ui/`), in a 960×540 layer scaled with the same integer factor as the canvas, using the **Press Start 2P** pixel font (OFL) at multiples of 8 px. `src/game/game-app.ts` holds the current screen and the running match; the solo setup (Q59) offers the themes and maps that suit team elimination, the side, 0–7 allied and 1–8 enemy bots (Q24), the bot difficulty and friendly fire (Q49), and remembers the last choices; `src/game/solo.ts` builds the match from them (the player is "You", bots are "Bot n", Q57). Over a match the interface lets the mouse through, except on its panels: the pause menu (Escape, Q53) and the end screen (winner, round score, kills and deaths of every participant; play again, main menu).
+- **Match controller** (`src/game/match-controller.ts`): runs a session on the canvas each frame (input → session → effects, world scene, HUD), pauses on Escape, follows a living teammate after death and switches on left or right click (`src/game/spectate.ts`, Q21, Q53), and keeps the last view when the mode declares a result.
+- The **HUD** (`render/hud.ts`, exists) is drawn by PixiJS at internal resolution with the **HUD bitmap font** (decision [0014](decisions/0014-hud-bitmap-font.md): a 1-bit atlas generated from the interface font, tinted to palette colors, `render/pixel-text.ts`), so it is pixel-exact and in palette (Q58): health and its bar bottom left; rounds, reserve or "reloading" bottom right; score with faction names, round and timer, survivors per team top center; the kill feed top right (5 lines, 5 s each, the player's own lines highlighted); the mode's banner in the middle at scale 2; "watching" while spectating; names and health bars above living teammates (Q26); the crosshair replacing the system cursor. Texts come from `i18n/hud-texts.ts`, which turns a `team` parameter into the faction name.
 - **Translations** with i18next (`src/i18n/`). UI strings in `locales/<lang>.json`; theme strings in `themes/<id>/locales/<lang>.json` (namespace `theme.<id>`). The language list comes from `/content-index.json`, which the Vite content plugin (`apps/client/vite/`) builds from the files found; the language's display name lives inside its file. Missing keys fall back to English and are reported by `check:i18n`.
 - *Rule for milestones 1 and 3:* **the server and the simulation never produce text**: they emit translation keys with parameters (`killfeed.eliminated` + killer id, victim id, weapon id); the client resolves names in the player's language.
-- A **font coverage check** (`check:i18n`) verifies that every character used in every locale exists in the interface font (and, from milestone 1, in the HUD bitmap font).
-- Keyboard input uses physical key codes, so ZQSD on AZERTY and WASD on QWERTY are the same keys with no setting.
+- A **font coverage check** (`check:i18n`) verifies that every character used in every locale exists in the interface font and in the HUD bitmap font, and that the HUD font is up to date (`npm run assets:font`).
+- Keyboard input uses physical key codes, so ZQSD on AZERTY and WASD on QWERTY are the same keys with no setting. In a match (`src/input/`): WASD positions and arrows move, the left button fires, R reloads (Q53); the aim is the angle from the character's hands on screen to the pointer; every key and button is released when the window loses focus.
 
 ## 13. Networking — *planned for milestone 3*
 
@@ -303,15 +323,17 @@ Decision [0005](decisions/0005-networking.md).
 - **Handshake** checks protocol version and a hash of the gameplay content, so a client with stale theme files gets a clear, translated error.
 - **Budget for 64 participants:** about 30 entities in view × ~10 bytes × 30 Hz ≈ 10 KB/s per client before deltas; server tick under 4 ms on average.
 
-## 14. Bots (`packages/bots`) — *planned for milestone 1*
+## 14. Bots (`packages/bots`) — *implemented in milestone 1; cover in milestone 2*
 
 Decision [0011](decisions/0011-bots.md).
 
 - A bot is a participant whose `InputCommand`s come from a `BotController` instead of a keyboard. Same rules, same code path in solo and online.
-- **Perception** is built from simulation queries limited to what the bot could see (view range, line of sight) plus what it hears (gunfire events within a radius).
-- **Decisions** use a small **utility AI**: candidate actions (wander, engage, chase, take cover, reload; later flank, throw grenade, retreat) are scored by considerations; the best one runs. New behaviors are added as new actions and considerations.
-- **Navigation:** A* on the tile grid with clearance for the character's radius, path smoothing, cached paths. Cover search samples nearby positions whose line of sight to the threat is blocked by a `cover` tile.
-- **Cost control:** bots think at about 10 Hz, staggered across ticks; aim smoothing runs every tick. Difficulty is a set of parameters (reaction time, aim error, think rate).
+- **Perception** (`src/perception.ts`, exists) is built from simulation queries limited to what the bot could see: a screen-sized rectangle around it (±480 × ±270 pixels, what a player sees) and line of sight, plus what it hears: enemy `shotFired` events within 900 pixels. A `Memory` keeps the last place an enemy was seen or heard for 8 seconds. This module is the only bot code that reads every actor; decisions receive only what it lets through.
+- **Decisions** (`src/brain.ts`, exists) use a small **utility AI**: candidate actions are scored from what the bot perceives and the best one runs: *engage* the nearest visible enemy (walk toward it beyond 360 px, otherwise stand and shoot), *reload* when empty or out of combat with few rounds left, *chase* the last clue seen or heard, *wander* toward an enemy spawn area or a random walkable tile. Every tick the bot steers along its path (giving up a destination it cannot get closer to for 1 s), turns its aim smoothly and fires only at an enemy it sees right now, after its reaction time and once its aim is within 0.2 rad. New behaviors are new actions with their score (take cover in M2; later flank, throw grenade, retreat).
+- **Navigation** (`src/navigation.ts`, exists): a `NavGrid` of walkable tiles (no blocking flag, no blocking footprint), A* with diagonal steps that never cut a blocked corner and a bound on the work, then smoothing into straight runs a character can walk (checked with its collider). Paths are kept until the destination changes. Planned: cover search, sampling nearby positions whose line of sight to the threat is blocked by a `cover` tile (M2).
+- **Cost control:** bots decide every few ticks (every 6 at normal, about 10 Hz), staggered by participant; steering, aim smoothing and the line-of-sight check of the current target run every tick. Measured: 16 bots cost 0.06 ms per tick on average (`npm run bench:sim`).
+- **Difficulty** (`src/difficulty.ts`): parameters only: reaction time, aim error drawn at each decision, turn rate, decision interval; presets `easy`, `normal`, `hard`. Each bot has its own random stream (`bot:<participant>`), so adding bots does not change other outcomes.
+- **Match host:** a participant of kind `bot` gets a brain (difficulty `normal` unless set); each tick the host gives it its character, the actors (perception filters them) and the previous tick's events (gunfire to hear).
 
 ## 15. Audio slots — *names reserved in themes (`sounds`); the rest is planned*
 
@@ -321,23 +343,25 @@ Out of scope, but reserved: behaviors declare sound cue names (`fire`, `reload`,
 
 Decision [0012](decisions/0012-tooling.md).
 
-- **Dev server** (Vite) serves the client, `themes/` and `locales/`, and watches them. The content plugin (`apps/client/vite/content-plugin.ts`) sends a `pixel-shoot:content-changed` message for each changed file; the client (`src/content/hot-reload.ts`) groups changes that arrive together and reloads only the affected theme, or the languages. Textures, animations and translations update in place, without a page reload. An invalid file shows the errors in a dev overlay (`src/dev/content-issues.tsx`) and the last valid version stays on screen. Maps join in milestone 1. In multiplayer development, the server will watch the same folders.
+- **Dev server** (Vite) serves the client, `themes/` and `locales/`, and watches them. The content plugin (`apps/client/vite/content-plugin.ts`) sends a `pixel-shoot:content-changed` message for each changed file; the client (`src/content/hot-reload.ts`) groups changes that arrive together and reloads only the affected theme, or the languages. Textures, animations and translations update in place, without a page reload. An invalid file shows the errors in a dev overlay (`src/dev/content-issues.tsx`) and the last valid version stays on screen. A change under a theme's `maps/` or `tilesets/` reloads only its maps and tileset images (C1.7): a running match swaps the map in place (`MatchHost.replaceMap`: new collision grid, bots' navigation, living characters left inside an obstacle moved to the nearest free spot, spawn areas from the next round) and the scene redraws it; an invalid map shows its problems and the previous version stays in play. Loads run in parallel; in headless Chromium a map edit shows in about 1.7 s. In multiplayer development, the server will watch the same folders.
 - **Palette check** (`check:palette`): scans every PNG; fails on any pixel whose color is not in Resurrect 64 (and, pending an open question, on partial transparency), reporting file, coordinates, color and nearest palette color.
-- **Placeholder generator** (`tools/src/placeholders/`): writes PNG + JSON in Aseprite's export format (same tags, directions and slices as real art), so replacing a placeholder is a file swap. `tools/placeholders.json` records the hash of each generated file: a file that no longer matches has been replaced by real art and is never overwritten; `assets:report` lists the placeholders still in use.
+- **Placeholder generator** (`tools/src/placeholders/`): writes PNG + JSON in Aseprite's export format (same tags, directions and slices as real art), so replacing a placeholder is a file swap; it also writes the Vietnam tilesets (`.tsj`) and the first map (`maps/river-village.tmj`, Q27) as Tiled files. `tools/placeholders.json` records the hash of each generated file: a file that no longer matches has been replaced by real art and is never overwritten; `assets:report` lists the placeholders still in use.
 - **Aseprite helpers**: an export script for all `.aseprite` files (when Aseprite is installed) and a Lua script that creates a new character file with the right size, palette, tags and slices.
-- **Validators**: `validate:themes`, `check:i18n`, font coverage.
-- **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse). Planned: collision and area-of-interest debug drawing.
-- **CI** (GitHub Actions): type-check, lint, tests, validators, palette check on every push.
+- **Validators**: `validate:themes` (themes, catalog conversion, maps), `check:i18n`, font coverage.
+- **Generated files** (`npm run schemas`, verified by `check:schemas`): editor JSON Schemas (`schemas/`), the Tiled project file (`tools/tiled/`) and the behavior reference ([`docs/reference/behaviors.md`](reference/behaviors.md)), all derived from the engine's definitions.
+- **FPS counter** (development builds only, `src/dev/fps-counter.tsx`): frames per second at the bottom of the screen, also exposed as `data-fps` for measurement scripts.
+- **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse); the test scene at `/dev/scene` (`src/dev/scene/`: a `sandbox` match on a map chosen with `?theme=<id>&map=<ref>`, by default the first map of the first theme that has one, the player in team 1 against three bots in team 2 who come looking for it, everyone back 2 seconds after dying; shots, impacts and hits show their effects). Planned: collision and area-of-interest debug drawing.
+- **CI** (GitHub Actions): `npm run check` (type-check, lint, tests, validators, palette check), the REUSE check and the Playwright smoke test, on every push.
 
 ## 17. Testing
 
-- **Vitest** for all packages.
+- **Vitest** for all packages. `npm run check` runs them with coverage, and fails below 80 % of lines in `sim`, `content`, `match`, `modes` and `bots` (C1.11; 96 to 100 % at the end of M1).
 - **Simulation tests** build tiny worlds from ASCII maps written in the test (`#` wall, `c` cover, `S` spawn…), feed scripted inputs and assert on state and events.
 - **Determinism test:** same seed and inputs → identical state hash after thousands of ticks.
 - **Headless full matches:** bot-only matches run in Node and must end with a winner within a time limit.
 - **Content tests:** broken fixture themes must produce the expected error messages.
 - **Protocol tests:** encode/decode round trips, including randomized inputs.
-- **Client:** unit tests for asset parsing, direction mapping and i18n; a browser smoke test (Playwright) from milestone 1.
+- **Client:** unit tests for asset parsing, direction mapping, i18n, sessions, input, solo setup and spectating; a browser smoke test (Playwright, `apps/client/e2e/`, decision [0015](decisions/0015-browser-smoke-tests.md)): a solo match starts from the menus and runs 10 seconds without a console error (`npm run test:e2e`, a separate CI job).
 - **Load tests** (milestone 3–4): headless clients and bots against a real server; tick time and bandwidth measured.
 
 ## 18. Performance budgets

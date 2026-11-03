@@ -36,6 +36,40 @@
             "type": "string",
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
             "description": "Default weapon (weapons.json)."
+          },
+          "speed": {
+            "default": 180,
+            "description": "Top speed in pixels per second (one tile is 48 pixels).",
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1000
+          },
+          "radius": {
+            "default": 10,
+            "description": "Radius of the collision circle around the feet, in pixels; also used for bullet hits. At most 23, so a character fits through a one-tile gap.",
+            "type": "number",
+            "minimum": 4,
+            "maximum": 23
+          },
+          "hitPoints": {
+            "default": 100,
+            "description": "Hit points at the start of each life.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "effects": {
+            "default": {},
+            "description": "Visual effects of this character.",
+            "type": "object",
+            "properties": {
+              "hit": {
+                "description": "Effect shown where a projectile hits this character.",
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              }
+            },
+            "additionalProperties": false
           }
         },
         "required": [

@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@pixel-shoot/bots": "*",
     "@pixel-shoot/content": "*",
     "@pixel-shoot/match": "*",
     "@pixel-shoot/modes": "*",

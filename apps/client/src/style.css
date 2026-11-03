@@ -30,6 +30,11 @@ body {
   image-rendering: pixelated;
 }
 
+/* In a match the HUD draws a crosshair instead of the system cursor (Q53). */
+.game-canvas.in-match {
+  cursor: none;
+}
+
 @font-face {
   font-family: 'Press Start 2P';
   src: url('./assets/fonts/PressStart2P-Regular.ttf') format('truetype');
@@ -196,4 +201,131 @@ h3 {
 
 .content-issues li.warning strong {
   color: var(--warning);
+}
+
+.scene-panel {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  max-width: 400px;
+  padding: 8px;
+  background: var(--panel);
+}
+
+.scene-panel p {
+  margin: 0;
+}
+
+/* The interface lets the mouse through to the game, except on its controls. */
+.scene-page {
+  pointer-events: none;
+}
+
+.scene-panel a {
+  pointer-events: auto;
+}
+
+/* Menus (Q59). */
+.menu-screen {
+  overflow-y: auto;
+}
+
+.menu-screen fieldset {
+  margin: 8px 0;
+}
+
+.menu-buttons {
+  margin-top: 16px;
+}
+
+.menu-buttons.vertical button {
+  display: block;
+  width: 100%;
+  margin-right: 0;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--letterbox);
+}
+
+button:disabled {
+  opacity: 1;
+  color: var(--muted);
+  cursor: default;
+}
+
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.hint {
+  color: var(--muted);
+  margin: 8px 0 16px;
+}
+
+.stepper output {
+  display: inline-block;
+  min-width: 24px;
+  margin-right: 8px;
+  text-align: center;
+}
+
+/* Over a match: the mouse goes through to the game except on panels. */
+.overlay {
+  pointer-events: none;
+}
+
+.panel {
+  pointer-events: auto;
+  background: var(--panel);
+  border: 2px solid var(--button-border);
+  padding: 16px;
+}
+
+.menu-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 240px;
+}
+
+.end-panel {
+  width: 560px;
+}
+
+.scoreboard {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+
+.scoreboard th {
+  font-weight: normal;
+  color: var(--muted);
+  text-align: left;
+}
+
+.scoreboard td,
+.scoreboard th {
+  padding: 2px 8px 2px 0;
+}
+
+.scoreboard tr.local td {
+  color: var(--accent);
+}
+
+/* Development builds only: frames per second, bottom center. */
+.fps-counter {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  margin: 0;
+  color: var(--muted);
+  pointer-events: none;
 }

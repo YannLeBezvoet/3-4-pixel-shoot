@@ -1,0 +1,12 @@
+{
+  "$schema": "../../schemas/projectiles.schema.json",
+  "projectiles": [
+    {
+      "id": "bullet",
+      "behavior": "bullet",
+      "params": { "speed": 1400, "range": 800 },
+      "sprite": "sprites/projectiles/bullet",
+      "effects": { "impact": "impact" }
+    }
+  ]
+}

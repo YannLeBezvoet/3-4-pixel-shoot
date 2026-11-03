@@ -1,0 +1,113 @@
+{
+    "automappingRulesFile": "",
+    "commands": [],
+    "compatibilityVersion": 1100,
+    "extensionsPath": "extensions",
+    "folders": [
+        "../../themes"
+    ],
+    "properties": [],
+    "propertyTypes": [
+        {
+            "id": 1,
+            "type": "class",
+            "name": "map",
+            "useAs": [
+                "map"
+            ],
+            "color": "#ff4d9be6",
+            "drawFill": true,
+            "members": [
+                {
+                    "name": "nameKey",
+                    "type": "string",
+                    "value": ""
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "type": "class",
+            "name": "tile",
+            "useAs": [
+                "tile",
+                "object"
+            ],
+            "color": "#ffe83b3b",
+            "drawFill": true,
+            "members": [
+                {
+                    "name": "solid",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "impassable",
+                    "type": "bool",
+                    "value": false
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "type": "class",
+            "name": "ground",
+            "useAs": [
+                "layer"
+            ],
+            "color": "#ff1ebc73",
+            "drawFill": true,
+            "members": []
+        },
+        {
+            "id": 4,
+            "type": "class",
+            "name": "overhead",
+            "useAs": [
+                "layer"
+            ],
+            "color": "#ff1ebc73",
+            "drawFill": true,
+            "members": []
+        },
+        {
+            "id": 5,
+            "type": "class",
+            "name": "objects",
+            "useAs": [
+                "layer"
+            ],
+            "color": "#ff1ebc73",
+            "drawFill": true,
+            "members": []
+        },
+        {
+            "id": 6,
+            "type": "class",
+            "name": "gameplay",
+            "useAs": [
+                "layer"
+            ],
+            "color": "#ff1ebc73",
+            "drawFill": true,
+            "members": []
+        },
+        {
+            "id": 7,
+            "type": "class",
+            "name": "spawn",
+            "useAs": [
+                "object"
+            ],
+            "color": "#fff9c22b",
+            "drawFill": true,
+            "members": [
+                {
+                    "name": "team",
+                    "type": "int",
+                    "value": 1
+                }
+            ]
+        }
+    ]
+}

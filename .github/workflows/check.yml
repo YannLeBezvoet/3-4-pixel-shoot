@@ -1,4 +1,5 @@
-# Runs everything `npm run check` runs, plus the REUSE licensing check, on every push and PR.
+# Runs everything `npm run check` runs, the REUSE licensing check and the browser smoke tests
+# (decision 0015), on every push and PR.
 name: Check
 
 on:
@@ -19,6 +20,18 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
 
   licenses:
     runs-on: ubuntu-latest

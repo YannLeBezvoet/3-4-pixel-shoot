@@ -1,5 +1,5 @@
 // Schemas of theme configuration files (docs/guides/add-a-theme.md).
-import type { BehaviorRegistry } from '@pixel-shoot/sim';
+import type { BehaviorKind, BehaviorRegistry } from '@pixel-shoot/sim';
 import { z } from 'zod';
 
 export const THEME_FORMAT_VERSION = 1;
@@ -55,6 +55,8 @@ export const themeManifestSchema = z.strictObject({
     ),
 });
 
+const effectRef = id.describe('Effect id (effects.json).');
+
 export const characterSchema = z.strictObject({
   id,
   nameKey: translationKey,
@@ -63,6 +65,32 @@ export const characterSchema = z.strictObject({
     'Character sprite: tags idle, walk, death in the 5 drawn directions and a "hand" slice.',
   ),
   weapon: id.describe('Default weapon (weapons.json).'),
+  speed: z
+    .number()
+    .positive()
+    .max(1000)
+    .default(180)
+    .describe('Top speed in pixels per second (one tile is 48 pixels).'),
+  radius: z
+    .number()
+    .min(4)
+    .max(23)
+    .default(10)
+    .describe(
+      'Radius of the collision circle around the feet, in pixels; also used for bullet hits. At most 23, so a character fits through a one-tile gap.',
+    ),
+  hitPoints: z
+    .int()
+    .min(1)
+    .max(10000)
+    .default(100)
+    .describe('Hit points at the start of each life.'),
+  effects: z
+    .strictObject({
+      hit: effectRef.optional().describe('Effect shown where a projectile hits this character.'),
+    })
+    .default({})
+    .describe('Visual effects of this character.'),
 });
 
 export const charactersFileSchema = z.strictObject({
@@ -76,49 +104,99 @@ const weaponBase = {
   sprite: assetRef.describe(
     'Weapon sprite, drawn pointing right, with "grip" and "muzzle" slices.',
   ),
+  projectile: id.describe('Projectile this weapon fires (projectiles.json).'),
+  effects: z
+    .strictObject({
+      fire: effectRef.optional().describe('Effect shown at the muzzle at each shot.'),
+    })
+    .default({})
+    .describe('Visual effects of this weapon.'),
   sounds: z
     .record(z.string(), z.string())
     .optional()
     .describe('Reserved for the audio milestone: sound cue name → sound id.'),
 };
 
-/** Runtime schema: parameters are checked afterwards against the chosen behavior. */
-export const weaponsFileSchema = z.strictObject({
+const projectileBase = {
+  id,
+  sprite: assetRef.describe(
+    'Projectile sprite, drawn pointing right, with a "fly" animation and an "origin" slice at the projectile position.',
+  ),
+  effects: z
+    .strictObject({
+      impact: effectRef
+        .optional()
+        .describe('Effect shown where the projectile stops against an obstacle.'),
+    })
+    .default({})
+    .describe('Visual effects of this projectile.'),
+};
+
+/**
+ * Runtime schema of a file listing entries that each pick an engine behavior: parameters are
+ * checked afterwards against the chosen behavior.
+ */
+function behaviorFileSchema<Key extends string, Shape extends z.core.$ZodShape>(
+  key: Key,
+  base: Shape,
+  example: string,
+) {
+  const entry = z.strictObject({
+    ...base,
+    behavior: z.string().describe(`Engine behavior, e.g. "${example}".`),
+    params: z.record(z.string(), z.unknown()).describe('Parameters of the behavior.'),
+  });
+  return z.strictObject({ $schema: schemaField, [key]: z.array(entry).min(1) } as {
+    $schema: typeof schemaField;
+  } & Record<Key, z.ZodArray<typeof entry>>);
+}
+
+/** Editor schema: one variant per behavior, so editors can complete the parameters. */
+function behaviorEditorSchema(
+  behaviors: BehaviorRegistry,
+  kind: BehaviorKind,
+  key: string,
+  base: z.core.$ZodShape,
+) {
+  const variants = behaviors.list(kind).map((behavior) =>
+    z.strictObject({
+      ...base,
+      behavior: z.literal(behavior.id).describe(behavior.description),
+      params: behavior.params,
+    }),
+  );
+  const entry =
+    variants.length === 1
+      ? (variants[0] as (typeof variants)[0])
+      : z.discriminatedUnion('behavior', variants as [(typeof variants)[0], ...typeof variants]);
+  return z.strictObject({ $schema: schemaField, [key]: z.array(entry).min(1) });
+}
+
+export const weaponsFileSchema = behaviorFileSchema('weapons', weaponBase, 'firearm');
+export const projectilesFileSchema = behaviorFileSchema('projectiles', projectileBase, 'bullet');
+
+export function weaponsEditorSchema(behaviors: BehaviorRegistry) {
+  return behaviorEditorSchema(behaviors, 'weapon', 'weapons', weaponBase);
+}
+
+export function projectilesEditorSchema(behaviors: BehaviorRegistry) {
+  return behaviorEditorSchema(behaviors, 'projectile', 'projectiles', projectileBase);
+}
+
+export const effectsFileSchema = z.strictObject({
   $schema: schemaField,
-  weapons: z
+  effects: z
     .array(
       z.strictObject({
-        ...weaponBase,
-        behavior: z.string().describe('Engine weapon behavior, e.g. "firearm".'),
-        params: z.record(z.string(), z.unknown()).describe('Parameters of the behavior.'),
+        id,
+        sprite: assetRef.describe(
+          'Effect sprite with a "play" animation; its "origin" slice is placed where the effect happens.',
+        ),
       }),
     )
     .min(1),
 });
 
-/** Editor schema: one variant per weapon behavior, so editors can complete the parameters. */
-export function weaponsEditorSchema(behaviors: BehaviorRegistry) {
-  const variants = behaviors.list('weapon').map((behavior) =>
-    z.strictObject({
-      ...weaponBase,
-      behavior: z.literal(behavior.id).describe(behavior.description),
-      params: behavior.params,
-    }),
-  );
-  return z.strictObject({
-    $schema: schemaField,
-    weapons: z
-      .array(
-        variants.length === 1
-          ? (variants[0] as (typeof variants)[0])
-          : z.discriminatedUnion(
-              'behavior',
-              variants as [(typeof variants)[0], ...typeof variants],
-            ),
-      )
-      .min(1),
-  });
-}
-
 export type ThemeManifest = z.infer<typeof themeManifestSchema>;
 export type CharacterDefinition = z.infer<typeof characterSchema>;
+export type EffectDefinition = z.infer<typeof effectsFileSchema>['effects'][number];

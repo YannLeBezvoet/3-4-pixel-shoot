@@ -1,6 +1,6 @@
 # @pixel-shoot/content
 
-Theme and locale schemas, validation and error formatting, and adapters from source files to engine data (Aseprite JSON → sprite sheets, later Tiled JSON → `MapData`). Reads files only through the `FileProvider` interface it defines.
+Theme and locale schemas, validation and error formatting, and adapters from source files to engine data (Aseprite JSON → sprite sheets, theme → simulation `Catalog`, Tiled JSON → `MapData`). Reads files only through the `FileProvider` interface it defines.
 
 - **May depend on:** `shared`, `sim`, `zod`.
 - **Must never:** read files directly or use DOM or Node APIs.

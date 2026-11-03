@@ -12,3 +12,5 @@ locales/
 
 # Prose: tables and wrapping are kept as written
 *.md
+**/test-results/
+**/playwright-report/

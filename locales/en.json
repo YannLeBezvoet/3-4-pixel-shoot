@@ -5,15 +5,19 @@
   "app": {
     "title": "Pixel Shoot"
   },
-  "home": {
-    "status": "Work in progress: milestone 0, foundations."
-  },
   "settings": {
-    "language": "Language"
+    "language": "Language",
+    "palettePass": "Palette pass",
+    "palettePassHint": "Keeps every pixel in the game palette, even where colors blend."
   },
   "dev": {
     "tools": "Developer tools",
     "spriteViewer": "Sprite viewer",
+    "scene": {
+      "title": "Test scene",
+      "controls": "Move: WASD (ZQSD on AZERTY) or arrows. Aim and fire: mouse. Reload: R.",
+      "noMap": "No theme has a map yet."
+    },
     "back": "Back",
     "viewer": {
       "characters": "Characters",
@@ -30,6 +34,33 @@
       "errors_other": "{{count}} content errors: the last valid version is shown.",
       "warnings_one": "{{count}} content warning.",
       "warnings_other": "{{count}} content warnings."
+    },
+    "fps": "{{fps}} FPS"
+  },
+  "hud": {
+    "reloading": "Reloading",
+    "ammoReserve": "{{rounds}} / {{spare}}",
+    "score": "{{team1}} {{score1}} - {{score2}} {{team2}}",
+    "round": "Round {{round}}",
+    "survivors": "Standing: {{team1}} vs {{team2}}",
+    "kill": "{{killer}} [{{weapon}}] {{victim}}",
+    "spectating": "Watching {{name}}"
+  },
+  "participant": {
+    "you": "You",
+    "bot": "Bot {{n}}"
+  },
+  "mode": {
+    "sandbox": {
+      "name": "Sandbox"
+    },
+    "team-elimination": {
+      "name": "Team elimination",
+      "countdown": "Round {{round}} · {{seconds}}",
+      "roundWon": "Round to {{team}}",
+      "roundDraw": "Draw: nobody takes the round",
+      "matchWon": "Victory: {{team}}",
+      "matchDraw": "The match is a draw"
     }
   },
   "direction": {
@@ -41,5 +72,46 @@
     "nw": "NW",
     "w": "W",
     "sw": "SW"
+  },
+  "menu": {
+    "solo": "Solo",
+    "settings": "Settings",
+    "back": "Back",
+    "fewer": "Fewer",
+    "more": "More",
+    "on": "On",
+    "off": "Off"
+  },
+  "solo": {
+    "title": "Solo",
+    "noMap": "No theme has a map for this mode.",
+    "theme": "Theme",
+    "map": "Map",
+    "side": "Your side",
+    "allies": "Allied bots",
+    "enemies": "Enemy bots",
+    "participants_one": "{{count}} participant",
+    "participants_other": "{{count}} participants",
+    "difficulty": "Bot difficulty",
+    "friendlyFire": "Friendly fire",
+    "start": "Start"
+  },
+  "difficulty": {
+    "easy": "Easy",
+    "normal": "Normal",
+    "hard": "Hard"
+  },
+  "pause": {
+    "title": "Paused",
+    "resume": "Resume",
+    "quit": "Quit to main menu"
+  },
+  "end": {
+    "player": "Player",
+    "team": "Team",
+    "kills": "Kills",
+    "deaths": "Deaths",
+    "again": "Play again",
+    "menu": "Main menu"
   }
 }

@@ -9,7 +9,7 @@ import path from 'node:path';
 import { parseGpl } from '@pixel-shoot/content';
 import { fromRoot } from '../paths';
 import { ColorPicker } from './canvas';
-import { vietnamPlaceholders } from './catalog';
+import { examplePlaceholders, vietnamPlaceholders } from './catalog';
 import type { PlaceholderFile } from './catalog';
 
 const MANIFEST = 'tools/placeholders.json';
@@ -37,7 +37,8 @@ async function readExisting(file: string): Promise<Buffer | undefined> {
 
 export async function catalog(root: string): Promise<PlaceholderFile[]> {
   const palette = parseGpl(await readFile(path.join(root, 'palette', 'resurrect-64.gpl'), 'utf8'));
-  return vietnamPlaceholders(new ColorPicker(palette));
+  const picker = new ColorPicker(palette);
+  return [...vietnamPlaceholders(picker), ...examplePlaceholders(picker)];
 }
 
 export type FileStatus = 'placeholder' | 'replaced' | 'missing';

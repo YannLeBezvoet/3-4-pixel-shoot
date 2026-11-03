@@ -11,5 +11,8 @@
   "weapon": {
     "m16a1": { "name": "M16A1" },
     "ak47": { "name": "AK-47" }
+  },
+  "map": {
+    "river-village": "Le village de la rivière"
   }
 }

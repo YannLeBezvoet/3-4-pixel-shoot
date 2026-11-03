@@ -12,6 +12,8 @@ export const contentIndexSchema = z.strictObject({
       id: z.string(),
       /** Every sprite sheet of the theme (JSON files under sprites/), as asset paths without extension. */
       sprites: z.array(z.string()),
+      /** Every map of the theme (.tmj files under maps/), as paths without extension. */
+      maps: z.array(z.string()),
     }),
   ),
 });

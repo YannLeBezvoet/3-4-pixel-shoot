@@ -1,0 +1,93 @@
+// Engine-neutral description of a map (ARCHITECTURE §9). Map sources (Tiled files today, a
+// generator later) produce it; the simulation reads its gameplay parts and the client also
+// draws its visual parts. Distances are world units: pixels at internal resolution.
+
+/** Side of a square tile, in world units. */
+export const TILE_SIZE = 48;
+
+/** Gameplay flags of a tile or a collision footprint, combined as bits. */
+export const TileFlag = {
+  /** Blocks movement, projectiles and sight: walls, rocks, huts. */
+  solid: 1,
+  /** Blocks movement only; projectiles and sight pass: deep water, chasms (Q50). */
+  impassable: 2,
+} as const;
+
+/** Flags that stop a character. */
+export const BLOCKS_MOVEMENT = TileFlag.solid | TileFlag.impassable;
+/** Flags that stop a projectile. */
+export const BLOCKS_PROJECTILES = TileFlag.solid;
+/** Flags that stop line of sight. */
+export const BLOCKS_SIGHT = TileFlag.solid;
+
+/** A picture cut from an image: the image's path in the theme folder and a rectangle in it. */
+export interface TileVisual {
+  /** Image path relative to the theme folder, e.g. "tilesets/jungle-ground.png". */
+  readonly image: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** One kind of tile used by the map: its gameplay flags and its picture. */
+export interface TileType {
+  readonly flags: number;
+  readonly visual?: TileVisual;
+}
+
+export interface TileLayer {
+  readonly name: string;
+  /**
+   * `ground` layers are drawn below everything and carry gameplay flags;
+   * `overhead` layers are drawn above everything and have no gameplay effect.
+   */
+  readonly role: 'ground' | 'overhead';
+  /** `width × height` indices into `MapData.tileTypes`, row by row; 0 means no tile. */
+  readonly cells: readonly number[];
+}
+
+/** An axis-aligned rectangle in world units; (x, y) is its top-left corner. */
+export interface Box {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface Footprint extends Box {
+  readonly flags: number;
+}
+
+/** A placed object made of one picture, possibly larger than a tile (a tree, a hut). */
+export interface MapObject {
+  /** Identifier in the source (the Tiled object id), used in messages. */
+  readonly id: number;
+  /** Ground point: bottom center of the picture. Objects are depth-sorted by it. */
+  readonly x: number;
+  readonly y: number;
+  readonly visual?: TileVisual;
+  /** Collision boxes in world coordinates. */
+  readonly footprints: readonly Footprint[];
+}
+
+/** An area where the members of a team appear at the start of a round (Q52). */
+export interface SpawnArea extends Box {
+  /** Team number, from 1. */
+  readonly team: number;
+}
+
+export interface MapData {
+  readonly id: string;
+  /** Translation key of the map name. */
+  readonly nameKey: string;
+  /** Size in tiles. */
+  readonly width: number;
+  readonly height: number;
+  /** Tile kinds referenced by layer cells. Index 0 is "no tile" and has no flags. */
+  readonly tileTypes: readonly TileType[];
+  /** Tile layers in drawing order. */
+  readonly layers: readonly TileLayer[];
+  readonly objects: readonly MapObject[];
+  readonly spawns: readonly SpawnArea[];
+}

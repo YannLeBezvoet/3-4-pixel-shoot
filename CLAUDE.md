@@ -8,9 +8,10 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 
 ## Current state
 
-- **Milestone 0 (Foundations) done**: version 0.0.0, merged into `main` on 2026-11-03 (not pushed). Criteria results: [docs/ROADMAP.md](docs/ROADMAP.md#m0--foundations); C0.10 (Aseprite) awaits the owner's check.
-- **Next:** milestone 1 (playable solo). Submit its detailed plan for approval before starting.
-- What exists today: [ARCHITECTURE §0](docs/ARCHITECTURE.md#0-what-exists-end-of-milestone-0).
+- **Milestone 0 (Foundations) done**: version 0.0.0. Criteria results: [docs/ROADMAP.md](docs/ROADMAP.md#m0--foundations); C0.10 (Aseprite) awaits the owner's check.
+- **Milestone 1 (playable solo) done**: version 0.1.0, merged into `main` and pushed on 2026-11-03. Criteria results: [ROADMAP](docs/ROADMAP.md#m1--playable-solo).
+- **Next:** milestone 2 (combat). Submit its detailed plan for approval before starting.
+- What exists today: [ARCHITECTURE §0](docs/ARCHITECTURE.md#0-what-exists-end-of-milestone-1).
 
 ## Where to find what
 
@@ -25,6 +26,8 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 | Themes (data only) | `themes/<id>/`; example: [themes/vietnam/](themes/vietnam/) |
 | Palette | [palette/resurrect-64.gpl](palette/resurrect-64.gpl) |
 | Editor JSON Schemas for theme files (generated) | `schemas/` |
+| Behaviors and their parameters (generated) | [docs/reference/behaviors.md](docs/reference/behaviors.md) |
+| Tiled project file (generated; open it in Tiled) | `tools/tiled/pixel-shoot.tiled-project` |
 | Licenses of every file | [REUSE.toml](REUSE.toml), [CREDITS.md](CREDITS.md), `LICENSES/` |
 | A package's role and allowed dependencies | `packages/*/README.md`, `apps/*/README.md`, [tools/README.md](tools/README.md) |
 
@@ -58,11 +61,14 @@ Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
 | `npm run typecheck` | Type-check every package (`tsc -b`, project references), then tests (`tsconfig.test.json`) |
 | `npm run lint` | ESLint, including module boundary rules |
 | `npm run format` / `format:check` | Prettier on code and config (not on `themes/`, `locales/`, Markdown) |
-| `npm run test` / `test:watch` / `coverage` | Vitest, all workspaces |
+| `npm run test` / `test:watch` / `coverage` | Vitest, all workspaces; `coverage` also enforces 80 % of lines in `sim`, `content`, `match`, `modes`, `bots` (C1.11) and is what `check` runs |
+| `npm run test:e2e` | Playwright smoke test in Chromium (starts or reuses the dev server; first run: `npx playwright install chromium`). Not in `check`; CI runs it (decision 0015) |
 | `npm run check:palette [files…]` | Palette and transparency check of every PNG (or the given files) |
 | `npm run validate:themes [ids…]` | Validate themes as the game loads them |
-| `npm run schemas` / `check:schemas` | Regenerate / verify `schemas/*.json` (run after changing a Zod schema) |
+| `npm run schemas` / `check:schemas` | Regenerate / verify the generated files: `schemas/*.json`, the Tiled project file, `docs/reference/behaviors.md` (run after changing a Zod schema, a behavior or a map property) |
 | `npm run sprites:export [-- --watch]` | Export every `.aseprite` file (needs `ASEPRITE_PATH`) |
 | `npm run assets:placeholders` / `assets:report` | (Re)generate placeholder art; list placeholders still in use |
-| `npm run check:i18n` | Key parity with English, `{{variables}}`, and font coverage of every text |
-| `npm run check` | **Everything CI runs** (`.github/workflows/check.yml`, plus a REUSE licensing check). Must pass before every commit |
+| `npm run bench:sim [-- --rounds N]` | Headless bot-only rounds on the Vietnam map: round endings, blind shots, tick time (default 100 rounds, about 15 s) |
+| `npm run assets:font` | Regenerate the HUD bitmap font from the interface font (decision 0014) |
+| `npm run check:i18n` | Key parity with English, `{{variables}}`, font coverage of every text, HUD font up to date |
+| `npm run check` | **Everything CI runs** except the browser smoke test (`.github/workflows/check.yml` also runs REUSE and `test:e2e`). Must pass before every commit |

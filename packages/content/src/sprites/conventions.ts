@@ -67,6 +67,8 @@ export interface SpriteRequirements {
   readonly kind: string;
   /** Actions that must exist in all 5 drawn directions. */
   readonly directionalActions: readonly string[];
+  /** Animations without direction that must exist. */
+  readonly actions: readonly string[];
   /** Slices that must exist, with what they are for. */
   readonly slices: Readonly<Record<string, string>>;
 }
@@ -74,14 +76,30 @@ export interface SpriteRequirements {
 export const CHARACTER_SPRITE: SpriteRequirements = {
   kind: 'character',
   directionalActions: ['idle', 'walk', 'death'],
+  actions: [],
   slices: { hand: 'the point where the weapon grip attaches' },
 };
 
 export const WEAPON_SPRITE: SpriteRequirements = {
   kind: 'weapon',
   directionalActions: [],
+  actions: [],
   slices: {
     grip: 'the point the weapon rotates around and holds in the hand',
     muzzle: 'the point where projectiles and muzzle flashes start',
   },
+};
+
+export const PROJECTILE_SPRITE: SpriteRequirements = {
+  kind: 'projectile',
+  directionalActions: [],
+  actions: ['fly'],
+  slices: { origin: 'the projectile position: the sprite is drawn there and rotates around it' },
+};
+
+export const EFFECT_SPRITE: SpriteRequirements = {
+  kind: 'effect',
+  directionalActions: [],
+  actions: ['play'],
+  slices: {},
 };

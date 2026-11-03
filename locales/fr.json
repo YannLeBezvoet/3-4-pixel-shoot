@@ -5,15 +5,19 @@
   "app": {
     "title": "Pixel Shoot"
   },
-  "home": {
-    "status": "En cours de développement : jalon 0, fondations."
-  },
   "settings": {
-    "language": "Langue"
+    "language": "Langue",
+    "palettePass": "Passe palette",
+    "palettePassHint": "Garde chaque pixel dans la palette du jeu, même là où les couleurs se mélangent."
   },
   "dev": {
     "tools": "Outils de développement",
     "spriteViewer": "Visionneuse de sprites",
+    "scene": {
+      "title": "Scène de test",
+      "controls": "Déplacement : ZQSD (WASD en QWERTY) ou flèches. Viser et tirer : souris. Recharger : R.",
+      "noMap": "Aucun thème n'a encore de carte."
+    },
     "back": "Retour",
     "viewer": {
       "characters": "Personnages",
@@ -32,6 +36,33 @@
       "warnings_one": "{{count}} avertissement de contenu.",
       "warnings_many": "{{count}} avertissements de contenu.",
       "warnings_other": "{{count}} avertissements de contenu."
+    },
+    "fps": "{{fps}} IPS"
+  },
+  "hud": {
+    "reloading": "Rechargement",
+    "ammoReserve": "{{rounds}} / {{spare}}",
+    "score": "{{team1}} {{score1}} - {{score2}} {{team2}}",
+    "round": "Manche {{round}}",
+    "survivors": "Debout : {{team1}} contre {{team2}}",
+    "kill": "{{killer}} [{{weapon}}] {{victim}}",
+    "spectating": "Vous suivez {{name}}"
+  },
+  "participant": {
+    "you": "Vous",
+    "bot": "Bot {{n}}"
+  },
+  "mode": {
+    "sandbox": {
+      "name": "Bac à sable"
+    },
+    "team-elimination": {
+      "name": "Élimination par équipes",
+      "countdown": "Manche {{round}} · {{seconds}}",
+      "roundWon": "Manche pour {{team}}",
+      "roundDraw": "Égalité : personne ne prend la manche",
+      "matchWon": "Victoire : {{team}}",
+      "matchDraw": "Match nul"
     }
   },
   "direction": {
@@ -43,5 +74,47 @@
     "nw": "NO",
     "w": "O",
     "sw": "SO"
+  },
+  "menu": {
+    "solo": "Solo",
+    "settings": "Réglages",
+    "back": "Retour",
+    "fewer": "Moins",
+    "more": "Plus",
+    "on": "Oui",
+    "off": "Non"
+  },
+  "solo": {
+    "title": "Solo",
+    "noMap": "Aucun thème n'a de carte pour ce mode.",
+    "theme": "Thème",
+    "map": "Carte",
+    "side": "Votre camp",
+    "allies": "Bots alliés",
+    "enemies": "Bots ennemis",
+    "participants_one": "{{count}} participant",
+    "participants_many": "{{count}} participants",
+    "participants_other": "{{count}} participants",
+    "difficulty": "Difficulté des bots",
+    "friendlyFire": "Tir ami",
+    "start": "Commencer"
+  },
+  "difficulty": {
+    "easy": "Facile",
+    "normal": "Normal",
+    "hard": "Difficile"
+  },
+  "pause": {
+    "title": "Pause",
+    "resume": "Reprendre",
+    "quit": "Quitter vers le menu"
+  },
+  "end": {
+    "player": "Joueur",
+    "team": "Équipe",
+    "kills": "Éliminations",
+    "deaths": "Morts",
+    "again": "Rejouer",
+    "menu": "Menu principal"
   }
 }

@@ -1,0 +1,21 @@
+{
+  "$schema": "../../schemas/weapons.schema.json",
+  "weapons": [
+    {
+      "id": "rifle",
+      "nameKey": "weapon.rifle",
+      "behavior": "firearm",
+      "params": {
+        "fireMode": "auto",
+        "roundsPerMinute": 600,
+        "damage": 25,
+        "spreadDeg": 2,
+        "magazine": 25,
+        "reloadMs": 2000
+      },
+      "sprite": "sprites/weapons/rifle",
+      "projectile": "bullet",
+      "effects": { "fire": "muzzle-flash" }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "../../schemas/characters.schema.json",
+  "characters": [
+    {
+      "id": "red-soldier",
+      "nameKey": "character.red-soldier",
+      "faction": "red",
+      "sprite": "sprites/characters/red-soldier",
+      "weapon": "rifle",
+      "effects": { "hit": "impact" }
+    },
+    {
+      "id": "blue-soldier",
+      "nameKey": "character.blue-soldier",
+      "faction": "blue",
+      "sprite": "sprites/characters/blue-soldier",
+      "weapon": "rifle",
+      "effects": { "hit": "impact" }
+    }
+  ]
+}

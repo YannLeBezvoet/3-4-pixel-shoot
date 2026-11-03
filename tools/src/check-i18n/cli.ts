@@ -1,11 +1,14 @@
 // npm run check:i18n
 // - every interface language has the same keys as English, with the same {{variables}};
-// - every character used by any translation (interface and themes) exists in the game font.
+// - every character used by any translation (interface and themes) exists in the game font
+//   and in the HUD bitmap font, which must be up to date (npm run assets:font).
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import type { Locale } from '@pixel-shoot/content';
 import { IssueCollector, compareLocales, formatIssues, parseLocale } from '@pixel-shoot/content';
 import opentype from 'opentype.js';
+import { HUD_FONT_JSON, HUD_FONT_PNG, buildHudFont } from '../hud-font/hud-font';
+import type { HudFontData } from '../hud-font/hud-font';
 import { repoRoot } from '../paths';
 
 /** The interface font (also referenced by apps/client/src/style.css). */
@@ -86,10 +89,34 @@ export async function checkI18n(root = repoRoot): Promise<IssueCollector> {
     buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
   );
   const fontName = font.getEnglishName('fontFamily') || path.basename(UI_FONT);
+
+  // The HUD font is generated from the interface font and must match it.
+  const expected = buildHudFont(font);
+  const [png, json] = await Promise.all([
+    readFile(path.join(root, HUD_FONT_PNG)).catch(() => undefined),
+    readFile(path.join(root, HUD_FONT_JSON), 'utf8').catch(() => undefined),
+  ]);
+  if (!png?.equals(expected.png) || json !== expected.json)
+    issues.error(
+      HUD_FONT_JSON,
+      '',
+      'The HUD font is missing or out of date: run "npm run assets:font".',
+    );
+  const hudChars = new Set(json ? (JSON.parse(json) as HudFontData).chars : '');
   for (const { file, key, text } of texts) {
     const missing = [...new Set([...text])].filter(
       (char) => !/\s/.test(char) && font.charToGlyphIndex(char) === 0,
     );
+    const notInHud = [...new Set([...text])].filter(
+      (char) => !/\s/.test(char) && !hudChars.has(char),
+    );
+    if (missing.length === 0 && notInHud.length > 0) {
+      issues.error(
+        file,
+        key,
+        `The HUD font has no glyph for ${notInHud.map((c) => `"${c}"`).join(', ')}: run "npm run assets:font".`,
+      );
+    }
     if (missing.length > 0) {
       issues.error(
         file,

@@ -1,0 +1,7 @@
+{
+  "theme": { "name": "Training" },
+  "faction": { "red": "Red", "blue": "Blue" },
+  "character": { "red-soldier": "Red soldier", "blue-soldier": "Blue soldier" },
+  "weapon": { "rifle": "Training rifle" },
+  "map": { "arena": "Arena" }
+}

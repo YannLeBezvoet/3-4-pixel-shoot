@@ -8,8 +8,8 @@
 
 | Milestone | Scope | Status |
 |---|---|---|
-| M0 | Foundations | **Done** — version 0.0.0, merged into `main` on 2026-11-03 (C0.10 to be checked by the owner; CI runs once pushed) |
-| M1 | Playable solo | Not started |
+| M0 | Foundations | **Done** — version 0.0.0, merged into `main` and pushed on 2026-11-03 (C0.10 to be checked by the owner) |
+| M1 | Playable solo | **Done** — version 0.1.0, merged into `main` and pushed on 2026-11-03 |
 | M2 | Combat | Not started |
 | M3 | Multiplayer | Not started |
 | M4 | Civilians, 64 participants, match settings | Not started |
@@ -82,7 +82,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 
 **Goal:** a complete solo match against bots on a Tiled map, with the architecture that multiplayer will reuse.
 
-**Depends on:** Q13–Q28. **Change from the original plan (Q13, accepted):** the team elimination mode is implemented here, in solo, rather than in M3 (Q13). It gives solo a goal and validates the `GameMode` interface early; M3 then brings it online.
+**Branch:** `milestone/1-playable-solo`. **Depends on:** Q13–Q28 and Q48–Q60. **Change from the original plan (Q13, accepted):** the team elimination mode is implemented here, in solo, rather than in M3 (Q13). It gives solo a goal and validates the `GameMode` interface early; M3 then brings it online.
 
 ### Scope
 
@@ -91,24 +91,82 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 - `match`: `MatchHost` with participants, bot scheduling, mode lifecycle.
 - `modes`: `team-elimination` (Q21).
 - `bots`: perception with line of sight, utility AI with wander / engage / chase / reload, A\* navigation, difficulty parameters.
-- `client`: `LocalSession`; renderer (tile chunks, y-sorted world layer with multi-tile trees, overhead layer, interpolation, camera with look-ahead, optional palette pass per Q14); input (physical keys, mouse aim); HUD in PixiJS with bitmap font (health, ammo, team counts, round info, kill feed); DOM menus (main menu, solo setup, settings, end of round/match); spectating after death; map hot reload; client particles for muzzle flash and hits.
+- `client`: `LocalSession`; renderer (tile chunks, y-sorted world layer with multi-tile trees, overhead layer, interpolation, camera centered on the player (Q20), optional palette pass per Q14); input (physical keys, mouse aim); HUD in PixiJS with bitmap font (health, ammo, team counts, round info, kill feed); DOM menus (main menu, solo setup, settings, end of round/match); spectating after death; map hot reload; client particles for muzzle flash and hits.
 - Theme: Vietnam placeholder map (Q27), factions and rifles (Q22, Q23); a second minimal theme `themes/example/` proving a theme needs no code.
 - Docs: guides `docs/guides/create-a-map.md` and `docs/guides/add-a-mode.md`; add-a-theme guide completed for weapons; generated behavior reference.
 
+### Tasks (one or a few commits each)
+
+*Approved on 2026-11-03; all done.* The order gives a first playable scene early (end of task 13: walking and shooting on the Vietnam map), then the match, the bots and the interface. Each commit updates the docs it affects; task 24 is the final pass.
+
+#### Simulation (`sim`)
+
+1. **World core.** Entity ids and typed component stores; systems run in the order of [ARCHITECTURE §5](ARCHITECTURE.md#5-simulation-core-packagessim--planned-for-milestone-1-except-the-behavior-registry); `step()` at 60 Hz with time counted in ticks; `InputCommand` (movement vector, aim angle, fire and reload buttons); named PRNG streams owned by the world; `SimEvent`s per tick; a state hash; the `MapData` type and the static grid of tile flags (`solid`, and `impassable` if Q50 is accepted). An ASCII-map helper (`#` solid, `~` impassable, `1`/`2` spawn…) exported for the tests of every package.
+2. **Movement and collision.** Characters as circles against the grid, sliding along walls; near-instant acceleration (Q19); separation between characters (Q48); spatial hash for entity queries; grid raycast for line of sight. Test: no character overlaps a `solid` tile after 10,000 random-input ticks (C1.4).
+3. **Weapons and projectiles.** Aim; `firearm` behavior (auto and semi, rate of fire, spread drawn from the world PRNG, magazine, reload including automatic reload (Q53), optional reserve); `bullet` projectile behavior (speed, range) with swept segment tests against the grid and character circles, including the segment from the shooter to the muzzle so nobody fires through a wall they stand against; events `shotFired`, `reloadStarted`, `reloaded`, `projectileImpact`, `hit`. Test: 360° sweep at the maximum projectile speed the schema allows (C1.4).
+4. **Health and death.** 100 hit points (Q15), damage from weapon parameters, friendly-fire flag (Q49), `damaged` and `killed` events carrying killer and weapon, corpses that block nothing (Q28). Determinism test (C1.5).
+
+#### Content and maps (`content`, `tools`)
+
+5. **Theme gameplay data.** Character fields `speed`, `radius`, `hitPoints` with defaults (Q54); new `projectiles.json` (behavior `bullet` + parameters + sprite); weapon entries gain `projectile` and an `effects` block (muzzle flash); new `effects.json` (effect id → sprite animation) for muzzle flashes and impacts; muzzle offset derived from the `hand`, `grip` and `muzzle` slices (gameplay content, [ARCHITECTURE §8.3](ARCHITECTURE.md#83-gameplay-content-vs-presentation-content)); conversion of a theme into the simulation's catalog of characters, weapons and projectiles. Format policy per Q56. JSON Schemas regenerated; Vietnam theme, add-a-theme guide and broken fixtures updated for every new message.
+6. **Tiled maps.** `MapSource` interface and `TiledMapSource`: `.tmj` with external `.tsj` tilesets → `MapData`; layer classes `ground`, `objects`, `overhead`, `gameplay`; tile properties (`solid`, `impassable`) with per-object overrides; multi-tile tile objects with rectangle collision footprints from Tiled's collision editor; `spawn` areas with a `team` (Q52); map `nameKey` (Q55); maps discovered in `maps/` and listed in the content index. Unsupported Tiled features (infinite maps, other orientations, embedded tilesets, non-48 px tiles) rejected; messages name map, layer, object id and position; at least 10 broken fixtures, each asserting the exact message.
+7. **Generated files.** The Tiled project file `tools/tiled/pixel-shoot.tiled-project` (custom classes and enums for layers, tiles, spawns and maps, generated from engine schemas) and the behavior reference `docs/reference/behaviors.md` (every behavior, its description and parameters), both written by `npm run schemas` and verified by `check:schemas` in CI.
+8. **Placeholder art and the Vietnam map.** Generator additions: river banks and bridge tiles, hut roof tiles for the `overhead` layer, bullet sprite, wall-impact effect, crosshair; `.tsj` tilesets carrying tile properties and collision footprints; a deterministic generator for the first map (about 80×60 tiles: jungle edge, village, rice paddies, river, Q27), which stops overwriting it once it is edited in Tiled (same hash mechanism as other placeholders). Palette check and validation pass.
+
+#### First playable scene (`match`, `modes`, client)
+
+9. **Game-mode API and `MatchHost`.** `GameModeDefinition`, `ModeApi` (spawn in a team's spawn area, spectate, timers, announcements as translation keys, end round or match), `ModeState`, map requirements, settings schema with defaults, in `sim`. `MatchHost` in `match`: participants (human or bot) with team and character, input routing, mode lifecycle, bot scheduling (thinking staggered at about 10 Hz), `WorldView` and event stream, driven by a clock it is given, map replacement in place (used by hot reload). A minimal `sandbox` mode (spawn and nothing else) serves dev pages and tests; it is not offered in menus and is the first example of the add-a-mode guide.
+10. **`LocalSession` and game loop.** The `Session` interface ([ARCHITECTURE §6](ARCHITECTURE.md#6-match-host-and-sessions--planned-for-milestone-1)); a fixed-step accumulator driven by `requestAnimationFrame`, giving the interpolation factor; pause; a catch-up limit after the tab was hidden.
+11. **Input.** Physical key codes (`KeyW/A/S/D`, arrows), mouse aim measured from the character's hand on screen, buttons per Q53, keys released when the window loses focus; unit tests of the mapping.
+12. **World rendering.** Ground layer baked into chunk textures; y-sorted world layer (characters, multi-tile objects such as trees, corpses below the living); overhead layer; interpolation between ticks; camera keeping the player at the exact center of the screen (Q20); dev page `/dev/scene` where the player walks and shoots on any map in the `sandbox` mode (C1.2, C1.3); unit test of the sort keys.
+13. **Effects.** Client particles driven by events: muzzle flash at the weapon's `muzzle`, bullet sprites, wall impacts, blood splat on hits. No gameplay effect.
+
+#### Match and bots (`modes`, `bots`)
+
+14. **Team elimination.** Q21 rules with Q51 (countdown, round result, round cap) and Q52 (spawns); spectating teammates; mode state for the HUD; scripted tests of every rule (elimination, time limit, draw, match end, friendly fire).
+15. **Bot perception and navigation.** Sight limited to a view rectangle the size of the screen with line of sight; hearing gunfire within a radius; memory of the last position seen or heard; A\* on the grid with clearance for the collider radius, path smoothing, cached paths, time-sliced requests; tests on ASCII maps.
+16. **Bot decisions.** Utility AI with wander, engage, chase, reload; aim smoothing every tick, reaction delay and aim error; difficulty presets easy, normal, hard; the bots' own PRNG stream. Headless bot-match test (C1.6), determinism with bots, and `npm run bench:sim` printing tick times for 16 participants (C1.10).
+
+#### Interface (client)
+
+17. **HUD.** A bitmap font generated from Press Start 2P as a 1-bit glyph atlas at 8 px, in palette, built by a tool and covered by the font check (decision record); HUD widgets per Q58; teammates' names and health bars (Q26); crosshair; every text from translation keys.
+18. **Menus.** Main menu, solo setup, settings, pause, end of match (Q59); spectating controls; names per Q57; every text translated in English and French.
+19. **Palette pass.** A final full-screen pass snapping every pixel to the nearest Resurrect 64 color (Q14), on by default, switchable in the settings.
+20. **Map hot reload.** The content store reloads changed maps and tilesets and swaps them into the running match (tiles and collision; characters left inside a wall are moved to the nearest free spot; spawn areas apply from the next round). An invalid map shows the error overlay and the previous map stays active (C1.7).
+
+#### Proofs, tests and documentation
+
+21. **Example theme.** `themes/example/` (Q60). Its art is produced by the placeholder generator in a tools-only commit; the theme itself is added in a commit that touches only `themes/example/` (C1.8).
+22. **Browser smoke test.** Playwright test starting a solo match (C1.12), run by `npm run test:e2e` and by a separate CI job; `npm run check` stays free of browsers so it remains fast before each commit (decision record).
+23. **Coverage and performance.** Line-coverage thresholds of 80 % for `sim`, `content`, `match`, `modes`, `bots`, enforced in CI (C1.11); an FPS counter in development builds; measurements recorded (C1.10).
+24. **Documentation.** Guides `create-a-map.md` and `add-a-mode.md`; add-a-theme guide completed (weapons, projectiles, effects, maps); `ARCHITECTURE.md` updated to what exists; new decision records accepted; `CLAUDE.md`; `CHANGELOG.md` entry `0.1.0`; criteria results in this file.
+
 ### Success criteria
 
-- [ ] **C1.1** From the main menu: Solo → choose bots per team (up to 16 participants, Q24) → the match starts on the Vietnam map; a full match plays to a winner and returns to the menu.
-- [ ] **C1.2** ZQSD on AZERTY and WASD on QWERTY move the player with no setting (physical keys). The character faces the cursor in 8 directions; the weapon follows the exact mouse angle.
-- [ ] **C1.3** Y-sorting: a dev scene shows the player walking around a tree; the player is hidden by the tree when above its base and drawn over it when below (screenshot check, and a unit test on sort keys).
-- [ ] **C1.4** Simulation tests (ASCII maps): bullets never cross `solid` tiles over a 360° sweep of angles at max projectile speed; a character never overlaps a `solid` tile after 10,000 random-input ticks; damage and death follow weapon parameters.
-- [ ] **C1.5** Determinism: same seed and inputs give the same state hash after 10,000 ticks.
-- [ ] **C1.6** Headless bot matches: in 100 seeded bot-only matches (8 vs 8) run in Node, ≥ 95 end with a winner before the round time limit; bots never fire at an enemy they have no line of sight to (asserted from events).
-- [ ] **C1.7** Map hot reload: saving the map in Tiled updates the running game within 2 seconds without a page reload (tiles, collision); an invalid change shows the error overlay naming map, layer and object, and the previous map stays active.
-- [ ] **C1.8** The `example` theme, added as files only, passes validation, appears in the solo setup, and plays.
-- [ ] **C1.9** Every visible text is translated in French and English; `check:i18n`, font coverage check and literal-string lint pass.
-- [ ] **C1.10** Performance on the reference machine (Q25): 60 FPS sustained with 16 participants; average simulation tick < 1 ms (benchmark script output recorded in the milestone report).
-- [ ] **C1.11** Line coverage ≥ 80 % for `sim`, `content`, `match`, `modes`, `bots`.
-- [ ] **C1.12** A Playwright smoke test starts a solo match and checks there is no console error for 10 seconds.
+- [x] **C1.1** From the main menu: Solo → choose bots per team (up to 16 participants, Q24) → the match starts on the Vietnam map; a full match plays to a winner and returns to the menu.
+  **Result:** checked in Chromium: Solo → Start (3 allied and 4 enemy bots, player idle) → the match on `river-village` ended after 117 s (PAVN & Viet Cong 3–0), the end screen showed the winner, the score and every participant's kills and deaths, and "Main menu" returned to the menu. The setup accepts up to 16 participants (measured with 16 in C1.10).
+- [x] **C1.2** ZQSD on AZERTY and WASD on QWERTY move the player with no setting (physical keys). The character faces the cursor in 8 directions; the weapon follows the exact mouse angle.
+  **Result:** input reads `KeyboardEvent.code` (`KeyW/A/S/D`, the same physical keys as ZQSD on AZERTY) and the arrows (`key-map.test.ts`); the browser scripts drive the player with those codes. The character view picks the octant of the aim and draws the weapon at the exact angle (M0, C0.3); the local player's weapon uses the live mouse angle (captures in `/dev/scene`).
+- [x] **C1.3** Y-sorting: a dev scene shows the player walking around a tree; the player is hidden by the tree when above its base and drawn over it when below (screenshot check, and a unit test on sort keys).
+  **Result:** `depth.test.ts` covers both cases and ties. Captures in Chromium on `/dev/scene?theme=vietnam`: walking down between trees, the player is hidden by a canopy while standing above that tree's base, and drawn over the trunk of a tree once its base is just above the player's feet.
+- [x] **C1.4** Simulation tests (ASCII maps): bullets never cross `solid` tiles over a 360° sweep of angles at max projectile speed; a character never overlaps a `solid` tile after 10,000 random-input ticks; damage and death follow weapon parameters.
+  **Result:** `combat.test.ts`: 4,320 shots (360° in 0.25° steps from 3 positions) at 6,000 px/s, every segment clear, every impact on an obstacle's edge; `movement.test.ts`: 8 characters, 10,000 random-input ticks, no overlap with tiles or footprints (more than 10,000 contacts with obstacles); `damage.test.ts`: 4 hits of 28 kill (72, 44, 16, 0).
+- [x] **C1.5** Determinism: same seed and inputs give the same state hash after 10,000 ticks.
+  **Result:** `damage.test.ts`: 8 characters fighting with random inputs, same hash after 10,000 ticks (more than 1,000 shots and several kills), different hash for another seed or other inputs; bot rounds replay identically from their seed (`bot-rounds.test.ts`).
+- [x] **C1.6** Headless bot rounds: in 100 seeded bot-only rounds (8 vs 8) run in Node, ≥ 95 end by elimination before the 3-minute limit; bots never fire at an enemy they have no line of sight to (asserted from events). *(Reworded with the plan: the original said "matches", but the time limit applies to rounds.)*
+  **Result:** `npm run bench:sim`: 98 of 100 rounds ended by elimination (average 33.0 s; rounds 20 and 23 reached the limit); 13,172 shots, none without a living enemy in sight within 35° of the shot. A 10-round version runs in the tests.
+- [x] **C1.7** Map hot reload: saving the map in Tiled updates the running game within 2 seconds without a page reload (tiles, collision); an invalid change shows the error overlay naming map, layer and object, and the previous map stays active.
+  **Result:** checked in headless Chromium on `/dev/scene`: a wall written into `river-village.tmj` was drawn after 1.67 s and stopped the player, with no page reload; an invalid change (a resized tree) showed "themes/vietnam/maps/river-village.tmj › layer "trees" › object 1 at (264, 188)" after 1.64 s while the previous map stayed in play; restoring the file cleared the overlay.
+- [x] **C1.8** The `example` theme, added as files only, passes validation, appears in the solo setup, and plays.
+  **Result:** its commit (`feat(themes): add the example theme, as files only`) touches only `themes/example/` (22 files); `validate:themes` passes; in Chromium it appears in the solo setup ("Training", map "Arena") and a match starts. Bot rounds also run on its arena (tests). Playing it revealed a client bug, fixed separately: a map without tile objects failed to start.
+- [x] **C1.9** Every visible text is translated in French and English; `check:i18n`, font coverage check and literal-string lint pass.
+  **Result:** `check:i18n` (keys, variables, coverage by the interface font and the HUD font) and the lint rule pass; menus, HUD and end screen checked in both languages. Content diagnostics in the development overlay stay in English, as decided in M0.
+- [x] **C1.10** Performance on the reference machine (Q25): 60 FPS sustained with 16 participants; average simulation tick < 1 ms (benchmark script output recorded in the milestone report, with the hardware used).
+  **Result:** on the owner's machine (AMD Ryzen 7 3700X, AMD Radeon RX 5700 XT, Linux, Chromium 151 driven by Playwright with the GPU through ANGLE/OpenGL, 1920×1080, palette pass on): 60 FPS average and minimum over 20 s of a solo match with 16 participants. `npm run bench:sim`: average tick 0.053 ms, p99 0.90 ms with 16 bots (Node 24). Not yet measured on an Iris Xe-class laptop.
+- [x] **C1.11** Line coverage ≥ 80 % for `sim`, `content`, `match`, `modes`, `bots`.
+  **Result:** sim 99.8 %, content 96.1 %, match 100 %, modes 96.1 %, bots 99.6 %; `npm run check` now fails below 80 %.
+- [x] **C1.12** A Playwright smoke test starts a solo match and checks there is no console error for 10 seconds.
+  **Result:** `npm run test:e2e` passes locally (11.7 s); CI runs it in the `e2e` job on every push.
 
 ---
 

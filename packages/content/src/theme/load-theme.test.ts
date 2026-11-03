@@ -67,13 +67,36 @@ function validTheme(): Record<string, unknown> {
             reloadMs: 2000,
           },
           sprite: 'sprites/rifle',
+          projectile: 'bullet',
+          effects: { fire: 'flash' },
         },
+      ],
+    },
+    [`${T}/projectiles.json`]: {
+      projectiles: [
+        {
+          id: 'bullet',
+          behavior: 'bullet',
+          params: { speed: 1500, range: 900 },
+          sprite: 'sprites/bullet',
+          effects: { impact: 'puff' },
+        },
+      ],
+    },
+    [`${T}/effects.json`]: {
+      effects: [
+        { id: 'flash', sprite: 'sprites/flash' },
+        { id: 'puff', sprite: 'sprites/flash' },
       ],
     },
     [`${T}/sprites/soldier.json`]: sheet(characterTags, ['hand']),
     [`${T}/sprites/soldier.png`]: '',
     [`${T}/sprites/rifle.json`]: sheet(['idle'], ['grip', 'muzzle']),
     [`${T}/sprites/rifle.png`]: '',
+    [`${T}/sprites/bullet.json`]: sheet(['fly'], ['origin']),
+    [`${T}/sprites/bullet.png`]: '',
+    [`${T}/sprites/flash.json`]: sheet(['play'], []),
+    [`${T}/sprites/flash.png`]: '',
     [`${T}/locales/en.json`]: {
       theme: { name: 'Test' },
       faction: { blue: 'Blue', red: 'Red' },
@@ -126,7 +149,31 @@ describe('loadTheme', () => {
       spreadDeg: 0,
       reserveMagazines: null,
     });
-    expect([...(theme?.sprites.keys() ?? [])]).toEqual(['sprites/soldier', 'sprites/rifle']);
+    expect([...(theme?.sprites.keys() ?? [])]).toEqual([
+      'sprites/soldier',
+      'sprites/rifle',
+      'sprites/bullet',
+      'sprites/flash',
+    ]);
+    // Character stats take their defaults (Q54).
+    expect(theme?.characters.get('blue-soldier')).toMatchObject({
+      speed: 180,
+      radius: 10,
+      hitPoints: 100,
+      effects: {},
+    });
+    expect(theme?.weapons.get('rifle')).toMatchObject({
+      projectile: 'bullet',
+      effects: { fire: 'flash' },
+    });
+    expect(theme?.projectiles.get('bullet')).toEqual({
+      id: 'bullet',
+      behavior: 'bullet',
+      params: { speed: 1500, range: 900 },
+      sprite: 'sprites/bullet',
+      effects: { impact: 'puff' },
+    });
+    expect([...(theme?.effects.keys() ?? [])]).toEqual(['flash', 'puff']);
     expect(theme?.translations.get('fr')?.strings.get('weapon.rifle')).toBe('Fusil');
   });
 
@@ -347,6 +394,121 @@ describe('loadTheme', () => {
     expect(issues).toHaveLength(1);
     expect(issues[0]).toMatchObject({ file: `${T}/weapons.json`, location: '' });
     expect(issues[0]?.message).toMatch(/^Invalid JSON: /);
+  });
+
+  it('reports an unknown projectile reference', async () => {
+    const { issues } = await load(
+      broken((f) => (json(f, 'weapons.json').weapons[0].projectile = 'bulet')),
+    );
+    expect(issues).toEqual([
+      error(
+        'weapons.json',
+        'weapons[0] ("rifle").projectile',
+        'Unknown projectile "bulet". Known projectiles (projectiles.json): bullet.',
+      ),
+    ]);
+  });
+
+  it('reports unknown effects wherever they are used', async () => {
+    const { issues } = await load(
+      broken((f) => {
+        json(f, 'characters.json').characters[0].effects = { hit: 'blood' };
+        json(f, 'weapons.json').weapons[0].effects.fire = 'flahs';
+        json(f, 'projectiles.json').projectiles[0].effects.impact = 'dust';
+      }),
+    );
+    expect(issues).toEqual([
+      error(
+        'characters.json',
+        'characters[0] ("blue-soldier").effects.hit',
+        'Unknown effect "blood". Known effects (effects.json): flash, puff.',
+      ),
+      error(
+        'weapons.json',
+        'weapons[0] ("rifle").effects.fire',
+        'Unknown effect "flahs". Known effects (effects.json): flash, puff.',
+      ),
+      error(
+        'projectiles.json',
+        'projectiles[0] ("bullet").effects.impact',
+        'Unknown effect "dust". Known effects (effects.json): flash, puff.',
+      ),
+    ]);
+  });
+
+  it('accepts a theme without effects.json when no effect is used', async () => {
+    const { theme, issues } = await load(
+      broken((f) => {
+        delete f[`${T}/effects.json`];
+        delete json(f, 'weapons.json').weapons[0].effects;
+        delete json(f, 'projectiles.json').projectiles[0].effects;
+      }),
+    );
+    expect(issues).toEqual([]);
+    expect(theme?.effects.size).toBe(0);
+  });
+
+  it('requires projectiles.json', async () => {
+    const { theme, issues } = await load(broken((f) => delete f[`${T}/projectiles.json`]));
+    expect(theme).toBeUndefined();
+    expect(issues).toEqual([error('projectiles.json', '', 'File not found.')]);
+  });
+
+  it('reports an unknown projectile behavior and invalid projectile parameters', async () => {
+    const unknown = await load(
+      broken((f) => (json(f, 'projectiles.json').projectiles[0].behavior = 'rocket')),
+    );
+    expect(unknown.issues).toEqual([
+      error(
+        'projectiles.json',
+        'projectiles[0] ("bullet").behavior',
+        'Unknown projectile behavior "rocket". Known projectile behaviors: bullet.',
+      ),
+    ]);
+    const tooFast = await load(
+      broken((f) => (json(f, 'projectiles.json').projectiles[0].params.speed = 9000)),
+    );
+    expect(tooFast.issues).toEqual([
+      error(
+        'projectiles.json',
+        'projectiles[0] ("bullet").params.speed',
+        'Too big: expected number to be <=6000',
+      ),
+    ]);
+  });
+
+  it('checks projectile and effect sprites', async () => {
+    const { issues } = await load(
+      broken((f) => {
+        json(f, 'sprites/bullet.json').meta.slices = [];
+        json(f, 'sprites/flash.json').meta.frameTags[0].name = 'boom';
+      }),
+    );
+    expect(issues).toEqual([
+      error(
+        'sprites/bullet.json',
+        'meta.slices',
+        'Missing slice "origin" (the projectile position: the sprite is drawn there and rotates around it). Add a slice named "origin" in Aseprite, set its pivot, and export with slices.',
+      ),
+      error(
+        'sprites/flash.json',
+        'meta.frameTags',
+        'Missing animation tag "play". An effect sprite needs the animation "play".',
+      ),
+    ]);
+  });
+
+  it('refuses a character too wide to pass a one-tile gap', async () => {
+    const { issues } = await load(
+      broken((f) => (json(f, 'characters.json').characters[0].radius = 30)),
+    );
+    expect(issues).toEqual([
+      error(
+        'characters.json',
+        'characters[0] ("blue-soldier").radius',
+        'Too big: expected number to be <=23',
+      ),
+    ]);
   });
 
   it('requires the theme id to match its folder', async () => {
