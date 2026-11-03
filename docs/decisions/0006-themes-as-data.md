@@ -1,6 +1,6 @@
 # 0006. Themes as validated data; behaviors as engine code
 
-- Status: Proposed
+- Status: Accepted (2026-11-03)
 - Date: 2026-11-03
 
 ## Context

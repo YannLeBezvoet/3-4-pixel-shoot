@@ -1,6 +1,6 @@
 # 0013. MIT for code, CC BY 4.0 for assets
 
-- Status: Proposed
+- Status: Accepted (2026-11-03)
 - Date: 2026-11-03
 
 ## Context
@@ -32,7 +32,7 @@ The project is open source. Code and assets (sprites, tilesets, maps, translatio
 - **Code: MIT** (`LICENSE`).
 - **Assets: CC BY 4.0** (`LICENSE-ASSETS`), covering everything under `themes/` and `locales/`, and any original image, map or translation file elsewhere.
 - Paths are mapped in a **`REUSE.toml`** file; a REUSE check runs in CI.
-- The README states the rule in two lines and asks for attribution in the form "[game title] contributors" (title and copyright holder to confirm, see open questions).
+- The README states the rule in two lines and asks for attribution in the form "Pixel Shoot contributors" (working title, Q1).
 - **Third-party material** (fonts, palette) keeps its own license and is credited in `CREDITS.md`. The Resurrect 64 palette was created by Kerrie Lake; it is credited even though a list of colors is generally not copyrightable. Fonts must be OFL, CC0 or CC BY.
 - **No RPG Maker assets**, even modified: only the style is a reference.
 
@@ -40,4 +40,4 @@ The project is open source. Code and assets (sprites, tilesets, maps, translatio
 
 - Maximum freedom for reusers; anyone may run a closed modified server. If that matters, AGPL-3.0 for the code is the alternative (see open questions).
 - Contributors agree to license their contributions under these terms (stated in `CONTRIBUTING.md`, created in milestone 0).
-- Copyright holder name in `LICENSE` to be confirmed by the owner.
+- Copyright line in `LICENSE`: "Copyright (c) 2026 Yann Le Bezvoet and contributors" (Q1).

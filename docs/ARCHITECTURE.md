@@ -1,7 +1,7 @@
 # Architecture
 
-> **Status: proposed, awaiting the owner's approval.** Nothing described here is implemented yet.
-> Once milestone 0 starts, this file describes what exists and marks clearly what is still planned.
+> **Status: accepted on 2026-11-03.** Implementation starts with milestone 0.
+> This file describes what exists and marks clearly what is still planned.
 > The reasons behind each choice are in [`decisions/`](decisions/). Open points are in [`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md).
 
 ## 1. Forces that shape the design

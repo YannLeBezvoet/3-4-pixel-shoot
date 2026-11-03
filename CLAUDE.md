@@ -8,8 +8,8 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 
 ## Current state
 
-- **Planning.** No code yet. Vision, architecture proposal, decision records (all *Proposed*), roadmap and open questions written on branch `docs/project-planning`.
-- **Next step:** wait for the owner to approve the M0 plan ([docs/ROADMAP.md](docs/ROADMAP.md)) and answer the M0 open questions. Do not start M0 before that.
+- **Milestone 0 (Foundations) in progress** on branch `milestone/0-foundations`. Plan, decision records and all open questions (Q1–Q47) approved on 2026-11-03.
+- Planning docs live on branch `docs/project-planning`; neither branch is merged or pushed yet.
 
 ## Where to find what
 

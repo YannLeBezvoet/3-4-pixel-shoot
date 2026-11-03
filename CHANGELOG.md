@@ -12,3 +12,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 - Roadmap with success criteria per milestone (`docs/ROADMAP.md`).
 - Open questions with proposals (`docs/OPEN_QUESTIONS.md`).
 - `CLAUDE.md` as the entry point for development sessions.
+
+### Changed
+
+- Decision records 0001–0013 accepted; open questions Q1–Q47 settled as proposed; team elimination moved to milestone 1.

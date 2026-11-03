@@ -1,6 +1,6 @@
 # 0010. Custom collision instead of a physics engine
 
-- Status: Proposed
+- Status: Accepted (2026-11-03)
 - Date: 2026-11-03
 
 ## Context

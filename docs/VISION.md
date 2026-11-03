@@ -2,7 +2,7 @@
 
 > Living document. It records what the project owner wants the game to be.
 > When the vision changes, this file is updated and the change is noted in `CHANGELOG.md`.
-> Last updated: 2026-11-03.
+> Last updated: 2026-11-03. Working title: **Pixel Shoot**.
 
 ## 1. Summary
 
@@ -131,9 +131,9 @@ Out of scope for now. Themes and the engine only reserve the places where sounds
 Details, deliverables and success criteria live in [`ROADMAP.md`](ROADMAP.md).
 
 0. **Foundations**: project structure, tooling, documentation, licenses, placeholder sprites, translation system.
-1. **Playable solo**: a Tiled map, a soldier in 8 directions, movement, aiming, shooting, a few basic bots, UI in French and English.
+1. **Playable solo**: a Tiled map, a soldier in 8 directions, movement, aiming, shooting, a few basic bots, UI in French and English, and the team elimination mode against bots (moved here from milestone 3, see Q13).
 2. **Combat**: cover, grenades, flamethrower, destructible elements, blood.
-3. **Multiplayer**: rooms with codes, server, team elimination.
+3. **Multiplayer**: rooms with codes, server, team elimination online.
 4. **Civilians** on maps, scaling to 64 participants, match settings.
 5. Further modes, then procedural generation, then vehicles, then audio.
 

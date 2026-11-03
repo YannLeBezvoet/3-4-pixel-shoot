@@ -8,7 +8,7 @@
 
 | Milestone | Scope | Status |
 |---|---|---|
-| M0 | Foundations | **Plan awaiting approval** |
+| M0 | Foundations | **In progress** (plan approved 2026-11-03) |
 | M1 | Playable solo | Not started |
 | M2 | Combat | Not started |
 | M3 | Multiplayer | Not started |
@@ -71,7 +71,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 
 **Goal:** a complete solo match against bots on a Tiled map, with the architecture that multiplayer will reuse.
 
-**Depends on:** Q13–Q28. **Proposed change to the original plan:** the team elimination mode is implemented here, in solo, rather than in M3 (Q13). It gives solo a goal and validates the `GameMode` interface early; M3 then brings it online.
+**Depends on:** Q13–Q28. **Change from the original plan (Q13, accepted):** the team elimination mode is implemented here, in solo, rather than in M3 (Q13). It gives solo a goal and validates the `GameMode` interface early; M3 then brings it online.
 
 ### Scope
 

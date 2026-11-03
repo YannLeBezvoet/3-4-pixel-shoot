@@ -1,6 +1,6 @@
 # 0007. Aseprite export pipeline and conventions
 
-- Status: Proposed
+- Status: Accepted (2026-11-03)
 - Date: 2026-11-03
 
 ## Context

@@ -1,6 +1,6 @@
 # 0008. Tiled JSON maps behind a `MapSource` interface
 
-- Status: Proposed
+- Status: Accepted (2026-11-03)
 - Date: 2026-11-03
 
 ## Context

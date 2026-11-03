@@ -1,6 +1,6 @@
 # 0003. Rendering with PixiJS at 960×540, integer scaling
 
-- Status: Proposed
+- Status: Accepted (2026-11-03)
 - Date: 2026-11-03
 
 ## Context
