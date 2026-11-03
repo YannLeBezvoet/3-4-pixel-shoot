@@ -39,13 +39,26 @@ export const GROUND_TILES = [
   'crate',
   'fence',
   'rubble',
+  'bridge',
+  'ford',
+  'thatch-roof',
+  'thatch-roof-edge',
+  'hut-floor',
+  'jungle-floor',
+  'tall-grass',
+  'rock',
 ] as const;
 
+export type GroundTile = (typeof GROUND_TILES)[number];
+
+/** Columns of the ground tileset image. */
+export const GROUND_COLUMNS = 8;
+
 export function drawGroundTileset(p: ColorPicker): Canvas {
-  const c = new Canvas(8 * T, 2 * T);
-  const at = (name: (typeof GROUND_TILES)[number]) => {
+  const c = new Canvas(GROUND_COLUMNS * T, Math.ceil(GROUND_TILES.length / GROUND_COLUMNS) * T);
+  const at = (name: GroundTile) => {
     const i = GROUND_TILES.indexOf(name);
-    return [(i % 8) * T, Math.floor(i / 8) * T] as const;
+    return [(i % GROUND_COLUMNS) * T, Math.floor(i / GROUND_COLUMNS) * T] as const;
   };
   const grass = p.hex('239063');
   const grassDark = p.hex('165a4c');
@@ -148,8 +161,69 @@ export function drawGroundTileset(p: ColorPicker): Canvas {
     'rubble',
     0.25,
   );
+  {
+    // Planks laid across a river flowing north-south, with rails along the edges.
+    const [x, y] = at('bridge');
+    c.rect(x, y, T, T, p.hex('9e4539'));
+    for (let i = 0; i < T; i += 8) {
+      c.rect(x + i, y, 7, T, p.hex('cd683d'));
+      c.rect(x + i + 7, y, 1, T, p.hex('7a3045'));
+    }
+    c.rect(x, y, T, 3, p.hex('694f62'));
+    c.rect(x, y + T - 3, T, 3, p.hex('694f62'));
+  }
+  {
+    const [x, y] = at('ford');
+    noise(c, x, y, p.hex('4d9be6'), [p.hex('8fd3ff')], 'ford', 0.08);
+    const rng = createRng('ford-stones');
+    for (let i = 0; i < 7; i++)
+      c.ellipse(x + rng.int(5, 42), y + rng.int(5, 42), rng.int(2, 4), 2, p.hex('9babb2'));
+  }
+  for (const name of ['thatch-roof', 'thatch-roof-edge'] as const) {
+    const [x, y] = at(name);
+    c.rect(x, y, T, T, p.hex('e6904e'));
+    const rng = createRng(name);
+    for (let i = 0; i < 70; i++) {
+      const sx = x + rng.int(0, T - 1);
+      const sy = y + rng.int(0, T - 6);
+      c.line(sx, sy, sx + rng.int(-1, 1), sy + 5, rng.pick([p.hex('f9c22b'), p.hex('cd683d')]));
+    }
+    if (name === 'thatch-roof-edge') {
+      c.rect(x, y + T - 8, T, 8, p.hex('9e4539'));
+      for (let i = 0; i < T; i += 3) c.rect(x + i, y + T - 8, 1, 8, p.hex('7a3045'));
+    }
+  }
+  noise(c, ...at('hut-floor'), p.hex('ab947a'), [p.hex('966c6c'), p.hex('c7dcd0')], 'hut-floor');
+  noise(c, ...at('jungle-floor'), grassDark, [p.hex('374e4a'), grass], 'jungle-floor', 0.2);
+  {
+    const [x, y] = at('tall-grass');
+    noise(c, x, y, grass, [grassDark], 'tall-grass-ground');
+    const rng = createRng('tall-grass');
+    for (let i = 0; i < 40; i++) {
+      const bx = x + rng.int(1, 46);
+      const by = y + rng.int(6, 46);
+      c.line(
+        bx,
+        by,
+        bx + rng.int(-2, 2),
+        by - rng.int(4, 7),
+        rng.pick([grassLight, p.hex('91db69')]),
+      );
+    }
+  }
+  {
+    const [x, y] = at('rock');
+    noise(c, x, y, grass, [grassDark, grassLight], 'rock-ground');
+    c.ellipse(x + 24, y + 27, 18, 14, p.hex('7f708a'));
+    c.ellipse(x + 20, y + 22, 11, 8, p.hex('9babb2'));
+    c.ellipse(x + 17, y + 19, 4, 3, p.hex('c7dcd0'));
+    c.ellipse(x + 24, y + 38, 15, 3, p.hex('625565'), (_x, yy) => yy >= y + 38);
+  }
   return c;
 }
+
+/** Trunk collision of the jungle tree, in its 96×144 picture: a box around the base. */
+export const TREE_TRUNK = { x: 40, y: 128, width: 16, height: 14 } as const;
 
 /** A jungle tree two tiles wide and three tall; its trunk base is the bottom-center. */
 export function drawJungleTree(p: ColorPicker): Canvas {

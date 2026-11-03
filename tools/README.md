@@ -10,7 +10,7 @@ Command-line tools for development and CI. Each tool lives in its own folder und
 | `validate-themes/` | `validate:themes [ids…]` | Loads every theme, its catalog and its maps exactly as the game does and prints every problem |
 | `schemas/` | `schemas`, `check:schemas` | Writes the files generated from engine definitions: `schemas/*.json` (editor JSON Schemas), `tools/tiled/pixel-shoot.tiled-project` (Tiled custom types) and `docs/reference/behaviors.md`; the check fails if any is stale |
 | `../tiled/` | (Tiled) | The generated Tiled project file: open it once in Tiled to get typed map properties |
-| `placeholders/` | `assets:placeholders`, `assets:report` | Generates placeholder art in the palette and in Aseprite's export format; never overwrites replaced files (hashes in `tools/placeholders.json`) |
+| `placeholders/` | `assets:placeholders`, `assets:report` | Generates placeholder art in the palette and in Aseprite's export format, plus the Vietnam tilesets and first map as Tiled files; never overwrites replaced or edited files (hashes in `tools/placeholders.json`) |
 | `check-i18n/` | `check:i18n` | Interface translations match English (keys, `{{variables}}`); every character of every text exists in the interface font |
 | `../eslint/` | (ESLint) | Local lint rule `no-literal-ui-text`: no literal displayed text in interface components |
 | `sprites-export/` | `sprites:export [-- --watch]` | Exports every `.aseprite` file with the Aseprite CLI (`ASEPRITE_PATH`) as PNG + JSON next to it |

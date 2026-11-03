@@ -14,7 +14,7 @@
 | `modes`, `bots`, `match`, `protocol`, `apps/server` | Empty entry points | — |
 | Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages | `apps/client/` |
 | Tools | Palette check, theme validation, JSON Schemas, i18n and font check, placeholder generator, Aseprite export, Lua character template | `tools/` |
-| Content | Vietnam theme (2 factions, 2 characters, 2 rifles, placeholder art, EN/FR texts); EN/FR interface | `themes/vietnam/`, `locales/` |
+| Content | Vietnam theme (2 factions, 2 characters, 2 rifles, a rifle bullet, 5 effects, the `river-village` map with its 2 tilesets, placeholder art, EN/FR texts); EN/FR interface | `themes/vietnam/`, `locales/` |
 | CI | `npm run check` + REUSE on GitHub Actions | `.github/workflows/check.yml` |
 
 ## 1. Forces that shape the design
@@ -336,7 +336,7 @@ Decision [0012](decisions/0012-tooling.md).
 
 - **Dev server** (Vite) serves the client, `themes/` and `locales/`, and watches them. The content plugin (`apps/client/vite/content-plugin.ts`) sends a `pixel-shoot:content-changed` message for each changed file; the client (`src/content/hot-reload.ts`) groups changes that arrive together and reloads only the affected theme, or the languages. Textures, animations and translations update in place, without a page reload. An invalid file shows the errors in a dev overlay (`src/dev/content-issues.tsx`) and the last valid version stays on screen. Maps are listed in the content index; their hot reload joins later in milestone 1. In multiplayer development, the server will watch the same folders.
 - **Palette check** (`check:palette`): scans every PNG; fails on any pixel whose color is not in Resurrect 64 (and, pending an open question, on partial transparency), reporting file, coordinates, color and nearest palette color.
-- **Placeholder generator** (`tools/src/placeholders/`): writes PNG + JSON in Aseprite's export format (same tags, directions and slices as real art), so replacing a placeholder is a file swap. `tools/placeholders.json` records the hash of each generated file: a file that no longer matches has been replaced by real art and is never overwritten; `assets:report` lists the placeholders still in use.
+- **Placeholder generator** (`tools/src/placeholders/`): writes PNG + JSON in Aseprite's export format (same tags, directions and slices as real art), so replacing a placeholder is a file swap; it also writes the Vietnam tilesets (`.tsj`) and the first map (`maps/river-village.tmj`, Q27) as Tiled files. `tools/placeholders.json` records the hash of each generated file: a file that no longer matches has been replaced by real art and is never overwritten; `assets:report` lists the placeholders still in use.
 - **Aseprite helpers**: an export script for all `.aseprite` files (when Aseprite is installed) and a Lua script that creates a new character file with the right size, palette, tags and slices.
 - **Validators**: `validate:themes` (themes, catalog conversion, maps), `check:i18n`, font coverage.
 - **Generated files** (`npm run schemas`, verified by `check:schemas`): editor JSON Schemas (`schemas/`), the Tiled project file (`tools/tiled/`) and the behavior reference ([`docs/reference/behaviors.md`](reference/behaviors.md)), all derived from the engine's definitions.
