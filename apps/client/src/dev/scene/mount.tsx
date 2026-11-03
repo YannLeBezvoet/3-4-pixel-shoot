@@ -1,6 +1,6 @@
 // Builds the dev scene: a sandbox match on the first map of the first theme that has one, the
-// local player and three motionless targets beside it (bots arrive later). The targets share
-// the player's spawn area, so friendly fire is on to make them shootable.
+// local player in team 1 against three bots in team 2, who come looking for it. Everyone comes
+// back 2 seconds after dying.
 import { signal } from '@preact/signals';
 import { buildCatalog } from '@pixel-shoot/content';
 import { createMatchHost } from '@pixel-shoot/match';
@@ -17,7 +17,7 @@ import { createLocalSession } from '../../session/local-session';
 import type { Session } from '../../session/session';
 import { ScenePage } from './scene-page';
 
-const TARGETS = 3;
+const BOTS = 3;
 
 function startMatch(assets: ThemeAssets): { session: Session; catalog: Catalog } | undefined {
   const [map] = assets.maps.values();
@@ -28,23 +28,17 @@ function startMatch(assets: ThemeAssets): { session: Session; catalog: Catalog }
     const faction = theme.factions[(team - 1) % theme.factions.length]?.id;
     return [...theme.characters.values()].find((c) => c.faction === faction)?.id ?? '';
   };
-  const host = createMatchHost({
-    map,
-    catalog,
-    mode: sandbox,
-    settings: { friendlyFire: true },
-    seed: 'dev-scene',
-  });
+  const host = createMatchHost({ map, catalog, mode: sandbox, seed: 'dev-scene' });
   const me = host.addParticipant({
     name: { key: 'participant.you' },
     team: 1,
     character: characterOf(1),
     kind: 'human',
   });
-  for (let n = 1; n <= TARGETS; n++)
+  for (let n = 1; n <= BOTS; n++)
     host.addParticipant({
       name: { key: 'participant.bot', params: { n } },
-      team: 1,
+      team: 2,
       character: characterOf(2),
       kind: 'bot',
     });
