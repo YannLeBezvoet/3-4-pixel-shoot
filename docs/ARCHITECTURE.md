@@ -273,7 +273,7 @@ Decision [0003](decisions/0003-rendering-pixijs.md).
 - Rotating the weapon at internal resolution keeps every pixel a palette color (no interpolation happens).
 - *Planned for milestone 1:* **Layers:** ground (tile chunks baked to textures, re-baked when a tile changes; blood decals painted into them), **y-sorted world layer** (characters, map elements, multi-tile objects, corpses; sort key = ground y), overhead layer, screen-space effects, HUD.
 - *Planned for milestone 1:* **Interpolation:** the renderer draws the `WorldView` interpolated between the last two ticks, so 60 Hz simulation looks smooth at 144 Hz.
-- *Planned for milestone 1:* **Camera:** follows the local player with a look-ahead toward the cursor.
+- *Planned for milestone 1:* **Camera:** keeps the local player's character at the exact center of the screen (Q20); beyond the map edges, the background color shows.
 - *Planned for milestones 1–2:* **Effects** (blood sprays, muzzle flashes, smoke, casings) are client-side particles driven by `SimEvent`s; they have no gameplay effect and are never sent over the network.
 - **Palette at runtime:** assets are strictly in palette. A final full-screen pass that snaps every pixel to the nearest Resurrect 64 color is planned as an option, so blending effects (fades, smoke, transparency) stay in palette. See open questions.
 

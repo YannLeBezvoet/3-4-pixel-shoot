@@ -9,7 +9,7 @@
 | Milestone | Scope | Status |
 |---|---|---|
 | M0 | Foundations | **Done** — version 0.0.0, merged into `main` on 2026-11-03 (C0.10 to be checked by the owner; CI runs once pushed) |
-| M1 | Playable solo | **Plan proposed** on 2026-11-03 (tasks below, questions Q48–Q60); awaiting the owner's approval |
+| M1 | Playable solo | **In progress** — plan approved on 2026-11-03 |
 | M2 | Combat | Not started |
 | M3 | Multiplayer | Not started |
 | M4 | Civilians, 64 participants, match settings | Not started |
@@ -91,13 +91,13 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 - `match`: `MatchHost` with participants, bot scheduling, mode lifecycle.
 - `modes`: `team-elimination` (Q21).
 - `bots`: perception with line of sight, utility AI with wander / engage / chase / reload, A\* navigation, difficulty parameters.
-- `client`: `LocalSession`; renderer (tile chunks, y-sorted world layer with multi-tile trees, overhead layer, interpolation, camera with look-ahead, optional palette pass per Q14); input (physical keys, mouse aim); HUD in PixiJS with bitmap font (health, ammo, team counts, round info, kill feed); DOM menus (main menu, solo setup, settings, end of round/match); spectating after death; map hot reload; client particles for muzzle flash and hits.
+- `client`: `LocalSession`; renderer (tile chunks, y-sorted world layer with multi-tile trees, overhead layer, interpolation, camera centered on the player (Q20), optional palette pass per Q14); input (physical keys, mouse aim); HUD in PixiJS with bitmap font (health, ammo, team counts, round info, kill feed); DOM menus (main menu, solo setup, settings, end of round/match); spectating after death; map hot reload; client particles for muzzle flash and hits.
 - Theme: Vietnam placeholder map (Q27), factions and rifles (Q22, Q23); a second minimal theme `themes/example/` proving a theme needs no code.
 - Docs: guides `docs/guides/create-a-map.md` and `docs/guides/add-a-mode.md`; add-a-theme guide completed for weapons; generated behavior reference.
 
 ### Tasks (one or a few commits each)
 
-*Proposed on 2026-11-03, awaiting approval.* The order gives a first playable scene early (end of task 13: walking and shooting on the Vietnam map), then the match, the bots and the interface. Each commit updates the docs it affects; task 24 is the final pass.
+*Approved on 2026-11-03.* The order gives a first playable scene early (end of task 13: walking and shooting on the Vietnam map), then the match, the bots and the interface. Each commit updates the docs it affects; task 24 is the final pass.
 
 #### Simulation (`sim`)
 
@@ -118,7 +118,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 9. **Game-mode API and `MatchHost`.** `GameModeDefinition`, `ModeApi` (spawn in a team's spawn area, spectate, timers, announcements as translation keys, end round or match), `ModeState`, map requirements, settings schema with defaults, in `sim`. `MatchHost` in `match`: participants (human or bot) with team and character, input routing, mode lifecycle, bot scheduling (thinking staggered at about 10 Hz), `WorldView` and event stream, driven by a clock it is given, map replacement in place (used by hot reload). A minimal `sandbox` mode (spawn and nothing else) serves dev pages and tests; it is not offered in menus and is the first example of the add-a-mode guide.
 10. **`LocalSession` and game loop.** The `Session` interface ([ARCHITECTURE §6](ARCHITECTURE.md#6-match-host-and-sessions--planned-for-milestone-1)); a fixed-step accumulator driven by `requestAnimationFrame`, giving the interpolation factor; pause; a catch-up limit after the tab was hidden.
 11. **Input.** Physical key codes (`KeyW/A/S/D`, arrows), mouse aim measured from the character's hand on screen, buttons per Q53, keys released when the window loses focus; unit tests of the mapping.
-12. **World rendering.** Ground layer baked into chunk textures; y-sorted world layer (characters, multi-tile objects such as trees, corpses below the living); overhead layer; interpolation between ticks; camera with look-ahead toward the cursor, clamped to the map (Q20); dev page `/dev/scene` where the player walks and shoots on any map in the `sandbox` mode (C1.2, C1.3); unit test of the sort keys.
+12. **World rendering.** Ground layer baked into chunk textures; y-sorted world layer (characters, multi-tile objects such as trees, corpses below the living); overhead layer; interpolation between ticks; camera keeping the player at the exact center of the screen (Q20); dev page `/dev/scene` where the player walks and shoots on any map in the `sandbox` mode (C1.2, C1.3); unit test of the sort keys.
 13. **Effects.** Client particles driven by events: muzzle flash at the weapon's `muzzle`, bullet sprites, wall impacts, blood splat on hits. No gameplay effect.
 
 #### Match and bots (`modes`, `bots`)
@@ -148,7 +148,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 - [ ] **C1.3** Y-sorting: a dev scene shows the player walking around a tree; the player is hidden by the tree when above its base and drawn over it when below (screenshot check, and a unit test on sort keys).
 - [ ] **C1.4** Simulation tests (ASCII maps): bullets never cross `solid` tiles over a 360° sweep of angles at max projectile speed; a character never overlaps a `solid` tile after 10,000 random-input ticks; damage and death follow weapon parameters.
 - [ ] **C1.5** Determinism: same seed and inputs give the same state hash after 10,000 ticks.
-- [ ] **C1.6** Headless bot rounds: in 100 seeded bot-only rounds (8 vs 8) run in Node, ≥ 95 end by elimination before the 3-minute limit; bots never fire at an enemy they have no line of sight to (asserted from events). *(Proposed rewording: the original said "matches", but the time limit applies to rounds.)*
+- [ ] **C1.6** Headless bot rounds: in 100 seeded bot-only rounds (8 vs 8) run in Node, ≥ 95 end by elimination before the 3-minute limit; bots never fire at an enemy they have no line of sight to (asserted from events). *(Reworded with the plan: the original said "matches", but the time limit applies to rounds.)*
 - [ ] **C1.7** Map hot reload: saving the map in Tiled updates the running game within 2 seconds without a page reload (tiles, collision); an invalid change shows the error overlay naming map, layer and object, and the previous map stays active.
 - [ ] **C1.8** The `example` theme, added as files only, passes validation, appears in the solo setup, and plays.
 - [ ] **C1.9** Every visible text is translated in French and English; `check:i18n`, font coverage check and literal-string lint pass.
