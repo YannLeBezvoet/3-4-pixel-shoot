@@ -1,15 +1,15 @@
 # Architecture
 
-> **Status: accepted on 2026-11-03; milestone 0 implemented.** §0 says what exists; sections describing later milestones are marked *planned*.
+> **Status: accepted on 2026-11-03; milestone 0 implemented, milestone 1 in progress.** §0 says what exists; sections describing later milestones are marked *planned*.
 > The reasons behind each choice are in [`decisions/`](decisions/). Open points are in [`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md).
 
-## 0. What exists (end of milestone 0)
+## 0. What exists (milestone 1 in progress)
 
 | Area | State | Where |
 |---|---|---|
 | Workspace, boundaries | Every package exists; boundaries enforced by `tsc -b` and lint, proven by a test | `packages/*`, `apps/*`, `tools/`, `tsconfig/`, `eslint.config.js` |
 | `shared` | Vectors, angles and octants, seeded RNG, `Result` | `packages/shared/src/` |
-| `sim` | Behavior registry and the `firearm` parameter schema only; no simulation yet | `packages/sim/src/behaviors/` |
+| `sim` | Behavior registry and the `firearm` parameter schema; `MapData` and the collision grid (tile flags `solid`, `impassable`; object footprints); ASCII maps for tests. No simulation loop yet | `packages/sim/src/` |
 | `content` | Theme loading and validation, Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
 | `modes`, `bots`, `match`, `protocol`, `apps/server` | Empty entry points | — |
 | Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages | `apps/client/` |
@@ -232,7 +232,9 @@ The same validation runs in the browser (shown in a dev overlay), on the server 
 Decision [0008](decisions/0008-tiled-maps.md).
 
 - **`MapSource`** (interface): `load(request) → MapData`. Milestone 1 ships `TiledMapSource`; milestone 5 adds a procedural generator in its own package. Nothing else depends on Tiled.
-- **`MapData`** (defined in `sim`): size in tiles, tile layers referencing a tile catalog (gameplay flags + visual reference), placed objects (map elements with their behavior parameters), spawn points per team, zones (rectangles/polygons with a type), and visual-only layers.
+- **`MapData`** (defined in `sim`, exists: `packages/sim/src/map/map-data.ts`): size in tiles, tile layers (`ground` with gameplay flags, `overhead` drawn on top) referencing a catalog of tile types (flags + picture), placed objects (picture, ground point, collision footprints), spawn areas per team (Q52). Planned: zones (rectangles/polygons with a type) and map elements with behavior parameters (M2).
+- **Collision grid** (`packages/sim/src/map/collision-grid.ts`): the flags of each tile combined from the ground layers, plus object footprints indexed by the tiles they touch; outside the map is solid. Flags: `solid` blocks movement, projectiles and sight; `impassable` blocks movement only (Q50); `cover` arrives in M2.
+- **ASCII maps** (`asciiMap` in `packages/sim/src/testing/`): `#` solid, `~` impassable, `o` solid object, `1`–`9` team spawn; used by the tests of every package.
 - **Tiled conventions (draft):** maps saved directly as Tiled JSON (`.tmj`), external tilesets (`.tsj`), 48×48 orthogonal tiles. Layer roles declared with Tiled's *class* field:
   - `ground` tile layers: drawn below everything; carry tile flags.
   - `objects` object layer: tile objects (trees, huts, sandbags) sorted by their base; collision footprints from Tiled's collision editor.
