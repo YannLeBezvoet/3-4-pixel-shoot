@@ -41,3 +41,7 @@ The project is open source. Code and assets (sprites, tilesets, maps, translatio
 - Maximum freedom for reusers; anyone may run a closed modified server. If that matters, AGPL-3.0 for the code is the alternative (see open questions).
 - Contributors agree to license their contributions under these terms (stated in `CONTRIBUTING.md`, created in milestone 0).
 - Copyright line in `LICENSE`: "Copyright (c) 2026 Yann Le Bezvoet and contributors" (Q1).
+
+## Amendments
+
+- **2026-11-03.** Implemented: `LICENSE` (MIT), `LICENSE-ASSETS` (notice for CC BY 4.0), license texts in `LICENSES/` (REUSE layout), `REUSE.toml`, `CREDITS.md`, `CONTRIBUTING.md`. Documentation under `docs/` is covered by the code license (MIT). The palette gets a `LicenseRef-Resurrect64-Palette` entry that credits its author without claiming a license on their behalf. The Press Start 2P font is SIL OFL 1.1.

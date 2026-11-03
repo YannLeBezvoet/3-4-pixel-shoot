@@ -24,6 +24,7 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48Ã—48 grid, 960Ã
 | Themes (data only) | `themes/<id>/`; example: [themes/vietnam/](themes/vietnam/) |
 | Palette | [palette/resurrect-64.gpl](palette/resurrect-64.gpl) |
 | Editor JSON Schemas for theme files (generated) | `schemas/` |
+| Licenses of every file | [REUSE.toml](REUSE.toml), [CREDITS.md](CREDITS.md), `LICENSES/` |
 | A package's role and allowed dependencies | `packages/*/README.md`, `apps/*/README.md`, [tools/README.md](tools/README.md) |
 
 ## Working rules
@@ -35,6 +36,7 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48Ã—48 grid, 960Ã
 - Everything in the repository is in English. The owner converses in French.
 - No displayed text in code: translation keys only (`t('â€¦')`), enforced by the local lint rule `tools/eslint/no-literal-ui-text.js` in `apps/client/src/ui` and `src/dev`.
 - Every code change updates the affected docs **in the same commit**.
+- Third-party files: add them to `REUSE.toml` and `CREDITS.md` in the same commit.
 - Tests live next to the code as `*.test.ts`; tests may use Node to read fixtures, the code they test may not. Boundary rules are proven by `tools/src/boundaries/boundaries.test.ts`.
 
 ## Git
