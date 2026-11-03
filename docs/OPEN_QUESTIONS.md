@@ -6,7 +6,18 @@
 
 ## Open
 
-*(none)*
+### Needed before M2 (raised with its detailed plan, 2026-11-03)
+
+- **Q61. Loadouts and the flamethrower.** Q17 gives each faction one fixed loadout; M2 adds grenades and a flamethrower. *Proposal:* a character carries one primary weapon and one throwable with a count per life (Q30: 2 grenades). Riflemen carry a rifle and grenades. The flamethrower is the primary weapon of a second character per faction, the flamethrower trooper. In solo, the player chooses rifleman or flamethrower trooper in the setup; one bot in four is a flamethrower trooper. No weapon switching in M2. Alternative: every character carries both a rifle and a flamethrower and switches with keys.
+- **Q62. Throwing control.** *Proposal:* the right mouse button throws a grenade toward the cursor (G as an alternative key). While dead, right click keeps switching the spectated teammate (Q53).
+- **Q63. What burns.** If grass burned, one flamethrower could set the whole map on fire. *Proposal:* in the Vietnam theme, tall grass, thatch roofs, bamboo walls, fences and crates are flammable; grass, jungle floor, paddies, mud, paths and trees are not. Fire on a tile burns about 5 s, has a chance each second to spread to each adjacent flammable tile, then leaves burnt ground or the burnt variant. Fire blocks nothing but damages characters standing in it.
+- **Q64. Explosions and friendly fire.** *Proposal:* a grenade hurts its thrower, even with friendly fire off; it hurts teammates only with friendly fire on (Q30). The same rule applies to fire: a character is hurt by fire it started.
+- **Q65. What stops a blast.** Q30 says explosions are blocked by walls. *Proposal:* the blast is stopped by `solid` and by `cover`, since sandbags exist to protect from it. A grenade flies over cover in its arc and bounces off solid obstacles.
+- **Q66. Blood setting.** *Proposal:* *full*: sprays, decals and pools (default); *reduced*: smaller sprays, no decals or pools; *off*: no blood, hits show the impact effect. The setting is in the settings screen.
+- **Q67. Bots and the new weapons.** *Proposal:* bots carrying a flamethrower close in and use it within its range; bots throw a grenade when an enemy they know of is behind cover or when several enemies stand close together, at most once every few seconds and never when a teammate is within the blast radius. Alternative: no grenades for bots in M2.
+- **Q68. C2.5 wording.** Cover does not block sight (Q29), so a bot cannot be "hidden by cover". *Proposal:* C2.5 counts a position where cover or a solid obstacle stops the attacker's bullets.
+- **Q69. 32 participants for C2.7.** Solo is capped at 16 (Q24). *Proposal:* the solo cap stays at 16 in M2; the 32-participant measurement uses a development page (`/dev/scene` with a participant count in the URL).
+- **Q70. Initial values.** All are theme data, tunable at any time. *Proposal:* M26 and Type 67: blast radius 3 tiles (144 px), 120 damage at the center falling linearly to 0 at the edge, maximum throw 8 tiles; flamethrowers: range 4 tiles, 10 damage per flame hit, 3 s of fire per tank then a 3 s refill; burning characters lose 8 hit points per second for 3 s; destructibles: bamboo wall 60, fence 40, crate 80 hit points, sandbags 200 and only damaged by explosions (Q33), fuel barrel 30 and explosive.
 
 ## Settled
 
