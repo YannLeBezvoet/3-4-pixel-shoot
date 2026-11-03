@@ -63,7 +63,8 @@ const commonPatterns = [
   },
 ];
 
-function restrictionsFor({ dir, pkg }) {
+/** Test files may use Node (to read fixtures); the code they test may not. */
+function restrictionsFor({ dir, pkg }, { tests = false } = {}) {
   const allowed = new Set([pkg.name, ...Object.keys(pkg.dependencies ?? {})]);
   const forbiddenPackages = projectPackages.filter((name) => !allowed.has(name));
   const paths = forbiddenPackages.map((name) => ({
@@ -73,7 +74,7 @@ function restrictionsFor({ dir, pkg }) {
   const patterns = [...commonPatterns];
   if (AGNOSTIC_ROOTS.some((root) => dir.startsWith(`${root}/`))) {
     patterns.push({
-      group: [...PLATFORM_MODULES, ...PRESENTATION_MODULES],
+      group: tests ? PRESENTATION_MODULES : [...PLATFORM_MODULES, ...PRESENTATION_MODULES],
       message: `${pkg.name} is platform-agnostic: it must not use Node, browser or presentation libraries (docs/ARCHITECTURE.md §4).`,
     });
   }
@@ -102,10 +103,16 @@ export default defineConfig(
       ],
     },
   },
-  ...workspaces.map((workspace) => ({
-    files: [`${workspace.dir}/**/*.{ts,tsx,js}`],
-    rules: { 'no-restricted-imports': restrictionsFor(workspace) },
-  })),
+  ...workspaces.flatMap((workspace) => [
+    {
+      files: [`${workspace.dir}/**/*.{ts,tsx,js}`],
+      rules: { 'no-restricted-imports': restrictionsFor(workspace) },
+    },
+    {
+      files: [`${workspace.dir}/**/*.test.{ts,tsx}`],
+      rules: { 'no-restricted-imports': restrictionsFor(workspace, { tests: true }) },
+    },
+  ]),
   {
     // PixiJS stays inside the render folder so a renderer upgrade touches one place (decision 0003).
     files: ['apps/client/src/**/*.{ts,tsx}'],

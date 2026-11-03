@@ -99,6 +99,15 @@ describe('import lint rules', () => {
     expect(messages[1]).toContain('public entry point');
   });
 
+  it('let tests of platform-agnostic packages read fixtures with Node, but not use presentation libraries', async () => {
+    const messages = await restrictedImports(
+      'packages/sim/src/probe.test.ts',
+      "import fs from 'node:fs';\nimport { Sprite } from 'pixi.js';\nexport const x = [fs, Sprite];\n",
+    );
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toContain("'pixi.js'");
+  });
+
   it('allow declared dependencies', async () => {
     const messages = await restrictedImports(
       'packages/sim/src/probe.ts',

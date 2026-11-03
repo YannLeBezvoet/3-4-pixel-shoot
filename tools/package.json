@@ -4,8 +4,12 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@pixel-shoot/content": "*",
     "@pixel-shoot/shared": "*",
     "@pixel-shoot/sim": "*",
-    "@pixel-shoot/content": "*"
+    "pngjs": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/pngjs": "^6.0.5"
   }
 }

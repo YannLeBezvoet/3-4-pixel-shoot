@@ -7,3 +7,4 @@ Command-line tools for development and CI. Each tool lives in its own folder und
 
 | Folder | Script | Purpose |
 |---|---|---|
+| `palette-check/` | `check:palette` | Every PNG uses only Resurrect 64 colors, with pixels fully opaque or fully transparent (Q6) |
