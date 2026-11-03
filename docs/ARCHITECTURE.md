@@ -248,7 +248,9 @@ Aim angle → drawn direction:
 | Mirrored | no | no | no | no | no | yes | yes | yes |
 | Weapon drawn | front | front | front | behind | behind | behind | front | front |
 
-The weapon sprite rotates to the exact aim angle around its `grip` pivot, flipped vertically when aiming left so it never appears upside down.
+The weapon sprite rotates to the exact aim angle around its `grip` pivot, flipped vertically when aiming left so it never appears upside down. Slice points and origins are pixel corners; mirroring happens around the ground point (`render/weapon-pose.ts`, `render/character-view.ts`).
+
+On the client, the **content store** (`src/content/content-store.ts`) holds the loaded themes, every sprite sheet of each theme folder and their images (renderer-agnostic `ImageBitmap`s); `render/sheet-textures.ts` turns them into PixiJS textures. When a reload finds errors, the last valid version stays in use.
 
 ## 11. Rendering (`apps/client/src/render`)
 
@@ -311,7 +313,7 @@ Decision [0012](decisions/0012-tooling.md).
 - **Placeholder generator** (`tools/src/placeholders/`): writes PNG + JSON in Aseprite's export format (same tags, directions and slices as real art), so replacing a placeholder is a file swap. `tools/placeholders.json` records the hash of each generated file: a file that no longer matches has been replaced by real art and is never overwritten; `assets:report` lists the placeholders still in use.
 - **Aseprite helpers**: an export script for all `.aseprite` files (when Aseprite is installed) and a Lua script that creates a new character file with the right size, palette, tags and slices.
 - **Validators**: `validate:themes`, `check:i18n`, font coverage.
-- **Dev pages** in the client: sprite viewer (all directions and animations, weapon following the mouse), collision and area-of-interest debug drawing.
+- **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse). Planned: collision and area-of-interest debug drawing.
 - **CI** (GitHub Actions): type-check, lint, tests, validators, palette check on every push.
 
 ## 17. Testing

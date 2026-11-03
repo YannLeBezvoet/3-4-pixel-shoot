@@ -20,6 +20,8 @@ export {
   viewForOctant,
 } from './sprites/conventions';
 export type { DirectionView, DrawnDirection, SpriteRequirements } from './sprites/conventions';
+export { animationFrameAt } from './sprites/animation';
+export type { AnimationFrame } from './sprites/animation';
 export {
   checkSpriteRequirements,
   originOf,

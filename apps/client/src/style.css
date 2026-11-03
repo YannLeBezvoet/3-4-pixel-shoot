@@ -6,6 +6,7 @@
   --button: #3e3546;
   --button-border: #625565;
   --accent: #f9c22b;
+  --panel: #3e3546;
 }
 
 html,
@@ -94,4 +95,59 @@ fieldset {
   padding: 8px 8px 0;
   margin: 16px 0;
   width: fit-content;
+}
+
+h3 {
+  font-size: 8px;
+  font-weight: normal;
+  color: var(--muted);
+  margin: 12px 0 4px;
+}
+
+.viewer-panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 296px;
+  padding: 16px;
+  overflow-y: auto;
+  background: var(--panel);
+}
+
+.viewer-panel h1 {
+  font-size: 8px;
+  line-height: 12px;
+}
+
+.viewer-panel button,
+.viewer-panel a {
+  margin: 0 4px 4px 0;
+  padding: 2px 4px;
+}
+
+.viewer-hint,
+.viewer-info,
+.viewer-row-title,
+.viewer-direction {
+  position: absolute;
+  margin: 0;
+  pointer-events: none;
+}
+
+.viewer-hint,
+.viewer-info {
+  width: 320px;
+  text-align: center;
+}
+
+.viewer-direction {
+  width: 48px;
+  text-align: center;
+}
+
+.viewer-direction small {
+  display: block;
+  font-size: 8px;
+  color: var(--muted);
 }

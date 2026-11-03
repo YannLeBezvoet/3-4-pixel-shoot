@@ -80,11 +80,8 @@ async function loadInterfaceLocales(
   return loaded;
 }
 
-export async function createTranslator(
-  files: FileProvider,
-  index: ContentIndex,
-  issues: IssueCollector,
-): Promise<Translator> {
+/** Creates the translator; languages are loaded by `reload` (the content store calls it). */
+export async function createTranslator(files: FileProvider): Promise<Translator> {
   const i18n = createInstance();
   await i18n.init({
     lng: 'en',
@@ -151,6 +148,5 @@ export async function createTranslator(
       revision.value++;
     },
   };
-  await translator.reload(index, issues);
   return translator;
 }

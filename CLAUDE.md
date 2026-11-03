@@ -50,7 +50,7 @@ Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
 | Command | What it does |
 |---|---|
 | `npm install` | Install all workspaces |
-| `npm run dev` | Client dev server (Vite) on http://localhost:5173 |
+| `npm run dev` | Client dev server (Vite) on http://localhost:5173; sprite viewer at `/dev/sprites` |
 | `npm run build` | Production build of the client into `apps/client/dist/` |
 | `npm run typecheck` | Type-check every package (`tsc -b`, project references), then tests (`tsconfig.test.json`) |
 | `npm run lint` | ESLint, including module boundary rules |

@@ -1,11 +1,39 @@
 {
-  "_meta": { "name": "English" },
-  "app": { "title": "Pixel Shoot" },
-  "home": { "status": "Work in progress: milestone 0, foundations." },
-  "settings": { "language": "Language" },
+  "_meta": {
+    "name": "English"
+  },
+  "app": {
+    "title": "Pixel Shoot"
+  },
+  "home": {
+    "status": "Work in progress: milestone 0, foundations."
+  },
+  "settings": {
+    "language": "Language"
+  },
   "dev": {
     "tools": "Developer tools",
     "spriteViewer": "Sprite viewer",
-    "back": "Back"
+    "back": "Back",
+    "viewer": {
+      "characters": "Characters",
+      "otherSprites": "Other sprites",
+      "animations": "Animations",
+      "aimHint": "Move the mouse to aim.",
+      "directions": "The 8 directions (3 mirrored)",
+      "mirrored": "mirror",
+      "frame": "{{tag}} · frame {{frame}}",
+      "noTheme": "No valid theme loaded."
+    }
+  },
+  "direction": {
+    "s": "S",
+    "se": "SE",
+    "e": "E",
+    "ne": "NE",
+    "n": "N",
+    "nw": "NW",
+    "w": "W",
+    "sw": "SW"
   }
 }

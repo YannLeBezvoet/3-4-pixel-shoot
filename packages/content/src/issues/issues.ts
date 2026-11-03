@@ -22,6 +22,10 @@ export class IssueCollector {
     this.#issues.push({ severity: 'warning', file, location, message });
   }
 
+  add(...issues: readonly ContentIssue[]): void {
+    this.#issues.push(...issues);
+  }
+
   get issues(): readonly ContentIssue[] {
     return this.#issues;
   }
