@@ -1,0 +1,88 @@
+// What a projectile's path meets first: an obstacle that stops projectiles, or a character it
+// may hit. Its owner is never hit; teammates only with friendly fire on (Q49).
+import type { EntityId } from '../core/entities';
+import { BLOCKS_PROJECTILES } from '../map/map-data';
+import { segmentEntersCircle } from '../physics/geometry';
+import { castSegment } from '../physics/raycast';
+import type { WorldState } from './state';
+
+export type TraceResult =
+  | { readonly kind: 'obstacle'; readonly x: number; readonly y: number }
+  | { readonly kind: 'actor'; readonly target: EntityId; readonly x: number; readonly y: number };
+
+export function traceProjectile(
+  world: WorldState,
+  owner: EntityId,
+  team: number,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+): TraceResult | undefined {
+  const obstacle = castSegment(world.grid, ax, ay, bx, by, BLOCKS_PROJECTILES);
+  let bestT = obstacle?.t ?? Infinity;
+  let target: EntityId | undefined;
+
+  const reach = world.maxActorRadius;
+  const candidates = world.actorIndex.query(
+    Math.min(ax, bx) - reach,
+    Math.min(ay, by) - reach,
+    Math.max(ax, bx) + reach,
+    Math.max(ay, by) + reach,
+  );
+  for (const id of candidates) {
+    if (id === owner) continue;
+    const actor = world.actor.get(id);
+    const position = world.position.get(id);
+    const body = world.body.get(id);
+    if (!actor || !position || !body) continue;
+    if (actor.team === team && !world.rules.friendlyFire) continue;
+    const t = segmentEntersCircle(ax, ay, bx, by, position.x, position.y, body.radius);
+    // Candidates come by increasing id, so a tie goes to the lowest id.
+    if (t !== undefined && t < bestT) {
+      bestT = t;
+      target = id;
+    }
+  }
+
+  if (bestT === Infinity) return undefined;
+  const x = ax + (bx - ax) * bestT;
+  const y = ay + (by - ay) * bestT;
+  return target === undefined ? { kind: 'obstacle', x, y } : { kind: 'actor', target, x, y };
+}
+
+/** What a projectile carries when it stops. */
+export interface ShotInfo {
+  /** The projectile entity, or undefined for a shot stopped before leaving the muzzle. */
+  readonly projectile: EntityId | undefined;
+  /** Projectile id in the catalog. */
+  readonly kind: string;
+  readonly owner: EntityId;
+  readonly weapon: string;
+  readonly damage: number;
+  readonly z: number;
+  readonly angle: number;
+}
+
+/** Reports where a projectile stopped: a `hit` on a character or a `projectileImpact`. */
+export function resolveTrace(world: WorldState, result: TraceResult, shot: ShotInfo): void {
+  const { projectile, kind, z, angle } = shot;
+  const { x, y } = result;
+  if (result.kind === 'obstacle') {
+    world.events.push({ type: 'projectileImpact', projectile, kind, x, y, z, angle });
+    return;
+  }
+  world.events.push({
+    type: 'hit',
+    projectile,
+    kind,
+    attacker: shot.owner,
+    target: result.target,
+    weapon: shot.weapon,
+    damage: shot.damage,
+    x,
+    y,
+    z,
+    angle,
+  });
+}

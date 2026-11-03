@@ -3,12 +3,10 @@ import { createRng } from '@pixel-shoot/shared';
 import type { InputCommand } from '../core/input';
 import { Button } from '../core/input';
 import { asciiMap } from '../testing/ascii-map';
-import { createCatalog } from './catalog';
+import { testCatalog } from '../testing/test-catalog';
 import { createSimulation } from './simulation';
 
-const catalog = createCatalog({
-  characters: [{ id: 'rifleman', speed: 180, radius: 10, hitPoints: 100 }],
-});
+const catalog = testCatalog();
 const map = asciiMap(`
   #####
   #1.2#
@@ -41,6 +39,10 @@ describe('createSimulation', () => {
       radius: 10,
       hp: 100,
       maxHp: 100,
+      weapon: 'rifle',
+      rounds: 20,
+      spareMagazines: null,
+      reloadLeft: 0,
     });
     expect(sim.step()).toEqual([
       { type: 'actorSpawned', entity: id, team: 1, character: 'rifleman' },

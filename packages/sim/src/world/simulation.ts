@@ -7,6 +7,7 @@ import type { SimEvent } from '../core/events';
 import { StateHasher } from '../core/hash';
 import type { InputCommand } from '../core/input';
 import { NEUTRAL_INPUT } from '../core/input';
+import { createFirearmState } from '../behaviors/weapons/firearm';
 import type { CollisionGrid } from '../map/collision-grid';
 import { buildCollisionGrid } from '../map/collision-grid';
 import type { MapData } from '../map/map-data';
@@ -51,6 +52,27 @@ export interface ActorState {
   readonly radius: number;
   readonly hp: number;
   readonly maxHp: number;
+  /** Weapon id in the catalog. */
+  readonly weapon: string;
+  /** Rounds in the magazine. */
+  readonly rounds: number;
+  /** Spare magazines; null means unlimited. */
+  readonly spareMagazines: number | null;
+  /** Ticks left in the current reload; 0 when not reloading. */
+  readonly reloadLeft: number;
+}
+
+/** A read-only copy of a projectile's state. */
+export interface ProjectileState {
+  readonly id: EntityId;
+  /** Projectile id in the catalog. */
+  readonly kind: string;
+  readonly owner: EntityId;
+  readonly x: number;
+  readonly y: number;
+  /** Height above the ground point, for drawing. */
+  readonly z: number;
+  readonly angle: number;
 }
 
 export interface Simulation {
@@ -69,6 +91,7 @@ export interface Simulation {
   step(inputs?: ReadonlyMap<EntityId, InputCommand>): readonly SimEvent[];
   actor(id: EntityId): ActorState | undefined;
   actors(): readonly ActorState[];
+  projectiles(): readonly ProjectileState[];
   /** Hash of the whole state: equal for equal seeds and inputs. */
   hash(): number;
 }
@@ -99,7 +122,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
     const position = world.position.get(id);
     const body = world.body.get(id);
     const health = world.health.get(id);
-    if (!actor || !position || !body || !health) return undefined;
+    const weapon = world.weapon.get(id);
+    if (!actor || !position || !body || !health || !weapon) return undefined;
     const { team, character, aim } = actor;
     return {
       id,
@@ -111,6 +135,10 @@ export function createSimulation(options: SimulationOptions): Simulation {
       radius: body.radius,
       hp: health.hp,
       maxHp: health.max,
+      weapon: weapon.weapon,
+      rounds: weapon.rounds,
+      spareMagazines: weapon.spareMagazines,
+      reloadLeft: weapon.reloadLeft,
     };
   };
 
@@ -125,6 +153,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
     spawnActor(spec) {
       const stats = world.catalog.characters.get(spec.character);
       if (!stats) throw new Error(`Unknown character "${spec.character}".`);
+      const weapon = world.catalog.weapons.get(stats.weapon);
+      if (!weapon) throw new Error(`Unknown weapon "${stats.weapon}".`);
       if (!Number.isInteger(spec.team) || spec.team < 1)
         throw new Error(`Teams are numbered from 1; got ${spec.team}.`);
       const id = world.nextEntity++;
@@ -140,6 +170,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
         input: { ...NEUTRAL_INPUT, aim },
       });
       world.health.set(id, { hp: stats.hitPoints, max: stats.hitPoints });
+      world.weapon.set(id, createFirearmState(weapon));
       world.maxActorRadius = Math.max(world.maxActorRadius, stats.radius);
       indexActors(world);
       world.events.push({ type: 'actorSpawned', entity: id, team: spec.team, character: stats.id });
@@ -162,6 +193,19 @@ export function createSimulation(options: SimulationOptions): Simulation {
 
     actor: actorState,
     actors: () => [...world.actor.ids()].map((id) => actorState(id) as ActorState),
+    projectiles: () =>
+      [...world.projectile.entries()].map(([id, projectile]) => {
+        const position = world.position.get(id) ?? { x: 0, y: 0 };
+        return {
+          id,
+          kind: projectile.kind,
+          owner: projectile.owner,
+          x: position.x,
+          y: position.y,
+          z: projectile.z,
+          angle: Math.atan2(projectile.dirY, projectile.dirX),
+        };
+      }),
 
     hash() {
       const hasher = new StateHasher().number(world.tick).number(world.nextEntity);

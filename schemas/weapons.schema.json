@@ -86,7 +86,7 @@
               },
               "reserveMagazines": {
                 "default": null,
-                "description": "Spare magazines per life; null means unlimited.",
+                "description": "Spare magazines per life; null means unlimited. A reload uses one, and the rounds left in the old magazine are lost.",
                 "anyOf": [
                   {
                     "type": "integer",

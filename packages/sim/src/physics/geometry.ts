@@ -77,3 +77,31 @@ export function segmentEntersBox(
   }
   return enter;
 }
+
+/**
+ * Where the segment from (ax, ay) to (bx, by) enters a circle, as a fraction t in [0, 1] of
+ * its length; 0 when it starts inside; undefined when it misses.
+ */
+export function segmentEntersCircle(
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  cx: number,
+  cy: number,
+  radius: number,
+): number | undefined {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const fx = ax - cx;
+  const fy = ay - cy;
+  const c = fx * fx + fy * fy - radius * radius;
+  if (c <= 0) return 0;
+  const a = dx * dx + dy * dy;
+  if (a === 0) return undefined;
+  const b = 2 * (fx * dx + fy * dy);
+  const discriminant = b * b - 4 * a * c;
+  if (discriminant < 0) return undefined;
+  const t = (-b - Math.sqrt(discriminant)) / (2 * a);
+  return t >= 0 && t <= 1 ? t : undefined;
+}

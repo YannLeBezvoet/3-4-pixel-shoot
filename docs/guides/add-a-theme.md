@@ -103,7 +103,9 @@ File names are fixed. Each JSON file starts with a `$schema` line: VS Code then 
   | `spreadDeg` | 0 to 45 | `0` | Random deviation of each shot, in degrees on each side of the aim |
   | `magazine` | whole number ≥ 1 | — | Rounds per magazine |
   | `reloadMs` | whole number ≥ 0 | — | Reload time in milliseconds |
-  | `reserveMagazines` | whole number or `null` | `null` | Spare magazines per life; `null` = unlimited |
+  | `reserveMagazines` | whole number or `null` | `null` | Spare magazines per life; `null` = unlimited. A reload uses one, and the rounds left in the old magazine are lost |
+
+  Reloading starts with the reload key, or by itself when the magazine is empty.
 
 - `sprite`: the weapon drawn **pointing right**, with `grip` and `muzzle` slices.
 - `sounds`: reserved for the audio milestone. Names are kept but nothing plays yet.

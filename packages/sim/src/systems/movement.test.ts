@@ -5,12 +5,10 @@ import { NEUTRAL_INPUT } from '../core/input';
 import { BLOCKS_MOVEMENT } from '../map/map-data';
 import { circleBlocked } from '../physics/move-circle';
 import { asciiMap } from '../testing/ascii-map';
-import { createCatalog } from '../world/catalog';
+import { testCatalog } from '../testing/test-catalog';
 import { createSimulation } from '../world/simulation';
 
-const catalog = createCatalog({
-  characters: [{ id: 'rifleman', speed: 180, radius: 10, hitPoints: 100 }],
-});
+const catalog = testCatalog();
 const open = asciiMap(`
   ##########
   #........#

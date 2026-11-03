@@ -45,6 +45,42 @@ export interface Health {
   readonly max: number;
 }
 
+/** The weapon an actor holds and its state. */
+export interface WeaponState {
+  /** Weapon id in the catalog. */
+  readonly weapon: string;
+  /** Rounds in the magazine. */
+  rounds: number;
+  /** Spare magazines; null means unlimited. */
+  spareMagazines: number | null;
+  /** Ticks before the next shot may be fired; fractional, so any rate of fire is exact. */
+  cooldown: number;
+  /** Ticks left in the current reload; 0 when not reloading. */
+  reloadLeft: number;
+  /** Whether fire was held during the previous tick (semi-automatic weapons). */
+  triggerWasHeld: boolean;
+}
+
+/** A projectile in flight. Its position is in the position store. */
+export interface Projectile {
+  /** Projectile id in the catalog. */
+  readonly kind: string;
+  readonly owner: EntityId;
+  readonly team: number;
+  /** Weapon that fired it. */
+  readonly weapon: string;
+  /** Unit direction. */
+  readonly dirX: number;
+  readonly dirY: number;
+  /** World units per tick. */
+  readonly speed: number;
+  readonly damage: number;
+  /** Height above the ground, for drawing; collision happens on the ground plane. */
+  readonly z: number;
+  /** Distance it may still travel. */
+  remaining: number;
+}
+
 /** Match rules the simulation applies. */
 export interface Rules {
   /** Whether bullets hit and hurt teammates (Q21, Q49). */
@@ -74,10 +110,20 @@ export interface WorldState {
   readonly body: ComponentStore<Body>;
   readonly actor: ComponentStore<Actor>;
   readonly health: ComponentStore<Health>;
+  readonly weapon: ComponentStore<WeaponState>;
+  readonly projectile: ComponentStore<Projectile>;
 }
 
 /** Every component store, in the fixed order used for hashing and removal. */
-export const STORES = ['position', 'velocity', 'body', 'actor', 'health'] as const;
+export const STORES = [
+  'position',
+  'velocity',
+  'body',
+  'actor',
+  'health',
+  'weapon',
+  'projectile',
+] as const;
 
 export function createStores() {
   return {
@@ -86,6 +132,8 @@ export function createStores() {
     body: new ComponentStore<Body>(),
     actor: new ComponentStore<Actor>(),
     health: new ComponentStore<Health>(),
+    weapon: new ComponentStore<WeaponState>(),
+    projectile: new ComponentStore<Projectile>(),
   } satisfies Record<(typeof STORES)[number], ComponentStore<unknown>>;
 }
 
