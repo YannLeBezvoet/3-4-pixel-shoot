@@ -22,6 +22,7 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 | Undecided points and their proposals | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) |
 | Owner guides (sprites, maps, themes, modes, languages) | `docs/guides/` (from M0) |
 | Palette | [palette/resurrect-64.gpl](palette/resurrect-64.gpl) |
+| Editor JSON Schemas for theme files (generated) | `schemas/` |
 | A package's role and allowed dependencies | `packages/*/README.md`, `apps/*/README.md`, [tools/README.md](tools/README.md) |
 
 ## Working rules
@@ -53,4 +54,6 @@ Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
 | `npm run format` / `format:check` | Prettier on code and config (not on `themes/`, `locales/`, Markdown) |
 | `npm run test` / `test:watch` / `coverage` | Vitest, all workspaces |
 | `npm run check:palette [files…]` | Palette and transparency check of every PNG (or the given files) |
+| `npm run validate:themes [ids…]` | Validate themes as the game loads them |
+| `npm run schemas` / `check:schemas` | Regenerate / verify `schemas/*.json` (run after changing a Zod schema) |
 | `npm run check` | **Everything CI runs.** Must pass before every commit |

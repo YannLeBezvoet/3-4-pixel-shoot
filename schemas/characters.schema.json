@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Path to the JSON Schema, for editor autocompletion.",
+      "type": "string"
+    },
+    "characters": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
+          },
+          "nameKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*$",
+            "description": "Key of a text in the theme translation files (locales/<language>.json)."
+          },
+          "faction": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "description": "Faction this character belongs to (theme.json)."
+          },
+          "sprite": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
+            "description": "Character sprite: tags idle, walk, death in the 5 drawn directions and a \"hand\" slice."
+          },
+          "weapon": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "description": "Default weapon (weapons.json)."
+          }
+        },
+        "required": [
+          "id",
+          "nameKey",
+          "faction",
+          "sprite",
+          "weapon"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "characters"
+  ],
+  "additionalProperties": false,
+  "title": "Theme characters (characters.json)"
+}

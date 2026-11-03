@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { charactersFileSchema, themeManifestSchema, weaponsEditorSchema } from '../theme/schemas';
 
 function toJsonSchema(schema: z.ZodType, title: string): Record<string, unknown> {
-  return { title, ...z.toJSONSchema(schema, { io: 'input', target: 'draft-2020-12' }) };
+  return { ...z.toJSONSchema(schema, { io: 'input', target: 'draft-2020-12' }), title };
 }
 
 /** File name in schemas/ → JSON Schema. */
