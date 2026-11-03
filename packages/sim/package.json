@@ -7,6 +7,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@pixel-shoot/shared": "*"
+    "@pixel-shoot/shared": "*",
+    "zod": "^4.6.7"
   }
 }

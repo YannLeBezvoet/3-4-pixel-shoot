@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@pixel-shoot/shared": "*",
-    "@pixel-shoot/sim": "*"
+    "@pixel-shoot/sim": "*",
+    "zod": "^4.6.7"
   }
 }
