@@ -350,7 +350,7 @@ Decision [0012](decisions/0012-tooling.md).
 - **Validators**: `validate:themes` (themes, catalog conversion, maps), `check:i18n`, font coverage.
 - **Generated files** (`npm run schemas`, verified by `check:schemas`): editor JSON Schemas (`schemas/`), the Tiled project file (`tools/tiled/`) and the behavior reference ([`docs/reference/behaviors.md`](reference/behaviors.md)), all derived from the engine's definitions.
 - **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse); the test scene at `/dev/scene` (`src/dev/scene/`: a `sandbox` match on the first map of the first theme that has one, the player in team 1 against three bots in team 2 who come looking for it, everyone back 2 seconds after dying; shots, impacts and hits show their effects). Planned: collision and area-of-interest debug drawing.
-- **CI** (GitHub Actions): type-check, lint, tests, validators, palette check on every push.
+- **CI** (GitHub Actions): `npm run check` (type-check, lint, tests, validators, palette check), the REUSE check and the Playwright smoke test, on every push.
 
 ## 17. Testing
 
@@ -360,7 +360,7 @@ Decision [0012](decisions/0012-tooling.md).
 - **Headless full matches:** bot-only matches run in Node and must end with a winner within a time limit.
 - **Content tests:** broken fixture themes must produce the expected error messages.
 - **Protocol tests:** encode/decode round trips, including randomized inputs.
-- **Client:** unit tests for asset parsing, direction mapping and i18n; a browser smoke test (Playwright) from milestone 1.
+- **Client:** unit tests for asset parsing, direction mapping, i18n, sessions, input, solo setup and spectating; a browser smoke test (Playwright, `apps/client/e2e/`, decision [0015](decisions/0015-browser-smoke-tests.md)): a solo match starts from the menus and runs 10 seconds without a console error (`npm run test:e2e`, a separate CI job).
 - **Load tests** (milestone 3–4): headless clients and bots against a real server; tick time and bandwidth measured.
 
 ## 18. Performance budgets

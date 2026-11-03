@@ -156,6 +156,7 @@ export default defineConfig(
       '*.config.{js,ts}',
       'apps/client/vite/**/*.ts',
       'apps/client/*.config.ts',
+      'apps/client/e2e/**/*.ts',
     ],
     languageOptions: { globals: { ...globals.node } },
   },

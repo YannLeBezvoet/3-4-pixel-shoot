@@ -17,6 +17,8 @@
     "apps/client/vite/**/*.ts",
     "tools/src/**/*.test.ts",
     "vitest.config.ts",
-    "tools/src/**/*.d.ts"
+    "tools/src/**/*.d.ts",
+    "apps/client/e2e/**/*.ts",
+    "playwright.config.ts"
   ]
 }
