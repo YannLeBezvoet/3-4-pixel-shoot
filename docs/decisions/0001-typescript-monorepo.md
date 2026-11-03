@@ -35,3 +35,7 @@ For the repository:
 - The simulation is shared byte-for-byte between browser and server.
 - Adding a package means adding it to the dependency table in `ARCHITECTURE.md` and to the lint rules.
 - npm's hoisting makes undeclared ("phantom") imports possible; the lint rules catch them. If they become a recurring problem, switching to pnpm is a contained change.
+
+## Amendments
+
+- **2026-11-03.** TypeScript is pinned to **6.0.x**, the last release with the JavaScript compiler API: `typescript-eslint` does not support TypeScript 7 yet (it requires `< 6.1`). Move to 7 once it does. ESLint boundary rules are generated from each package's `package.json` dependencies.

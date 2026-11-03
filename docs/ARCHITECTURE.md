@@ -100,7 +100,7 @@ flowchart TD
 **Enforcement** (decision [0001](decisions/0001-typescript-monorepo.md)):
 - Each package declares its dependencies in its `package.json`; TypeScript project references follow the same graph.
 - Platform-agnostic packages compile with `lib: ["ES2023"]` and no ambient types: any use of `window`, `document` or Node built-ins fails type-checking.
-- ESLint import rules forbid imports that cross the table above (for example `sim` importing `pixi.js` or a package's internal files).
+- ESLint import rules (`eslint.config.js`), **generated from each package's declared dependencies**, forbid imports that cross the table above: an undeclared project package, a deep import into another package's files, a Node or presentation library in a platform-agnostic package, PixiJS outside `apps/client/src/render`.
 
 ## 5. Simulation core (`packages/sim`)
 

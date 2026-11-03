@@ -4,13 +4,8 @@
     "rootDir": "src",
     "outDir": "dist-types"
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx"
-  ],
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
   "references": [
     {
       "path": "../../packages/shared"

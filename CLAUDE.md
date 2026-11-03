@@ -48,3 +48,5 @@ Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
 |---|---|
 | `npm install` | Install all workspaces |
 | `npm run typecheck` | Type-check every package (`tsc -b`, project references) |
+| `npm run lint` | ESLint, including module boundary rules |
+| `npm run format` / `format:check` | Prettier on code and config (not on `themes/`, `locales/`, Markdown) |
