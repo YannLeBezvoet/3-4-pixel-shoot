@@ -14,7 +14,7 @@
 | `match` | `createMatchHost`: participants, inputs, mode lifecycle, kills and deaths, `WorldView`. No bots yet | `packages/match/src/` |
 | `modes` | Game-mode API in `sim` (`GameModeDefinition`, `ModeApi`, `ModeState`); the `sandbox` mode (development only) | `packages/sim/src/modes/`, `packages/modes/src/` |
 | `bots`, `protocol`, `apps/server` | Empty entry points | — |
-| Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages; `LocalSession` (fixed 60 Hz step, interpolation) and match input (physical keys, mouse aim) | `apps/client/` |
+| Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages; `LocalSession` (fixed 60 Hz step, interpolation), match input (physical keys, mouse aim), world rendering (map chunks, depth-sorted world layer, interpolation, centered camera), test scene (`/dev/scene`); the content store also loads maps and tileset images | `apps/client/` |
 | Tools | Palette check, theme validation, JSON Schemas, i18n and font check, placeholder generator, Aseprite export, Lua character template | `tools/` |
 | Content | Vietnam theme (2 factions, 2 characters, 2 rifles, a rifle bullet, 5 effects, the `river-village` map with its 2 tilesets, placeholder art, EN/FR texts); EN/FR interface | `themes/vietnam/`, `locales/` |
 | CI | `npm run check` + REUSE on GitHub Actions | `.github/workflows/check.yml` |
@@ -280,7 +280,7 @@ Aim angle → drawn direction:
 
 The weapon sprite rotates to the exact aim angle around its `grip` pivot, flipped vertically when aiming left so it never appears upside down. Slice points and origins are pixel corners; mirroring happens around the ground point (`render/weapon-pose.ts`, `render/character-view.ts`).
 
-On the client, the **content store** (`src/content/content-store.ts`) holds the loaded themes, every sprite sheet of each theme folder and their images (renderer-agnostic `ImageBitmap`s); `render/sheet-textures.ts` turns them into PixiJS textures. When a reload finds errors, the last valid version stays in use.
+On the client, the **content store** (`src/content/content-store.ts`) holds the loaded themes, every sprite sheet of each theme folder and their images, and each theme's maps with their tileset images (renderer-agnostic `ImageBitmap`s); `render/sheet-textures.ts` and `render/image-textures.ts` turn them into PixiJS textures. When a reload finds errors, the last valid version stays in use, for a whole theme or for a single map.
 
 ## 11. Rendering (`apps/client/src/render`)
 
@@ -288,9 +288,10 @@ Decision [0003](decisions/0003-rendering-pixijs.md).
 
 - **PixiJS** renders into a **960×540** canvas; the canvas is upscaled by CSS with the **largest integer factor** that fits, with `image-rendering: pixelated`, computed in device pixels (`render/screen-layout.ts`, `render/renderer.ts`). In development, a test pattern (palette swatches and a 1-pixel checkerboard) shows whether scaling is crisp. All textures use nearest-neighbor sampling; the camera snaps to whole pixels.
 - Rotating the weapon at internal resolution keeps every pixel a palette color (no interpolation happens).
-- *Planned for milestone 1:* **Layers:** ground (tile chunks baked to textures, re-baked when a tile changes; blood decals painted into them), **y-sorted world layer** (characters, map elements, multi-tile objects, corpses; sort key = ground y), overhead layer, screen-space effects, HUD.
-- *Planned for milestone 1:* **Interpolation:** the renderer draws the `WorldView` interpolated between the last two ticks, so 60 Hz simulation looks smooth at 144 Hz.
-- *Planned for milestone 1:* **Camera:** keeps the local player's character at the exact center of the screen (Q20); beyond the map edges, the background color shows.
+- **Layers** (`render/world-scene.ts`, exists): ground (tile chunks of 16×16 tiles, each cached as one texture and hidden off screen, `render/map-view.ts`; blood decals painted into them in M2), corpses, the **depth-sorted world layer** (map objects such as trees, living characters, projectiles; draw order from `render/depth.ts`: larger ground y in front, ties by entity id), overhead tiles. Planned: screen-space effects and the HUD above them.
+- **Interpolation** (exists): the scene draws the session frame interpolated between the last two ticks, so 60 Hz simulation looks smooth at 144 Hz. The local player's weapon uses the live mouse aim rather than the last tick's.
+- **Camera** (exists): keeps the followed character at the exact center of the screen (Q20), snapped to whole pixels; beyond the map edges, the background color shows.
+- **Looks** (`render/theme-looks.ts`): gameplay ids (characters, weapons, projectiles, effects) are turned into sprite sheets of the theme; a dead character's weapon is not drawn.
 - *Planned for milestones 1–2:* **Effects** (blood sprays, muzzle flashes, smoke, casings) are client-side particles driven by `SimEvent`s; they have no gameplay effect and are never sent over the network.
 - **Palette at runtime:** assets are strictly in palette. A final full-screen pass that snaps every pixel to the nearest Resurrect 64 color is planned as an option, so blending effects (fades, smoke, transparency) stay in palette. See open questions.
 
@@ -344,7 +345,7 @@ Decision [0012](decisions/0012-tooling.md).
 - **Aseprite helpers**: an export script for all `.aseprite` files (when Aseprite is installed) and a Lua script that creates a new character file with the right size, palette, tags and slices.
 - **Validators**: `validate:themes` (themes, catalog conversion, maps), `check:i18n`, font coverage.
 - **Generated files** (`npm run schemas`, verified by `check:schemas`): editor JSON Schemas (`schemas/`), the Tiled project file (`tools/tiled/`) and the behavior reference ([`docs/reference/behaviors.md`](reference/behaviors.md)), all derived from the engine's definitions.
-- **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse). Planned: collision and area-of-interest debug drawing.
+- **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse); the test scene at `/dev/scene` (`src/dev/scene/`: a `sandbox` match on the first map of the first theme that has one, the player against three motionless targets). Planned: collision and area-of-interest debug drawing.
 - **CI** (GitHub Actions): type-check, lint, tests, validators, palette check on every push.
 
 ## 17. Testing

@@ -197,3 +197,25 @@ h3 {
 .content-issues li.warning strong {
   color: var(--warning);
 }
+
+.scene-panel {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  max-width: 400px;
+  padding: 8px;
+  background: var(--panel);
+}
+
+.scene-panel p {
+  margin: 0;
+}
+
+/* The interface lets the mouse through to the game, except on its controls. */
+.scene-page {
+  pointer-events: none;
+}
+
+.scene-panel a {
+  pointer-events: auto;
+}

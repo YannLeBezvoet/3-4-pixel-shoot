@@ -68,7 +68,8 @@ export class CharacterView {
     this.#body.anchor.set(anchor.x, anchor.y);
     this.#body.scale.set(view.mirrored ? -1 : 1, 1);
 
-    const weapon = look.weapon;
+    // A dead character drops its weapon: the corpse lies without it.
+    const weapon = this.#action === 'death' ? undefined : look.weapon;
     this.#weapon.visible = weapon !== undefined;
     if (!weapon) return;
     const weaponSheet = weapon.sheet.sheet;

@@ -14,6 +14,11 @@
   "dev": {
     "tools": "Outils de développement",
     "spriteViewer": "Visionneuse de sprites",
+    "scene": {
+      "title": "Scène de test",
+      "controls": "Déplacement : ZQSD (WASD en QWERTY) ou flèches. Viser et tirer : souris. Recharger : R.",
+      "noMap": "Aucun thème n'a encore de carte."
+    },
     "back": "Retour",
     "viewer": {
       "characters": "Personnages",
@@ -33,6 +38,10 @@
       "warnings_many": "{{count}} avertissements de contenu.",
       "warnings_other": "{{count}} avertissements de contenu."
     }
+  },
+  "participant": {
+    "you": "Vous",
+    "bot": "Bot {{n}}"
   },
   "mode": {
     "sandbox": { "name": "Bac à sable" }

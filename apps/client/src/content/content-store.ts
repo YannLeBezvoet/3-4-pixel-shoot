@@ -10,7 +10,15 @@ import type {
   SpriteSheet,
   Theme,
 } from '@pixel-shoot/content';
-import { IssueCollector, loadTheme, parseSpriteSheet, spriteFiles } from '@pixel-shoot/content';
+import {
+  IssueCollector,
+  joinPath,
+  loadMap,
+  loadTheme,
+  parseSpriteSheet,
+  spriteFiles,
+} from '@pixel-shoot/content';
+import type { MapData } from '@pixel-shoot/sim';
 import { builtInBehaviors } from '@pixel-shoot/sim';
 import type { Translator } from '../i18n/translator';
 import { loadContentIndex } from './fetch-files';
@@ -26,6 +34,18 @@ export interface ThemeAssets {
   readonly theme: Theme;
   /** Every sprite sheet of the theme folder, used by the theme or not. */
   readonly sheets: ReadonlyMap<string, LoadedSheet>;
+  /** Maps by reference ("maps/river-village"). A map with errors keeps its last valid version. */
+  readonly maps: ReadonlyMap<string, MapData>;
+  /** Images drawn by the maps (tilesets), by path relative to the theme folder. */
+  readonly images: ReadonlyMap<string, ImageBitmap>;
+}
+
+/** Every image path a map draws from. */
+function mapImages(map: MapData): Set<string> {
+  const paths = new Set<string>();
+  for (const type of map.tileTypes) if (type.visual) paths.add(type.visual.image);
+  for (const object of map.objects) if (object.visual) paths.add(object.visual.image);
+  return paths;
 }
 
 export interface ContentStore {
@@ -92,8 +112,33 @@ export async function createContentStore(
     }
     publish(`theme:${id}`, collector.issues);
     if (!theme || collector.hasErrors) return; // keep the last valid version
+
+    const previous = themes.value.get(id);
+    const maps = new Map<string, MapData>();
+    const images = new Map<string, ImageBitmap>();
+    for (const ref of index.value.themes.find((t) => t.id === id)?.maps ?? []) {
+      const result = await loadMap(files, theme, ref);
+      const mapIssues = new IssueCollector();
+      mapIssues.add(...result.issues);
+      const map = result.map ?? previous?.maps.get(ref); // an invalid map keeps its last version
+      if (map) {
+        for (const path of mapImages(map)) {
+          if (images.has(path)) continue;
+          const image = await loadImage(`${base}${joinPath(theme.dir, path)}`);
+          if (image) images.set(path, image);
+          else
+            mapIssues.error(
+              joinPath(theme.dir, path),
+              '',
+              'Tileset image not found or unreadable.',
+            );
+        }
+        maps.set(ref, map);
+      }
+      publish(`map:${id}/${ref}`, mapIssues.issues);
+    }
     const next = new Map(themes.value);
-    next.set(id, { theme, sheets });
+    next.set(id, { theme, sheets, maps, images });
     themes.value = next;
     translator.addTheme(theme);
   }

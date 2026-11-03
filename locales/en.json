@@ -14,6 +14,11 @@
   "dev": {
     "tools": "Developer tools",
     "spriteViewer": "Sprite viewer",
+    "scene": {
+      "title": "Test scene",
+      "controls": "Move: WASD (ZQSD on AZERTY) or arrows. Aim and fire: mouse. Reload: R.",
+      "noMap": "No theme has a map yet."
+    },
     "back": "Back",
     "viewer": {
       "characters": "Characters",
@@ -31,6 +36,10 @@
       "warnings_one": "{{count}} content warning.",
       "warnings_other": "{{count}} content warnings."
     }
+  },
+  "participant": {
+    "you": "You",
+    "bot": "Bot {{n}}"
   },
   "mode": {
     "sandbox": { "name": "Sandbox" }
