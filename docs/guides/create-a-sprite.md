@@ -1,6 +1,6 @@
 # Create a sprite
 
-How to draw a sprite in Aseprite so the game loads it with no code: characters, weapons and effects. The placeholders in `themes/vietnam/sprites/` follow every rule below; open their JSON files to see real examples.
+How to draw a sprite in Aseprite so the game loads it with no code: characters, weapons, projectiles and effects. The placeholders in `themes/vietnam/sprites/` follow every rule below; open their JSON files to see real examples.
 
 ## 1. General rules
 
@@ -40,7 +40,7 @@ Points the game needs are Aseprite **slices** (Slice tool, `C`) of 1×1 pixel. T
 | `hand` | characters | Where the weapon's grip attaches. |
 | `grip` | weapons | The point the weapon rotates around, held in the hand. |
 | `muzzle` | weapons | Where bullets and the muzzle flash start. |
-| `origin` | optional, any sprite | The **ground point**: feet of a character, base of a tree, center of an explosion. Without it: the bottom-center pixel of the frame (24, 47 in a 48×48 frame). |
+| `origin` | required for projectiles, optional for any other sprite | The **ground point**: feet of a character, base of a tree, center of an explosion. Without it: the bottom-center pixel of the frame (24, 47 in a 48×48 frame). |
 
 A slice can move from frame to frame (for example, the hand bobbing during `walk`): go to the frame and move the slice. Aseprite then stores a key for that frame, and the game follows it.
 
@@ -60,9 +60,10 @@ Quick start: the script `tools/aseprite/new-character.lua` creates a 48×48 file
 - Add the `grip` and `muzzle` slices.
 - When the character aims left, the game flips the weapon vertically so it is never upside down.
 
-## 6. Effects and other sprites
+## 6. Projectiles, effects and other sprites
 
-Effects (muzzle flash, blood, explosions, flames) use any tag names; the placeholders use a single `play` tag with a repeat count of 1. Set an `origin` slice where the effect attaches (the muzzle for a flash, the center for an explosion). Effects are wired into themes from milestone 1.
+- **Projectiles** (bullets): draw them **pointing right**, with a `fly` tag and an `origin` slice at the projectile's tip. The game draws the sprite at the projectile's position, rotated to its direction.
+- **Effects** (muzzle flash, blood, impacts, explosions, flames): a `play` tag, usually with a repeat count of 1. Set an `origin` slice where the effect attaches: the base of the flash for a muzzle flash drawn pointing right, the center for an impact or an explosion. A theme lists its effects in `effects.json` ([add a theme](add-a-theme.md)).
 
 ## 7. Export
 

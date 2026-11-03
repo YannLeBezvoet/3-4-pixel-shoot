@@ -1,6 +1,6 @@
 // Loads a theme folder and validates it completely: schemas, behavior parameters,
 // cross-references, sprites and translations. Every problem is collected.
-import type { BehaviorRegistry } from '@pixel-shoot/sim';
+import type { BehaviorKind, BehaviorRegistry } from '@pixel-shoot/sim';
 import type { FileProvider } from '../files/file-provider';
 import { joinPath } from '../files/file-provider';
 import { readJson } from '../files/read-json';
@@ -10,13 +10,20 @@ import { validate } from '../issues/zod';
 import type { Locale } from '../locales/locale';
 import { hasKey, parseLocale } from '../locales/locale';
 import type { SpriteRequirements } from '../sprites/conventions';
-import { CHARACTER_SPRITE, WEAPON_SPRITE } from '../sprites/conventions';
+import {
+  CHARACTER_SPRITE,
+  EFFECT_SPRITE,
+  PROJECTILE_SPRITE,
+  WEAPON_SPRITE,
+} from '../sprites/conventions';
 import type { SpriteSheet } from '../sprites/sprite-sheet';
 import { checkSpriteRequirements, parseSpriteSheet } from '../sprites/sprite-sheet';
-import type { CharacterDefinition, ThemeManifest } from './schemas';
+import type { CharacterDefinition, EffectDefinition, ThemeManifest } from './schemas';
 import {
   THEME_FORMAT_VERSION,
   charactersFileSchema,
+  effectsFileSchema,
+  projectilesFileSchema,
   themeManifestSchema,
   weaponsFileSchema,
 } from './schemas';
@@ -28,10 +35,23 @@ export interface ThemeWeapon {
   /** Parameters validated by the behavior's schema, defaults applied. */
   readonly params: unknown;
   readonly sprite: string;
+  /** Projectile id (projectiles.json). */
+  readonly projectile: string;
+  readonly effects: { readonly fire?: string };
   readonly sounds: Readonly<Record<string, string>>;
 }
 
+export interface ThemeProjectile {
+  readonly id: string;
+  readonly behavior: string;
+  /** Parameters validated by the behavior's schema, defaults applied. */
+  readonly params: unknown;
+  readonly sprite: string;
+  readonly effects: { readonly impact?: string };
+}
+
 export type ThemeCharacter = CharacterDefinition;
+export type ThemeEffect = EffectDefinition;
 
 export interface Theme {
   readonly id: string;
@@ -42,6 +62,8 @@ export interface Theme {
   readonly factions: ThemeManifest['factions'];
   readonly characters: ReadonlyMap<string, ThemeCharacter>;
   readonly weapons: ReadonlyMap<string, ThemeWeapon>;
+  readonly projectiles: ReadonlyMap<string, ThemeProjectile>;
+  readonly effects: ReadonlyMap<string, ThemeEffect>;
   /** Sprite sheets by asset path (relative to the theme folder, without extension). */
   readonly sprites: ReadonlyMap<string, SpriteSheet>;
   /** Theme texts by language. */
@@ -96,6 +118,43 @@ function indexById<T extends { id: string }>(
   return byId;
 }
 
+/**
+ * Checks that each entry names a known behavior of `kind` and that its parameters are valid
+ * for it. Returns the valid entries with their parameters parsed (defaults applied).
+ */
+function checkBehaviors<T extends { id: string; behavior: string; params: unknown }>(
+  entries: readonly T[],
+  byId: ReadonlyMap<string, T>,
+  kind: BehaviorKind,
+  arrayName: string,
+  file: string,
+  raw: unknown,
+  behaviors: BehaviorRegistry,
+  issues: IssueCollector,
+): Map<string, T> {
+  const valid = new Map<string, T>();
+  entries.forEach((entry, index) => {
+    if (byId.get(entry.id) !== entry) return;
+    const where = describeJsonPath(raw, [arrayName, index]);
+    const behavior = behaviors.get(kind, entry.behavior);
+    if (!behavior) {
+      const known = listOf(behaviors.list(kind).map((b) => b.id));
+      issues.error(
+        file,
+        `${where}.behavior`,
+        `Unknown ${kind} behavior "${entry.behavior}". Known ${kind} behaviors: ${known}.`,
+      );
+      return;
+    }
+    const params = validate(behavior.params, entry.params, file, issues, {
+      root: raw,
+      basePath: [arrayName, index, 'params'],
+    });
+    if (params !== undefined) valid.set(entry.id, { ...entry, params });
+  });
+  return valid;
+}
+
 export async function loadTheme(
   files: FileProvider,
   themeId: string,
@@ -106,6 +165,8 @@ export async function loadTheme(
   const manifestFile = joinPath(dir, 'theme.json');
   const charactersFile = joinPath(dir, 'characters.json');
   const weaponsFile = joinPath(dir, 'weapons.json');
+  const projectilesFile = joinPath(dir, 'projectiles.json');
+  const effectsFile = joinPath(dir, 'effects.json');
   const done = (theme?: Theme): LoadThemeResult => ({
     theme: issues.hasErrors ? undefined : theme,
     issues: issues.issues,
@@ -134,7 +195,7 @@ export async function loadTheme(
     );
   }
 
-  // 2. Characters and weapons.
+  // 2. Characters, weapons, projectiles and effects (effects.json is optional).
   const rawCharacters = await readJson(files, charactersFile, issues);
   const charactersData =
     rawCharacters === undefined
@@ -145,7 +206,20 @@ export async function loadTheme(
     rawWeapons === undefined
       ? undefined
       : validate(weaponsFileSchema, rawWeapons, weaponsFile, issues);
-  if (!manifest || !charactersData || !weaponsData) return done();
+  const rawProjectiles = await readJson(files, projectilesFile, issues);
+  const projectilesData =
+    rawProjectiles === undefined
+      ? undefined
+      : validate(projectilesFileSchema, rawProjectiles, projectilesFile, issues);
+  const hasEffects = await files.exists(effectsFile);
+  const rawEffects = hasEffects ? await readJson(files, effectsFile, issues) : undefined;
+  const effectsData = !hasEffects
+    ? { effects: [] }
+    : rawEffects === undefined
+      ? undefined
+      : validate(effectsFileSchema, rawEffects, effectsFile, issues);
+  if (!manifest || !charactersData || !weaponsData || !projectilesData || !effectsData)
+    return done();
 
   const factions = indexById(
     manifest.factions,
@@ -163,8 +237,6 @@ export async function loadTheme(
     rawCharacters,
     issues,
   );
-
-  const weapons = new Map<string, ThemeWeapon>();
   const weaponEntries = indexById(
     weaponsData.weapons,
     'weapon',
@@ -173,33 +245,58 @@ export async function loadTheme(
     rawWeapons,
     issues,
   );
-  weaponsData.weapons.forEach((weapon, index) => {
-    if (weaponEntries.get(weapon.id) !== weapon) return;
-    const where = describeJsonPath(rawWeapons, ['weapons', index]);
-    const behavior = options.behaviors.get('weapon', weapon.behavior);
-    if (!behavior) {
-      const known = listOf(options.behaviors.list('weapon').map((b) => b.id));
-      issues.error(
-        weaponsFile,
-        `${where}.behavior`,
-        `Unknown weapon behavior "${weapon.behavior}". Known weapon behaviors: ${known}.`,
-      );
-      return;
-    }
-    const params = validate(behavior.params, weapon.params, weaponsFile, issues, {
-      root: rawWeapons,
-      basePath: ['weapons', index, 'params'],
-    });
-    if (params === undefined) return;
-    weapons.set(weapon.id, {
-      id: weapon.id,
+  const projectileEntries = indexById(
+    projectilesData.projectiles,
+    'projectile',
+    'projectiles',
+    projectilesFile,
+    rawProjectiles,
+    issues,
+  );
+  const effectList: readonly ThemeEffect[] = effectsData.effects;
+  const effects = indexById(effectList, 'effect', 'effects', effectsFile, rawEffects, issues);
+
+  const weapons = new Map<string, ThemeWeapon>();
+  for (const [id, weapon] of checkBehaviors(
+    weaponsData.weapons,
+    weaponEntries,
+    'weapon',
+    'weapons',
+    weaponsFile,
+    rawWeapons,
+    options.behaviors,
+    issues,
+  )) {
+    weapons.set(id, {
+      id,
       nameKey: weapon.nameKey,
       behavior: weapon.behavior,
-      params,
+      params: weapon.params,
       sprite: weapon.sprite,
+      projectile: weapon.projectile,
+      effects: weapon.effects,
       sounds: weapon.sounds ?? {},
     });
-  });
+  }
+  const projectiles = new Map<string, ThemeProjectile>();
+  for (const [id, projectile] of checkBehaviors(
+    projectilesData.projectiles,
+    projectileEntries,
+    'projectile',
+    'projectiles',
+    projectilesFile,
+    rawProjectiles,
+    options.behaviors,
+    issues,
+  )) {
+    projectiles.set(id, {
+      id,
+      behavior: projectile.behavior,
+      params: projectile.params,
+      sprite: projectile.sprite,
+      effects: projectile.effects,
+    });
+  }
 
   // 3. Cross-references.
   charactersData.characters.forEach((character, index) => {
@@ -219,6 +316,44 @@ export async function loadTheme(
       );
     }
   });
+  weaponsData.weapons.forEach((weapon, index) => {
+    if (!projectileEntries.has(weapon.projectile)) {
+      issues.error(
+        weaponsFile,
+        `${describeJsonPath(rawWeapons, ['weapons', index])}.projectile`,
+        `Unknown projectile "${weapon.projectile}". Known projectiles (projectiles.json): ${listOf(projectileEntries.keys())}.`,
+      );
+    }
+  });
+  const checkEffect = (effect: string | undefined, file: string, location: string) => {
+    if (effect === undefined || effects.has(effect)) return;
+    issues.error(
+      file,
+      location,
+      `Unknown effect "${effect}". Known effects (effects.json): ${listOf(effects.keys())}.`,
+    );
+  };
+  charactersData.characters.forEach((c, i) =>
+    checkEffect(
+      c.effects.hit,
+      charactersFile,
+      `${describeJsonPath(rawCharacters, ['characters', i])}.effects.hit`,
+    ),
+  );
+  weaponsData.weapons.forEach((w, i) =>
+    checkEffect(
+      w.effects.fire,
+      weaponsFile,
+      `${describeJsonPath(rawWeapons, ['weapons', i])}.effects.fire`,
+    ),
+  );
+  projectilesData.projectiles.forEach((p, i) =>
+    checkEffect(
+      p.effects.impact,
+      projectilesFile,
+      `${describeJsonPath(rawProjectiles, ['projectiles', i])}.effects.impact`,
+    ),
+  );
   manifest.factions.forEach((faction, index) => {
     if (!charactersData.characters.some((c) => c.faction === faction.id)) {
       issues.error(
@@ -251,6 +386,23 @@ export async function loadTheme(
       WEAPON_SPRITE,
       `${describeJsonPath(rawWeapons, ['weapons', i])}.sprite`,
       weaponsFile,
+    ),
+  );
+
+  projectilesData.projectiles.forEach((p, i) =>
+    addUse(
+      p.sprite,
+      PROJECTILE_SPRITE,
+      `${describeJsonPath(rawProjectiles, ['projectiles', i])}.sprite`,
+      projectilesFile,
+    ),
+  );
+  effectList.forEach((e, i) =>
+    addUse(
+      e.sprite,
+      EFFECT_SPRITE,
+      `${describeJsonPath(rawEffects, ['effects', i])}.sprite`,
+      effectsFile,
     ),
   );
 
@@ -352,6 +504,8 @@ export async function loadTheme(
     factions: manifest.factions,
     characters,
     weapons,
+    projectiles,
+    effects,
     sprites,
     translations,
   });

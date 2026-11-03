@@ -3,7 +3,14 @@
 import type { DrawnDirection } from '@pixel-shoot/content';
 import { DRAWN_DIRECTIONS } from '@pixel-shoot/content';
 import type { Canvas, ColorPicker } from './canvas';
-import { drawBloodSplat, drawExplosion, drawFlame, drawMuzzleFlash } from './art/effects';
+import {
+  drawBloodSplat,
+  drawBulletImpact,
+  drawExplosion,
+  drawFlame,
+  drawMuzzleFlash,
+  drawRifleBullet,
+} from './art/effects';
 import type { SoldierPose, SoldierStyle } from './art/soldier';
 import { drawSoldier } from './art/soldier';
 import { drawGroundTileset, drawJungleTree } from './art/tiles';
@@ -68,6 +75,12 @@ function weaponSheet(name: string, art: WeaponArt): SheetOutput {
   sheet.addAnimation('idle', [
     { canvas: art.canvas, durationMs: 100, slices: { grip: art.grip, muzzle: art.muzzle } },
   ]);
+  return sheet.build();
+}
+
+function projectileSheet(name: string, canvas: Canvas, origin: { x: number; y: number }) {
+  const sheet = new SheetBuilder(name, 48, 48);
+  sheet.addAnimation('fly', [{ canvas, durationMs: 100, slices: { origin } }]);
   return sheet.build();
 }
 
@@ -159,6 +172,19 @@ export function vietnamPlaceholders(p: ColorPicker): PlaceholderFile[] {
         'flame',
         48,
         [0, 1, 2, 3].map((s) => ({ canvas: drawFlame(p, s), ms: 90 })),
+      ),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/projectiles/rifle-bullet`,
+      projectileSheet('rifle-bullet', drawRifleBullet(p), { x: 28, y: 24 }),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/effects/bullet-impact`,
+      effectSheet(
+        'bullet-impact',
+        48,
+        [0, 1, 2].map((s) => ({ canvas: drawBulletImpact(p, s), ms: 60 })),
+        { x: 24, y: 24 },
       ),
     ),
     { path: `${root}/tilesets/jungle-ground.png`, content: imageOnly(drawGroundTileset(p)) },

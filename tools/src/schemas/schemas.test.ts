@@ -8,7 +8,12 @@ describe('renderSchemas', () => {
       'schemas/theme.schema.json',
       'schemas/characters.schema.json',
       'schemas/weapons.schema.json',
+      'schemas/projectiles.schema.json',
+      'schemas/effects.schema.json',
     ]);
+    const projectiles = schemas.get('schemas/projectiles.schema.json') as string;
+    expect(projectiles).toContain('"const": "bullet"');
+    expect(projectiles).toContain('"range"');
     const weapons = schemas.get('schemas/weapons.schema.json') as string;
     expect(weapons).toContain('"roundsPerMinute"');
     expect(weapons).toContain('"const": "firearm"');

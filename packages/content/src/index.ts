@@ -13,7 +13,9 @@ export { buildJsonSchemas } from './schemas/json-schemas';
 export {
   CHARACTER_SPRITE,
   DRAWN_DIRECTIONS,
+  EFFECT_SPRITE,
   GRID,
+  PROJECTILE_SPRITE,
   WEAPON_SPRITE,
   parseTagName,
   tagName,
@@ -43,6 +45,9 @@ export type {
   LoadThemeResult,
   Theme,
   ThemeCharacter,
+  ThemeEffect,
+  ThemeProjectile,
   ThemeWeapon,
 } from './theme/load-theme';
+export { barrelLength, buildCatalog, handPosition } from './theme/catalog';
 export { THEME_FORMAT_VERSION } from './theme/schemas';

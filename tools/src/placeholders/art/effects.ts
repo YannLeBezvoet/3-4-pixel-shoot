@@ -97,3 +97,30 @@ export function drawFlame(p: ColorPicker, step: number): Canvas {
     c.set(24 + rng.int(-8, 8), rng.int(6, 16), colors[3] as (typeof colors)[0]);
   return c;
 }
+
+/** Rifle bullet drawn pointing right, its tip (the origin) at (28, 24): a short tracer. */
+export function drawRifleBullet(p: ColorPicker): Canvas {
+  const c = new Canvas(48, 48);
+  c.rect(20, 24, 6, 1, p.hex('f9c22b'));
+  c.rect(26, 24, 2, 1, p.hex('fbff86'));
+  return c;
+}
+
+/** Dust and sparks thrown up where a bullet hits an obstacle, centered on (24, 24). */
+export function drawBulletImpact(p: ColorPicker, step: number): Canvas {
+  const c = new Canvas(48, 48);
+  const rng = createRng(`impact-${step}`);
+  const colors =
+    step === 0 ? [p.hex('fbff86'), p.hex('f9c22b')] : [p.hex('ab947a'), p.hex('966c6c')];
+  const radius = 2 + step * 2;
+  for (let i = 0; i < 6; i++) {
+    const angle = rng.range(0, Math.PI * 2);
+    const distance = rng.range(0, radius);
+    c.set(
+      Math.round(24 + Math.cos(angle) * distance),
+      Math.round(24 + Math.sin(angle) * distance),
+      rng.pick(colors),
+    );
+  }
+  return c;
+}

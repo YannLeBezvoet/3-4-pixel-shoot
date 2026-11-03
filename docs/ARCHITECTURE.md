@@ -10,7 +10,7 @@
 | Workspace, boundaries | Every package exists; boundaries enforced by `tsc -b` and lint, proven by a test | `packages/*`, `apps/*`, `tools/`, `tsconfig/`, `eslint.config.js` |
 | `shared` | Vectors, angles and octants, seeded RNG, `Result` | `packages/shared/src/` |
 | `sim` | World core: `createSimulation` (entity-component stores, 60 Hz `step()`, input commands, events, named random streams, state hash); `MapData` and the collision grid (tile flags `solid`, `impassable`; object footprints); ASCII maps for tests; behavior registry and the `firearm` parameter schema. Movement with acceleration (Q19), sliding collision against tiles and footprints, separation between characters (Q48), actor spatial hash, segment casts and line of sight; `firearm` weapon and `bullet` projectile behaviors; damage, deaths and corpses; determinism proven over 10,000 ticks. No game-mode API yet | `packages/sim/src/` |
-| `content` | Theme loading and validation, Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
+| `content` | Theme loading and validation (manifest, characters with gameplay values, weapons, projectiles, effects), conversion of a theme into the simulation catalog (`buildCatalog`), Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
 | `modes`, `bots`, `match`, `protocol`, `apps/server` | Empty entry points | — |
 | Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages | `apps/client/` |
 | Tools | Palette check, theme validation, JSON Schemas, i18n and font check, placeholder generator, Aseprite export, Lua character template | `tools/` |
@@ -183,10 +183,10 @@ Files have fixed names; the ones marked *planned* arrive with the milestone that
 ```
 themes/vietnam/
 ├── theme.json        # manifest: id, format version, default language, factions
-├── characters.json   # archetypes: sprite set, collider radius, speed, hit points, default loadout
-├── weapons.json      # weapon definitions: behavior id + parameters, sprite, sound cues
-├── projectiles.json  # planned (M1): projectile definitions: behavior id + parameters, sprite, effects
-├── effects.json      # planned (M1–M2): visual effects: blood, explosions, muzzle flashes, flames
+├── characters.json   # archetypes: sprite, speed, collider radius, hit points, default weapon, hit effect
+├── weapons.json      # weapon definitions: behavior id + parameters, sprite, projectile, effects, sound cues
+├── projectiles.json  # projectile definitions: behavior id + parameters, sprite, impact effect
+├── effects.json      # visual effects (optional): id → sprite with a "play" animation
 ├── sounds.json       # planned (audio milestone): sound cue id → file
 ├── locales/en.json · locales/fr.json
 ├── sprites/<category>/<name>.aseprite · .png · .json
@@ -202,8 +202,10 @@ Example weapon entry (illustrative):
   "nameKey": "weapon.m16a1.name",
   "behavior": "firearm",
   "params": { "fireMode": "auto", "roundsPerMinute": 750, "damage": 28, "spreadDeg": 3,
-              "magazine": 20, "reloadMs": 2200, "projectile": "rifle-bullet" },
+              "magazine": 20, "reloadMs": 2200 },
   "sprite": "sprites/weapons/m16a1",
+  "projectile": "rifle-bullet",
+  "effects": { "fire": "muzzle-flash" },
   "sounds": { "fire": "weapon.m16a1.fire", "reload": "weapon.m16a1.reload" }
 }
 ```
@@ -212,7 +214,7 @@ Example weapon entry (illustrative):
 
 1. **Schema validation** of every file (Zod), with errors pointing to the file and the JSON path.
 2. **Behavior parameters** validated against the schema registered by the chosen behavior.
-3. **Cross-references**: factions, weapons, sprite files, animation tags, translation keys (later: projectiles, tilesets).
+3. **Cross-references**: factions, weapons, projectiles, effects, sprite files, animation tags, translation keys (later: tilesets).
 4. **Asset rules**: frame sizes multiple of 48, required animation tags and directions present, required slices present.
 
 Errors are collected (not thrown one by one) and printed together, for example:
@@ -224,7 +226,7 @@ error: themes/vietnam/characters.json › characters[0] ("us-rifleman").weapon
   Unknown weapon "m61". Known weapons (weapons.json): m16a1, ak47.
 ```
 
-The loader is `loadTheme` in `packages/content/src/theme/`; its tests list every kind of problem it reports.
+The loader is `loadTheme` in `packages/content/src/theme/`; its tests list every kind of problem it reports. `buildCatalog` (same folder) then turns a valid theme into the simulation's `Catalog`, measuring on the sprites how high and how far ahead each character holds its weapon (`hand` slice of the first `idle.side` frame) and each weapon's length from `grip` to `muzzle`; `validate:themes` runs it too.
 
 The same validation runs in the browser (shown in a dev overlay), on the server at startup, and in the `validate:themes` command used by CI. Texts missing from a non-default language are warnings: the default-language text is shown instead.
 

@@ -190,6 +190,15 @@ export function checkSpriteRequirements(
       );
     }
   }
+  for (const action of requirements.actions) {
+    if (!sheet.animations.has(action)) {
+      issues.error(
+        file,
+        'meta.frameTags',
+        `Missing animation tag "${action}". ${/^[aeiou]/.test(requirements.kind) ? 'An' : 'A'} ${requirements.kind} sprite needs the animation${requirements.actions.length > 1 ? 's' : ''} ${requirements.actions.map((a) => `"${a}"`).join(', ')}.`,
+      );
+    }
+  }
   for (const [name, purpose] of Object.entries(requirements.slices)) {
     if (!sheet.slices.has(name)) {
       issues.error(

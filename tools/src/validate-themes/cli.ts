@@ -1,6 +1,7 @@
 // npm run validate:themes [theme ids…]
-// Validates every theme (or the given ones) exactly as the game does when loading them.
-import { formatIssues, loadTheme } from '@pixel-shoot/content';
+// Validates every theme (or the given ones) exactly as the game does when loading them,
+// including the conversion into the simulation's catalog.
+import { buildCatalog, formatIssues, loadTheme } from '@pixel-shoot/content';
 import { builtInBehaviors } from '@pixel-shoot/sim';
 import { listLanguages, listThemes, nodeFileProvider } from '../content/node-files';
 import { repoRoot } from '../paths';
@@ -28,8 +29,15 @@ export async function validateThemes(
     ]
       .filter(Boolean)
       .join(', ');
-    log(theme ? `✓ ${id}: valid${counts ? ` (${counts})` : ''}` : `✗ ${id}: ${counts}`);
-    ok &&= theme !== undefined;
+    let catalogError: string | undefined;
+    try {
+      if (theme) buildCatalog(theme);
+    } catch (error) {
+      catalogError = (error as Error).message;
+    }
+    if (catalogError) log(`✗ ${id}: ${catalogError}`);
+    else log(theme ? `✓ ${id}: valid${counts ? ` (${counts})` : ''}` : `✗ ${id}: ${counts}`);
+    ok &&= theme !== undefined && catalogError === undefined;
   }
   return ok;
 }

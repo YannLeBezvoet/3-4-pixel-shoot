@@ -14,6 +14,8 @@
         "reloadMs": 2200
       },
       "sprite": "sprites/weapons/m16a1",
+      "projectile": "rifle-bullet",
+      "effects": { "fire": "muzzle-flash" },
       "sounds": { "fire": "m16a1-fire", "reload": "rifle-reload" }
     },
     {
@@ -29,6 +31,8 @@
         "reloadMs": 2600
       },
       "sprite": "sprites/weapons/ak47",
+      "projectile": "rifle-bullet",
+      "effects": { "fire": "muzzle-flash" },
       "sounds": { "fire": "ak47-fire", "reload": "rifle-reload" }
     }
   ]

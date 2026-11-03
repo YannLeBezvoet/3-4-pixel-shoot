@@ -6,14 +6,16 @@
       "nameKey": "character.us-rifleman",
       "faction": "us-army",
       "sprite": "sprites/characters/us-rifleman",
-      "weapon": "m16a1"
+      "weapon": "m16a1",
+      "effects": { "hit": "blood-splat" }
     },
     {
       "id": "pavn-rifleman",
       "nameKey": "character.pavn-rifleman",
       "faction": "pavn",
       "sprite": "sprites/characters/pavn-rifleman",
-      "weapon": "ak47"
+      "weapon": "ak47",
+      "effects": { "hit": "blood-splat" }
     }
   ]
 }

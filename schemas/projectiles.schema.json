@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Path to the JSON Schema, for editor autocompletion.",
+      "type": "string"
+    },
+    "projectiles": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
+          },
+          "sprite": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
+            "description": "Projectile sprite, drawn pointing right, with a \"fly\" animation and an \"origin\" slice at the projectile position."
+          },
+          "effects": {
+            "default": {},
+            "description": "Visual effects of this projectile.",
+            "type": "object",
+            "properties": {
+              "impact": {
+                "description": "Effect shown where the projectile stops against an obstacle.",
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              }
+            },
+            "additionalProperties": false
+          },
+          "behavior": {
+            "type": "string",
+            "const": "bullet",
+            "description": "A projectile flying straight at gun height until it hits a character, a solid obstacle or reaches its range."
+          },
+          "params": {
+            "type": "object",
+            "properties": {
+              "speed": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 6000,
+                "description": "Speed in pixels per second (one tile is 48 pixels)."
+              },
+              "range": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 5000,
+                "description": "Distance in pixels from the muzzle after which the bullet disappears."
+              }
+            },
+            "required": [
+              "speed",
+              "range"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "sprite",
+          "behavior",
+          "params"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "projectiles"
+  ],
+  "additionalProperties": false,
+  "title": "Theme projectiles (projectiles.json)"
+}

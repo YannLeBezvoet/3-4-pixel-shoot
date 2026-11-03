@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Path to the JSON Schema, for editor autocompletion.",
+      "type": "string"
+    },
+    "effects": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
+          },
+          "sprite": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
+            "description": "Effect sprite with a \"play\" animation; its \"origin\" slice is placed where the effect happens."
+          }
+        },
+        "required": [
+          "id",
+          "sprite"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "effects"
+  ],
+  "additionalProperties": false,
+  "title": "Theme effects (effects.json)"
+}

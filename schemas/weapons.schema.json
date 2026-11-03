@@ -27,6 +27,24 @@
             "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
             "description": "Weapon sprite, drawn pointing right, with \"grip\" and \"muzzle\" slices."
           },
+          "projectile": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "description": "Projectile this weapon fires (projectiles.json)."
+          },
+          "effects": {
+            "default": {},
+            "description": "Visual effects of this weapon.",
+            "type": "object",
+            "properties": {
+              "fire": {
+                "description": "Effect shown at the muzzle at each shot.",
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              }
+            },
+            "additionalProperties": false
+          },
           "sounds": {
             "description": "Reserved for the audio milestone: sound cue name → sound id.",
             "type": "object",
@@ -113,6 +131,7 @@
           "id",
           "nameKey",
           "sprite",
+          "projectile",
           "behavior",
           "params"
         ],

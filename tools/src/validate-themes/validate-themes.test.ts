@@ -29,4 +29,10 @@ describe('validateThemes', () => {
       'error: themes/broken/theme.json › formatVersion\n  Unsupported formatVersion 9. This version of the game reads formatVersion 1.\n✗ broken: 1 error',
     );
   });
+
+  it('accepts the themes of the repository', async () => {
+    const lines: string[] = [];
+    expect(await validateThemes(await listThemes(), (l) => lines.push(l))).toBe(true);
+    expect(lines).toContain('✓ vietnam: valid');
+  });
 });
