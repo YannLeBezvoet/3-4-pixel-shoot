@@ -8,6 +8,7 @@ import type { ContentStore, ThemeAssets } from '../content/content-store';
 import type { Translator } from '../i18n/translator';
 import type { PixelFont } from '../render/pixel-text';
 import type { Renderer } from '../render/renderer';
+import type { Preferences } from '../settings/preferences';
 import { createLocalSession } from '../session/local-session';
 import { MatchController } from './match-controller';
 import type { SoloChoices } from './solo';
@@ -52,12 +53,20 @@ export class GameApp {
   readonly store: ContentStore;
   readonly translator: Translator;
   readonly font: PixelFont;
+  readonly preferences: Preferences;
 
-  constructor(renderer: Renderer, store: ContentStore, translator: Translator, font: PixelFont) {
+  constructor(
+    renderer: Renderer,
+    store: ContentStore,
+    translator: Translator,
+    font: PixelFont,
+    preferences: Preferences,
+  ) {
     this.renderer = renderer;
     this.store = store;
     this.translator = translator;
     this.font = font;
+    this.preferences = preferences;
   }
 
   get screen(): ReadonlySignal<Screen> {

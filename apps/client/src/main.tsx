@@ -8,12 +8,14 @@ import { fetchFileProvider } from './content/fetch-files';
 import { enableContentHotReload } from './content/hot-reload';
 import { createTranslator } from './i18n/translator';
 import { GameApp } from './game/game-app';
+import { createPalettePass } from './render/palette-pass';
 import { loadPixelFont } from './render/pixel-text';
 import { createRenderer } from './render/renderer';
 import { createTestPattern } from './render/test-pattern';
 import { App } from './ui/app';
 import { GameContext } from './ui/game-context';
 import { mountUi } from './ui/mount';
+import { createPreferences } from './settings/preferences';
 import './style.css';
 
 const DEV_PAGES = [
@@ -32,7 +34,13 @@ const renderer = await createRenderer(host);
 const layout = signal(renderer.layout());
 renderer.onLayout((next) => (layout.value = next));
 
-const game = new GameApp(renderer, store, translator, await loadPixelFont());
+const palette = parseGpl(paletteText);
+const preferences = createPreferences();
+const palettePass = createPalettePass(palette);
+renderer.app.stage.filterArea = renderer.app.screen;
+preferences.palettePass.subscribe((on) => (renderer.app.stage.filters = on ? [palettePass] : []));
+
+const game = new GameApp(renderer, store, translator, await loadPixelFont(), preferences);
 let page: ComponentChildren = (
   <GameContext.Provider value={game}>
     <App devPages={import.meta.env.DEV ? DEV_PAGES : []} />
@@ -41,7 +49,7 @@ let page: ComponentChildren = (
 if (import.meta.env.DEV) {
   enableContentHotReload(store);
   if (location.pathname === '/dev/sprites') {
-    renderer.app.stage.addChild(createTestPattern(parseGpl(paletteText)));
+    renderer.app.stage.addChild(createTestPattern(palette));
     const { createSpriteViewer } = await import('./dev/sprite-viewer/mount');
     page = createSpriteViewer(renderer, store);
   } else if (location.pathname === '/dev/scene') {

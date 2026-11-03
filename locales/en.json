@@ -6,7 +6,9 @@
     "title": "Pixel Shoot"
   },
   "settings": {
-    "language": "Language"
+    "language": "Language",
+    "palettePass": "Palette pass",
+    "palettePassHint": "Keeps every pixel in the game palette, even where colors blend."
   },
   "dev": {
     "tools": "Developer tools",
