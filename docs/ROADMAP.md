@@ -8,8 +8,8 @@
 
 | Milestone | Scope | Status |
 |---|---|---|
-| M0 | Foundations | **Done** — version 0.0.0, merged into `main` on 2026-11-03 (C0.10 to be checked by the owner; CI runs once pushed) |
-| M1 | Playable solo | **Done** — version 0.1.0 on branch `milestone/1-playable-solo` (2026-11-03); merging into `main` awaits the owner's decision; C1.12 also runs on CI once pushed |
+| M0 | Foundations | **Done** — version 0.0.0, merged into `main` and pushed on 2026-11-03 (C0.10 to be checked by the owner) |
+| M1 | Playable solo | **Done** — version 0.1.0, merged into `main` and pushed on 2026-11-03 |
 | M2 | Combat | Not started |
 | M3 | Multiplayer | Not started |
 | M4 | Civilians, 64 participants, match settings | Not started |
@@ -166,7 +166,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 - [x] **C1.11** Line coverage ≥ 80 % for `sim`, `content`, `match`, `modes`, `bots`.
   **Result:** sim 99.8 %, content 96.1 %, match 100 %, modes 96.1 %, bots 99.6 %; `npm run check` now fails below 80 %.
 - [x] **C1.12** A Playwright smoke test starts a solo match and checks there is no console error for 10 seconds.
-  **Result:** `npm run test:e2e` passes locally (11.7 s); the CI job runs once the branch is pushed.
+  **Result:** `npm run test:e2e` passes locally (11.7 s); CI runs it in the `e2e` job on every push.
 
 ---
 
