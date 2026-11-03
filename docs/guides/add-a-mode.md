@@ -10,7 +10,7 @@ packages/modes/src/<mode-id>/
 └── <mode-id>.test.ts   # its tests
 ```
 
-Then add it to `packages/modes/src/built-in.ts` and export it from `packages/modes/src/index.ts`. The mode's name is a translation key (`mode.<mode-id>.name`) in `locales/en.json` and the other interface languages.
+Then add it to `builtInModes` in `packages/modes/src/built-in.ts` (the list offered to players) and export it from `packages/modes/src/index.ts`. The mode's name is a translation key (`mode.<mode-id>.name`) in `locales/en.json` and the other interface languages.
 
 ## 2. The smallest mode: `sandbox`
 
@@ -41,10 +41,21 @@ export const sandbox: GameModeDefinition<SandboxSettings> = {
 - **`api`** (`ModeApi`) is the only door into the match: `participants()`, `characterOf(id)`, `spawn(id)`, `clearWorld()`, `setFrozen(frozen)`, `tick`, `map` and `random` (the mode's own random stream; never `Math.random`).
 - **`state()`** is drawn by the HUD: `round`, `timeLeft` (ticks), `teamScores`, `banner` (a translation key with parameters, never text) and, at the end, `result`.
 - **Time** is counted in ticks: 60 per second (`TICK_RATE`).
+- **Texts** in `state()` are translation keys with parameters. A parameter named `team` holds a team number: the game shows that team's faction name (`{ key: 'mode.team-elimination.roundWon', params: { team: 1 } }` reads "Round to US Army").
 
-## 3. Test it
+## 3. A complete mode: `team-elimination`
 
-Run the mode inside a real match host on an ASCII map, as `sandbox.test.ts` does:
+`packages/modes/src/team-elimination/team-elimination.ts` shows the usual building blocks of a round-based mode:
+
+- **Phases** (`countdown`, `playing`, `roundOver`, `matchOver`), each ending at a tick computed when it starts.
+- **A round starts** with `api.clearWorld()`, `api.spawn()` for every participant and `api.setFrozen(true)` for the countdown; `setFrozen(false)` starts the fight.
+- **The round ends** when `api.characterOf()` shows a team with nobody alive, or when time runs out.
+- **The match ends** by setting `result` in the state: the match host then reports `finished`.
+- **Settings:** `friendlyFire` (off), `roundsToWin` (3), `roundSeconds` (180). After 3 × `roundsToWin` rounds the match stops whatever the score, so repeated draws cannot make it endless (Q51).
+
+## 4. Test it
+
+Run the mode inside a real match host on an ASCII map, as `sandbox.test.ts` and `team-elimination.test.ts` do:
 
 ```ts
 const host = createMatchHost({ map: asciiMap('#1....2#'), catalog: testCatalog(), mode: sandbox, seed: 's' });

@@ -42,7 +42,15 @@
     "bot": "Bot {{n}}"
   },
   "mode": {
-    "sandbox": { "name": "Sandbox" }
+    "sandbox": { "name": "Sandbox" },
+    "team-elimination": {
+      "name": "Team elimination",
+      "countdown": "Round {{round}} · {{seconds}}",
+      "roundWon": "Round to {{team}}",
+      "roundDraw": "Draw: nobody takes the round",
+      "matchWon": "Victory: {{team}}",
+      "matchDraw": "The match is a draw"
+    }
   },
   "direction": {
     "s": "S",

@@ -44,7 +44,15 @@
     "bot": "Bot {{n}}"
   },
   "mode": {
-    "sandbox": { "name": "Bac à sable" }
+    "sandbox": { "name": "Bac à sable" },
+    "team-elimination": {
+      "name": "Élimination par équipes",
+      "countdown": "Manche {{round}} · {{seconds}}",
+      "roundWon": "Manche pour {{team}}",
+      "roundDraw": "Égalité : personne ne prend la manche",
+      "matchWon": "Victoire : {{team}}",
+      "matchDraw": "Match nul"
+    }
   },
   "direction": {
     "s": "S",
