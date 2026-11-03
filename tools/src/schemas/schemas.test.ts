@@ -33,6 +33,7 @@ describe('renderSchemas', () => {
     expect(types.get('tile')?.members).toEqual([
       { name: 'solid', type: 'bool', value: false },
       { name: 'impassable', type: 'bool', value: false },
+      { name: 'low', type: 'bool', value: false },
     ]);
     expect(types.get('spawn')).toMatchObject({ useAs: ['object'], members: [{ name: 'team', type: 'int', value: 1 }] });
     expect(types.get('ground')?.useAs).toEqual(['layer']);

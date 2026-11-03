@@ -19,6 +19,10 @@
 - **Q69. 32 participants for C2.7.** Solo is capped at 16 (Q24). *Proposal:* the solo cap stays at 16 in M2; the 32-participant measurement uses a development page (`/dev/scene` with a participant count in the URL).
 - **Q70. Initial values.** All are theme data, tunable at any time. *Proposal:* M26 and Type 67: blast radius 3 tiles (144 px), 120 damage at the center falling linearly to 0 at the edge, maximum throw 8 tiles; flamethrowers: range 4 tiles, 10 damage per flame hit, 3 s of fire per tank then a 3 s refill; burning characters lose 8 hit points per second for 3 s; destructibles: bamboo wall 60, fence 40, crate 80 hit points, sandbags 200 and only damaged by explosions (Q33), fuel barrel 30 and explosive.
 
+### Raised by an owner request (2026-11-03)
+
+- **Q71. Characters next to sandbags.** The owner asked that a character's weapon be drawn in front of sandbags. *Proposal (implemented, awaiting confirmation):* tile objects with the `low` property, sandbags included, are drawn just above the ground, below corpses, characters, their weapons, bullets and effects. The sandbag picture is flat and its collision covers it, so no character ever stands on it and nothing needs to be hidden behind it. Alternative: keep sandbags depth-sorted with characters and lift only the weapon above them, which only matters if sandbags are later drawn with height (a front face that hides a soldier's legs).
+
 ## Settled
 
 On 2026-11-03 the owner accepted every proposal below as written (Q1–Q47).

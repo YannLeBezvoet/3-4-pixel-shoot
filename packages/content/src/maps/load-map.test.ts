@@ -200,6 +200,20 @@ describe('loadMap', () => {
     expect(map?.objects[0]?.footprints).toEqual([]);
   });
 
+  it('marks low objects from their tile, overridable on the object', async () => {
+    const lowTile = (f: Files) => f[TREE].tiles[0].properties.push(prop('low', 'bool', true));
+    const low = await load(broken(lowTile));
+    expect(low.issues).toEqual([]);
+    expect(low.map?.objects[0]).toMatchObject({ id: 5, low: true });
+    const raised = await load(
+      broken((f) => {
+        lowTile(f);
+        f[MAP].layers[2].objects[0].properties = [prop('low', 'bool', false)];
+      }),
+    );
+    expect(raised.map?.objects[0]?.low).toBeUndefined();
+  });
+
   it('refuses maps that are not orthogonal, infinite or not on a 48 px grid', async () => {
     const isometric = await load(broken((f) => (f[MAP].orientation = 'isometric')));
     expect(isometric.issues).toEqual([
@@ -438,7 +452,7 @@ describe('loadMap', () => {
       warning(
         GROUND,
         'tile 1',
-        'Unknown property "soild" (ignored). Known properties here: "solid", "impassable".',
+        'Unknown property "soild" (ignored). Known properties here: "solid", "impassable", "low".',
       ),
     ]);
   });

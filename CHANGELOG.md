@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 - Vietnam theme: sandbags are tile objects (tileset `sandbags.tsj`) placed over any ground, instead of ground tiles with dirt drawn in; the `river-village` map places them in a `sandbags` objects layer. The ground tileset keeps an empty slot in their place so later tile ids do not move.
 - Vietnam theme: the sandbags' collision shape covers exactly their redrawn picture, a column 32 px wide.
 
+### Added
+
+- Tile property `low` for tile objects (drawing only): the object is drawn just above the ground, below corpses, characters, their weapons and bullets, instead of being depth-sorted. Sandbags are `low`, so a soldier's weapon is never hidden behind them.
+
 ## [0.1.0] — 2026-11-03
 
 Milestone 1 (playable solo), merged into `main`.

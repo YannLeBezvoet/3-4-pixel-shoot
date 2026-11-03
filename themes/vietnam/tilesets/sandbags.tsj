@@ -18,6 +18,11 @@
    "type": "tile",
    "properties": [
     {
+     "name": "low",
+     "type": "bool",
+     "value": true
+    },
+    {
      "name": "solid",
      "type": "bool",
      "value": true

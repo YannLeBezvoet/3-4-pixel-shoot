@@ -23,10 +23,16 @@ export const TILE_PROPERTIES = {
     default: false,
     description: 'Blocks movement only; bullets and sight pass (deep water).',
   },
+  low: {
+    type: 'bool',
+    default: false,
+    description:
+      'Tile objects only: drawn just above the ground, below characters, their weapons and bullets, instead of being depth-sorted (sandbags). No gameplay effect.',
+  },
 } as const satisfies Record<string, PropertyDefinition>;
 
-/** The tile flag each boolean tile property sets. */
-export const TILE_FLAG_PROPERTIES: Readonly<Record<keyof typeof TILE_PROPERTIES, number>> = {
+/** The tile flag each boolean gameplay property sets; `low` only changes drawing. */
+export const TILE_FLAG_PROPERTIES: Readonly<Record<'solid' | 'impassable', number>> = {
   solid: TileFlag.solid,
   impassable: TileFlag.impassable,
 };

@@ -67,6 +67,11 @@ export interface MapObject {
   readonly x: number;
   readonly y: number;
   readonly visual?: TileVisual;
+  /**
+   * Drawn just above the ground, below characters and projectiles, instead of being
+   * depth-sorted: a low object such as sandbags. No gameplay effect.
+   */
+  readonly low?: boolean;
   /** Collision boxes in world coordinates. */
   readonly footprints: readonly Footprint[];
 }

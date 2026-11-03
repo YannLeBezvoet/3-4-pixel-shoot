@@ -1,5 +1,6 @@
-// The match drawn from a session frame (ARCHITECTURE §11): ground, corpses, the depth-sorted
-// world layer (map objects, characters, projectiles), then overhead tiles. Positions are
+// The match drawn from a session frame (ARCHITECTURE §11): ground, low map objects (sandbags),
+// corpses, the depth-sorted world layer (map objects, characters, projectiles), then overhead
+// tiles. Positions are
 // interpolated between the last two ticks; the camera keeps the followed character at the
 // exact center of the screen (Q20) and snaps to whole pixels.
 import type { EntityId, MapData } from '@pixel-shoot/sim';
@@ -31,6 +32,7 @@ export interface DrawOptions {
 export class WorldScene {
   readonly root = new Container();
   readonly #ground = new Container();
+  readonly #low = new Container();
   readonly #corpses = new Container();
   readonly #world = new Container({ sortableChildren: true });
   readonly #overhead = new Container();
@@ -47,7 +49,7 @@ export class WorldScene {
   constructor(sheets: SheetTextures) {
     this.#sheets = sheets;
     this.#effects = new Effects(this.#world, sheets);
-    this.root.addChild(this.#ground, this.#corpses, this.#world, this.#overhead);
+    this.root.addChild(this.#ground, this.#low, this.#corpses, this.#world, this.#overhead);
   }
 
   /** Starts the visual effects of events (shots, impacts, hits) from the session. */
@@ -62,6 +64,7 @@ export class WorldScene {
     }
     this.#map = createMapView(map, images, this.#images);
     this.#ground.addChild(this.#map.ground);
+    this.#low.addChild(this.#map.low);
     this.#overhead.addChild(this.#map.overhead);
     // A map may have no objects; PixiJS refuses addChild() without a child.
     if (this.#map.objects.length > 0) this.#world.addChild(...this.#map.objects);

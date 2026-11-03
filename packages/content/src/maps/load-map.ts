@@ -118,10 +118,10 @@ function readProperties<D extends Record<string, PropertyDefinition>>(
   return { values, set };
 }
 
-function tileFlags(values: Record<keyof typeof TILE_PROPERTIES, boolean>): number {
+function tileFlags(values: { [K in keyof typeof TILE_FLAG_PROPERTIES]: boolean }): number {
   let flags = 0;
   for (const [name, flag] of Object.entries(TILE_FLAG_PROPERTIES))
-    if (values[name as keyof typeof TILE_PROPERTIES]) flags |= flag;
+    if (values[name as keyof typeof TILE_FLAG_PROPERTIES]) flags |= flag;
   return flags;
 }
 
@@ -136,6 +136,12 @@ function notARectangle(object: TiledObject): string | undefined {
   return undefined;
 }
 
+/** Properties of a tileset tile, defaults of the tile objects placed from it. */
+interface TileProperties {
+  readonly flags: number;
+  readonly low: boolean;
+}
+
 interface LoadedTileset {
   readonly file: string;
   readonly firstgid: number;
@@ -147,7 +153,7 @@ interface LoadedTileset {
   readonly columns: number;
   readonly margin: number;
   readonly spacing: number;
-  readonly tiles: ReadonlyMap<number, { flags: number; footprints: readonly Footprint[] }>;
+  readonly tiles: ReadonlyMap<number, TileProperties & { footprints: readonly Footprint[] }>;
 }
 
 async function loadTileset(
@@ -180,7 +186,7 @@ async function loadTileset(
     return undefined;
   }
 
-  const tiles = new Map<number, { flags: number; footprints: Footprint[] }>();
+  const tiles = new Map<number, TileProperties & { footprints: Footprint[] }>();
   for (const tile of tileset.tiles) {
     const location = `tile ${tile.id}`;
     const { values } = readProperties(tile.properties, TILE_PROPERTIES, file, location, issues);
@@ -198,7 +204,7 @@ async function loadTileset(
       }
       footprints.push({ x: shape.x, y: shape.y, width: shape.width, height: shape.height, flags });
     }
-    tiles.set(tile.id, { flags, footprints });
+    tiles.set(tile.id, { flags, low: values.low, footprints });
   }
   return {
     file,
@@ -479,8 +485,9 @@ export async function loadMap(
         let flags = tile?.flags ?? 0;
         for (const [name, flag] of Object.entries(TILE_FLAG_PROPERTIES)) {
           if (!set.has(name)) continue;
-          flags = values[name as keyof typeof TILE_PROPERTIES] ? flags | flag : flags & ~flag;
+          flags = values[name as keyof typeof TILE_FLAG_PROPERTIES] ? flags | flag : flags & ~flag;
         }
+        const low = set.has('low') ? values.low : (tile?.low ?? false);
         const left = object.x;
         const top = object.y - object.height;
         const shapes = tile?.footprints ?? [];
@@ -495,6 +502,7 @@ export async function loadMap(
           x: left + object.width / 2,
           y: object.y,
           visual: visualOf(tileset, localId),
+          ...(low ? { low } : {}),
           footprints:
             flags === 0
               ? []

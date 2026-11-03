@@ -45,6 +45,11 @@
                     "name": "impassable",
                     "type": "bool",
                     "value": false
+                },
+                {
+                    "name": "low",
+                    "type": "bool",
+                    "value": false
                 }
             ]
         },

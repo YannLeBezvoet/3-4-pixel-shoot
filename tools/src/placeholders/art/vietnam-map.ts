@@ -77,12 +77,13 @@ export function groundTileset(name = 'jungle-ground'): string {
   );
 }
 
-/** A tileset of one solid tile object (`name.png`) whose collision is `footprint`. */
+/** A tileset of one tile object (`name.png`, solid by default) whose collision is `footprint`. */
 function objectTileset(
   name: string,
   width: number,
   height: number,
   footprint: { x: number; y: number; width: number; height: number },
+  properties = [property('solid', 'bool', true)],
 ): string {
   return stringify(
     {
@@ -102,7 +103,7 @@ function objectTileset(
         {
           id: 0,
           type: 'tile',
-          properties: [property('solid', 'bool', true)],
+          properties,
           objectgroup: {
             draworder: 'index',
             id: 2,
@@ -123,8 +124,15 @@ function objectTileset(
 
 export const treeTileset = () => objectTileset('jungle-tree', 2 * T, 3 * T, TREE_TRUNK);
 
-/** Sandbags are solid until cover arrives (milestone 2). */
-export const sandbagsTileset = () => objectTileset('sandbags', T, T, SANDBAGS_FOOTPRINT);
+/**
+ * Sandbags are solid until cover arrives (milestone 2), and low: drawn below characters, so a
+ * soldier's weapon is never hidden behind them.
+ */
+export const sandbagsTileset = () =>
+  objectTileset('sandbags', T, T, SANDBAGS_FOOTPRINT, [
+    property('low', 'bool', true),
+    property('solid', 'bool', true),
+  ]);
 
 interface Rect {
   x: number;

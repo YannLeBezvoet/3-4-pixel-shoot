@@ -1,6 +1,6 @@
 // A map drawn from MapData: ground and overhead tile layers in chunks of 16×16 tiles, each
 // cached as one texture and hidden when off screen; map objects (trees, huts) as sprites the
-// world layer sorts by depth.
+// world layer sorts by depth, except low objects (sandbags), drawn just above the ground.
 import type { MapData } from '@pixel-shoot/sim';
 import { TILE_SIZE } from '@pixel-shoot/sim';
 import { Container, Sprite } from 'pixi.js';
@@ -13,6 +13,8 @@ const CHUNK_PIXELS = CHUNK * TILE_SIZE;
 export interface MapView {
   /** Drawn below everything. */
   readonly ground: Container;
+  /** Low objects (sandbags): drawn above the ground, below corpses and the world layer. */
+  readonly low: Container;
   /** Drawn above everything. */
   readonly overhead: Container;
   /** Depth-sorted sprites to place in the world layer. */
@@ -56,6 +58,7 @@ export function createMapView(
       }
   }
 
+  const low = new Container({ sortableChildren: true });
   const objects = map.objects.flatMap((object) => {
     const visual = object.visual;
     const image = visual && images.get(visual.image);
@@ -64,11 +67,14 @@ export function createMapView(
     sprite.anchor.set(0.5, 1);
     sprite.position.set(object.x, object.y);
     sprite.zIndex = depthOf(object.y, object.id);
-    return [sprite];
+    if (!object.low) return [sprite];
+    low.addChild(sprite);
+    return [];
   });
 
   return {
     ground,
+    low,
     overhead,
     objects,
     cull(left, top, width, height) {
@@ -81,6 +87,7 @@ export function createMapView(
     },
     destroy() {
       ground.destroy({ children: true });
+      low.destroy({ children: true });
       overhead.destroy({ children: true });
       for (const sprite of objects) sprite.destroy();
     },
