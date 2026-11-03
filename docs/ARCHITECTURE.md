@@ -13,7 +13,8 @@
 | `content` | Theme loading and validation (manifest, characters with gameplay values, weapons, projectiles, effects), conversion of a theme into the simulation catalog (`buildCatalog`), Tiled maps (`loadMap`, `MapSource`), Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
 | `match` | `createMatchHost`: participants, inputs, mode lifecycle, kills and deaths, `WorldView`. No bots yet | `packages/match/src/` |
 | `modes` | Game-mode API in `sim` (`GameModeDefinition`, `ModeApi`, `ModeState`); `team-elimination` (Q21, Q51) and `sandbox` (development only) | `packages/sim/src/modes/`, `packages/modes/src/` |
-| `bots`, `protocol`, `apps/server` | Empty entry points | — |
+| `bots` | Perception (sight, hearing, memory) and navigation (A*, path smoothing). No decisions yet | `packages/bots/src/` |
+| `protocol`, `apps/server` | Empty entry points | — |
 | Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages; `LocalSession` (fixed 60 Hz step, interpolation), match input (physical keys, mouse aim), world rendering (map chunks, depth-sorted world layer, interpolation, centered camera), test scene (`/dev/scene`); the content store also loads maps and tileset images | `apps/client/` |
 | Tools | Palette check, theme validation, JSON Schemas, i18n and font check, placeholder generator, Aseprite export, Lua character template | `tools/` |
 | Content | Vietnam theme (2 factions, 2 characters, 2 rifles, a rifle bullet, 5 effects, the `river-village` map with its 2 tilesets, placeholder art, EN/FR texts); EN/FR interface | `themes/vietnam/`, `locales/` |
@@ -321,14 +322,14 @@ Decision [0005](decisions/0005-networking.md).
 - **Handshake** checks protocol version and a hash of the gameplay content, so a client with stale theme files gets a clear, translated error.
 - **Budget for 64 participants:** about 30 entities in view × ~10 bytes × 30 Hz ≈ 10 KB/s per client before deltas; server tick under 4 ms on average.
 
-## 14. Bots (`packages/bots`) — *planned for milestone 1*
+## 14. Bots (`packages/bots`) — *being built in milestone 1*
 
 Decision [0011](decisions/0011-bots.md).
 
 - A bot is a participant whose `InputCommand`s come from a `BotController` instead of a keyboard. Same rules, same code path in solo and online.
-- **Perception** is built from simulation queries limited to what the bot could see (view range, line of sight) plus what it hears (gunfire events within a radius).
+- **Perception** (`src/perception.ts`, exists) is built from simulation queries limited to what the bot could see: a screen-sized rectangle around it (±480 × ±270 pixels, what a player sees) and line of sight, plus what it hears: enemy `shotFired` events within 900 pixels. A `Memory` keeps the last place an enemy was seen or heard for 8 seconds. This module is the only bot code that reads every actor; decisions receive only what it lets through.
 - **Decisions** use a small **utility AI**: candidate actions (wander, engage, chase, take cover, reload; later flank, throw grenade, retreat) are scored by considerations; the best one runs. New behaviors are added as new actions and considerations.
-- **Navigation:** A* on the tile grid with clearance for the character's radius, path smoothing, cached paths. Cover search samples nearby positions whose line of sight to the threat is blocked by a `cover` tile.
+- **Navigation** (`src/navigation.ts`, exists): a `NavGrid` of walkable tiles (no blocking flag, no blocking footprint), A* with diagonal steps that never cut a blocked corner and a bound on the work, then smoothing into straight runs a character can walk (checked with its collider). Planned: cached paths (task 16); cover search, sampling nearby positions whose line of sight to the threat is blocked by a `cover` tile (M2).
 - **Cost control:** bots think at about 10 Hz, staggered across ticks; aim smoothing runs every tick. Difficulty is a set of parameters (reaction time, aim error, think rate).
 
 ## 15. Audio slots — *names reserved in themes (`sounds`); the rest is planned*
