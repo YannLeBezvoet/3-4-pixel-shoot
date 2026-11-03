@@ -8,7 +8,7 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 
 ## Current state
 
-- **Milestone 0 (Foundations) done** on branch `milestone/0-foundations` (built on `docs/project-planning`), awaiting the owner's review. Criteria results: [docs/ROADMAP.md](docs/ROADMAP.md#m0--foundations). Nothing merged or pushed.
+- **Milestone 0 (Foundations) done**: version 0.0.0, merged into `main` on 2026-11-03 (not pushed). Criteria results: [docs/ROADMAP.md](docs/ROADMAP.md#m0--foundations); C0.10 (Aseprite) awaits the owner's check.
 - **Next:** milestone 1 (playable solo). Submit its detailed plan for approval before starting.
 - What exists today: [ARCHITECTURE §0](docs/ARCHITECTURE.md#0-what-exists-end-of-milestone-0).
 

@@ -5,7 +5,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 
 ## [Unreleased]
 
-Milestone 0 (foundations). Becomes version 0.0.0 when the owner merges it (Q12).
+## [0.0.0] — 2026-11-03
+
+Milestone 0 (foundations), merged into `main`.
 
 ### Added
 

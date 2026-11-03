@@ -8,7 +8,7 @@
 
 | Milestone | Scope | Status |
 |---|---|---|
-| M0 | Foundations | **Done, awaiting the owner's review** (C0.10 to be checked by the owner; CI runs once pushed) |
+| M0 | Foundations | **Done** — version 0.0.0, merged into `main` on 2026-11-03 (C0.10 to be checked by the owner; CI runs once pushed) |
 | M1 | Playable solo | Not started |
 | M2 | Combat | Not started |
 | M3 | Multiplayer | Not started |
