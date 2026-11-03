@@ -14,7 +14,7 @@
 | `match` | `createMatchHost`: participants, inputs, mode lifecycle, kills and deaths, `WorldView`. No bots yet | `packages/match/src/` |
 | `modes` | Game-mode API in `sim` (`GameModeDefinition`, `ModeApi`, `ModeState`); the `sandbox` mode (development only) | `packages/sim/src/modes/`, `packages/modes/src/` |
 | `bots`, `protocol`, `apps/server` | Empty entry points | — |
-| Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages | `apps/client/` |
+| Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages; `LocalSession` (fixed 60 Hz step, interpolation) and match input (physical keys, mouse aim) | `apps/client/` |
 | Tools | Palette check, theme validation, JSON Schemas, i18n and font check, placeholder generator, Aseprite export, Lua character template | `tools/` |
 | Content | Vietnam theme (2 factions, 2 characters, 2 rifles, a rifle bullet, 5 effects, the `river-village` map with its 2 tilesets, placeholder art, EN/FR texts); EN/FR interface | `themes/vietnam/`, `locales/` |
 | CI | `npm run check` + REUSE on GitHub Actions | `.github/workflows/check.yml` |
@@ -145,8 +145,8 @@ Decision [0002](decisions/0002-simulation-presentation-split.md).
 ## 6. Match host and sessions — *being built in milestone 1*
 
 - **`MatchHost`** (`packages/match/src/match-host.ts`, exists) owns one match: the simulation, the game-mode instance, the participants (human or bot) and, from task 16, the bot controllers. `createMatchHost({ map, catalog, mode, settings, seed })` validates the mode settings and derives the simulation rules from them; the host exposes `addParticipant`, `removeParticipant`, `start`, `submitInput` (a human's input holds until replaced), `step` (one tick: simulation, then the mode's `onEvent` for each event and its `onTick`; returns the events) and `view()`, the `WorldView` presentation draws: actors, projectiles, participants with their character, kills and deaths, and the mode state. It implements the `ModeApi`: `spawn` places a character on a random free spot of the team's spawn areas (the match's `spawns` random stream) facing the middle of the map. The same code runs in a browser tab for solo and in a server room online. Per-participant views (`forParticipant`, interest management) arrive with multiplayer.
-- **`Session`** (client side) is what the UI and renderer talk to: `sendInput`, `getWorldView(alpha)` for interpolated drawing, `onEvent`, `getModeState`.
-  - `LocalSession` runs a `MatchHost` in-process (milestone 1). It can move to a Web Worker later without changing its interface (see open questions).
+- **`Session`** (client side, `apps/client/src/session/session.ts`, exists) is what the UI and renderer talk to: `sendInput` (held until replaced), `advance(deltaMs)` (lets real time pass and returns the events of the ticks run), `frame()` (the two latest `WorldView`s and the interpolation factor between them) and `paused`.
+  - `LocalSession` (`local-session.ts`, exists) runs a `MatchHost` in-process with a fixed-step accumulator: 60 ticks per second whatever the frame rate, at most 250 ms of catch-up after a stall (a hidden tab), nothing while paused. It can move to a Web Worker later without changing its interface (Q47).
   - `RemoteSession` (milestone 3) sends inputs to the server, predicts the local player's movement with the same simulation code, reconciles on snapshots and interpolates other entities.
 
 ## 7. Game modes (`packages/modes`) — *being built in milestone 1*
@@ -303,7 +303,7 @@ Decisions [0004](decisions/0004-ui.md) and [0009](decisions/0009-i18n.md).
 - **Translations** with i18next (`src/i18n/`). UI strings in `locales/<lang>.json`; theme strings in `themes/<id>/locales/<lang>.json` (namespace `theme.<id>`). The language list comes from `/content-index.json`, which the Vite content plugin (`apps/client/vite/`) builds from the files found; the language's display name lives inside its file. Missing keys fall back to English and are reported by `check:i18n`.
 - *Rule for milestones 1 and 3:* **the server and the simulation never produce text**: they emit translation keys with parameters (`killfeed.eliminated` + killer id, victim id, weapon id); the client resolves names in the player's language.
 - A **font coverage check** (`check:i18n`) verifies that every character used in every locale exists in the interface font (and, from milestone 1, in the HUD bitmap font).
-- Keyboard input uses physical key codes, so ZQSD on AZERTY and WASD on QWERTY are the same keys with no setting.
+- Keyboard input uses physical key codes, so ZQSD on AZERTY and WASD on QWERTY are the same keys with no setting. In a match (`src/input/`): WASD positions and arrows move, the left button fires, R reloads (Q53); the aim is the angle from the character's hands on screen to the pointer; every key and button is released when the window loses focus.
 
 ## 13. Networking — *planned for milestone 3*
 
