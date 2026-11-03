@@ -11,6 +11,8 @@ import type { Plugin } from 'vite';
 
 /** Same value as CONTENT_INDEX_FILE in @pixel-shoot/content (checked by a test). */
 export const CONTENT_INDEX_FILE = 'content-index.json';
+/** Custom hot-reload event sent to the page with { path } relative to the repository root. */
+export const CONTENT_CHANGED_EVENT = 'pixel-shoot:content-changed';
 
 const CONTENT_DIRS = ['themes', 'locales'];
 const UNPUBLISHED = /\.(aseprite|ase)$/i;
@@ -66,6 +68,16 @@ export function contentPlugin({ root }: { root: string }): Plugin {
       outDir = path.resolve(config.root, config.build.outDir);
     },
     configureServer(server) {
+      // Hot reload: tell the page which content file changed; it reloads only what it affects.
+      server.watcher.add(CONTENT_DIRS.map((dir) => path.join(root, dir)));
+      const notify = (file: string) => {
+        const relative = path.relative(root, file).split(path.sep).join('/');
+        const [top] = relative.split('/');
+        if (!top || !CONTENT_DIRS.includes(top) || UNPUBLISHED.test(relative)) return;
+        server.ws.send({ type: 'custom', event: CONTENT_CHANGED_EVENT, data: { path: relative } });
+      };
+      for (const event of ['add', 'change', 'unlink'] as const) server.watcher.on(event, notify);
+
       server.middlewares.use(async (req, res, next) => {
         const url = decodeURIComponent((req.url ?? '').split('?')[0] ?? '');
         if (url === `/${CONTENT_INDEX_FILE}`) {

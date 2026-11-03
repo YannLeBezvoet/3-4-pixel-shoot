@@ -15,7 +15,7 @@ Set `_meta.name` to the language's **own** name, as players of that language wri
 }
 ```
 
-The new language appears in the menu as soon as the file exists (reload the page during development).
+The new language appears in the menu as soon as the file exists, without reloading the page during development (`npm run dev`).
 
 ## 2. Translate the texts
 

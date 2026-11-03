@@ -5,6 +5,7 @@ import { parseGpl } from '@pixel-shoot/content';
 import paletteText from '../../../palette/resurrect-64.gpl?raw';
 import { createContentStore } from './content/content-store';
 import { fetchFileProvider } from './content/fetch-files';
+import { enableContentHotReload } from './content/hot-reload';
 import { createTranslator } from './i18n/translator';
 import { createRenderer } from './render/renderer';
 import { createTestPattern } from './render/test-pattern';
@@ -27,11 +28,19 @@ renderer.onLayout((next) => (layout.value = next));
 
 let page: ComponentChildren = <HomeScreen devPages={import.meta.env.DEV ? DEV_PAGES : []} />;
 if (import.meta.env.DEV) {
+  enableContentHotReload(store);
   renderer.app.stage.addChild(createTestPattern(parseGpl(paletteText)));
   if (location.pathname === '/dev/sprites') {
     const { createSpriteViewer } = await import('./dev/sprite-viewer/mount');
     page = createSpriteViewer(renderer, store);
   }
+  const { ContentIssues } = await import('./dev/content-issues');
+  page = (
+    <>
+      {page}
+      <ContentIssues store={store} />
+    </>
+  );
 }
 
 mountUi({ host, layout, translator, page });

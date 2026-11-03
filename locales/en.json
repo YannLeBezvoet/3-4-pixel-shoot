@@ -24,6 +24,12 @@
       "mirrored": "mirror",
       "frame": "{{tag}} · frame {{frame}}",
       "noTheme": "No valid theme loaded."
+    },
+    "issues": {
+      "errors_one": "{{count}} content error: the last valid version is shown.",
+      "errors_other": "{{count}} content errors: the last valid version is shown.",
+      "warnings_one": "{{count}} content warning.",
+      "warnings_other": "{{count}} content warnings."
     }
   },
   "direction": {

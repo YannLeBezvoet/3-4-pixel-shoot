@@ -138,3 +138,5 @@ error: themes/vietnam/characters.json › characters[0] ("us-rifleman").weapon
 ```
 
 Fix the errors; warnings can wait.
+
+While the game runs in development (`npm run dev`), saving a theme file updates the game within a moment, without reloading the page. If the file is broken, the same messages appear in a panel at the bottom of the screen and the game keeps the last valid version until you fix it.
