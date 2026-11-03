@@ -318,3 +318,14 @@ button:disabled {
 .scoreboard tr.local td {
   color: var(--accent);
 }
+
+/* Development builds only: frames per second, bottom center. */
+.fps-counter {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  margin: 0;
+  color: var(--muted);
+  pointer-events: none;
+}

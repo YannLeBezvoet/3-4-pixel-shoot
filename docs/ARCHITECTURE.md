@@ -349,12 +349,13 @@ Decision [0012](decisions/0012-tooling.md).
 - **Aseprite helpers**: an export script for all `.aseprite` files (when Aseprite is installed) and a Lua script that creates a new character file with the right size, palette, tags and slices.
 - **Validators**: `validate:themes` (themes, catalog conversion, maps), `check:i18n`, font coverage.
 - **Generated files** (`npm run schemas`, verified by `check:schemas`): editor JSON Schemas (`schemas/`), the Tiled project file (`tools/tiled/`) and the behavior reference ([`docs/reference/behaviors.md`](reference/behaviors.md)), all derived from the engine's definitions.
+- **FPS counter** (development builds only, `src/dev/fps-counter.tsx`): frames per second at the bottom of the screen, also exposed as `data-fps` for measurement scripts.
 - **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse); the test scene at `/dev/scene` (`src/dev/scene/`: a `sandbox` match on the first map of the first theme that has one, the player in team 1 against three bots in team 2 who come looking for it, everyone back 2 seconds after dying; shots, impacts and hits show their effects). Planned: collision and area-of-interest debug drawing.
 - **CI** (GitHub Actions): `npm run check` (type-check, lint, tests, validators, palette check), the REUSE check and the Playwright smoke test, on every push.
 
 ## 17. Testing
 
-- **Vitest** for all packages.
+- **Vitest** for all packages. `npm run check` runs them with coverage, and fails below 80 % of lines in `sim`, `content`, `match`, `modes` and `bots` (C1.11; 96 to 100 % at the end of M1).
 - **Simulation tests** build tiny worlds from ASCII maps written in the test (`#` wall, `c` cover, `S` spawn…), feed scripted inputs and assert on state and events.
 - **Determinism test:** same seed and inputs → identical state hash after thousands of ticks.
 - **Headless full matches:** bot-only matches run in Node and must end with a winner within a time limit.

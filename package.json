@@ -21,7 +21,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run check:palette && npm run check:schemas && npm run validate:themes && npm run check:i18n",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run coverage && npm run check:palette && npm run check:schemas && npm run validate:themes && npm run check:i18n",
     "check:palette": "tsx tools/src/palette-check/cli.ts",
     "validate:themes": "tsx tools/src/validate-themes/cli.ts",
     "schemas": "tsx tools/src/schemas/cli.ts",

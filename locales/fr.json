@@ -36,7 +36,8 @@
       "warnings_one": "{{count}} avertissement de contenu.",
       "warnings_many": "{{count}} avertissements de contenu.",
       "warnings_other": "{{count}} avertissements de contenu."
-    }
+    },
+    "fps": "{{fps}} IPS"
   },
   "hud": {
     "reloading": "Rechargement",

@@ -60,7 +60,7 @@ Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
 | `npm run typecheck` | Type-check every package (`tsc -b`, project references), then tests (`tsconfig.test.json`) |
 | `npm run lint` | ESLint, including module boundary rules |
 | `npm run format` / `format:check` | Prettier on code and config (not on `themes/`, `locales/`, Markdown) |
-| `npm run test` / `test:watch` / `coverage` | Vitest, all workspaces |
+| `npm run test` / `test:watch` / `coverage` | Vitest, all workspaces; `coverage` also enforces 80 % of lines in `sim`, `content`, `match`, `modes`, `bots` (C1.11) and is what `check` runs |
 | `npm run test:e2e` | Playwright smoke test in Chromium (starts or reuses the dev server; first run: `npx playwright install chromium`). Not in `check`; CI runs it (decision 0015) |
 | `npm run check:palette [files…]` | Palette and transparency check of every PNG (or the given files) |
 | `npm run validate:themes [ids…]` | Validate themes as the game loads them |

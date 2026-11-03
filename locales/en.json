@@ -34,7 +34,8 @@
       "errors_other": "{{count}} content errors: the last valid version is shown.",
       "warnings_one": "{{count}} content warning.",
       "warnings_other": "{{count}} content warnings."
-    }
+    },
+    "fps": "{{fps}} FPS"
   },
   "hud": {
     "reloading": "Reloading",

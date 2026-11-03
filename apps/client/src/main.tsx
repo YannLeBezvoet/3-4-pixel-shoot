@@ -57,9 +57,11 @@ if (import.meta.env.DEV) {
     page = await createDevScene(renderer, store, translator);
   }
   const { ContentIssues } = await import('./dev/content-issues');
+  const { FpsCounter } = await import('./dev/fps-counter');
   page = (
     <>
       {page}
+      <FpsCounter renderer={renderer} />
       <ContentIssues store={store} />
     </>
   );
