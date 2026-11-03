@@ -35,7 +35,7 @@ export function traceProjectile(
     const actor = world.actor.get(id);
     const position = world.position.get(id);
     const body = world.body.get(id);
-    if (!actor || !position || !body) continue;
+    if (!actor?.alive || !position || !body) continue;
     if (actor.team === team && !world.rules.friendlyFire) continue;
     const t = segmentEntersCircle(ax, ay, bx, by, position.x, position.y, body.radius);
     // Candidates come by increasing id, so a tie goes to the lowest id.
@@ -64,7 +64,10 @@ export interface ShotInfo {
   readonly angle: number;
 }
 
-/** Reports where a projectile stopped: a `hit` on a character or a `projectileImpact`. */
+/**
+ * Reports where a projectile stopped: a `hit` on a character, whose damage is applied by the
+ * damage system later in the tick, or a `projectileImpact`.
+ */
 export function resolveTrace(world: WorldState, result: TraceResult, shot: ShotInfo): void {
   const { projectile, kind, z, angle } = shot;
   const { x, y } = result;
@@ -72,6 +75,12 @@ export function resolveTrace(world: WorldState, result: TraceResult, shot: ShotI
     world.events.push({ type: 'projectileImpact', projectile, kind, x, y, z, angle });
     return;
   }
+  world.damage.push({
+    target: result.target,
+    attacker: shot.owner,
+    weapon: shot.weapon,
+    amount: shot.damage,
+  });
   world.events.push({
     type: 'hit',
     projectile,

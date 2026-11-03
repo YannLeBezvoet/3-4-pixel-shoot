@@ -14,7 +14,7 @@ export function movement(world: WorldState): void {
     const velocity = world.velocity.get(id);
     const position = world.position.get(id);
     const body = world.body.get(id);
-    if (!velocity || !position || !body) continue;
+    if (!velocity || !position || !body || !actor.alive) continue;
 
     // Accelerate toward the target velocity by a bounded change per tick.
     const targetX = actor.input.move.x * actor.speed;
@@ -46,10 +46,11 @@ export function movement(world: WorldState): void {
 /** Pushes overlapping actors apart, half each, sliding along obstacles. */
 function separateActors(world: WorldState): void {
   indexActors(world);
-  for (const id of world.actor.ids()) {
+  // The index holds living actors only: corpses block nothing (Q28).
+  for (const [id, actor] of world.actor.entries()) {
     const a = world.position.get(id);
     const body = world.body.get(id);
-    if (!a || !body) continue;
+    if (!a || !body || !actor.alive) continue;
     const reach = body.radius + world.maxActorRadius;
     for (const otherId of world.actorIndex.query(
       a.x - reach,

@@ -52,6 +52,7 @@ export interface ActorState {
   readonly radius: number;
   readonly hp: number;
   readonly maxHp: number;
+  readonly alive: boolean;
   /** Weapon id in the catalog. */
   readonly weapon: string;
   /** Rounds in the magazine. */
@@ -112,6 +113,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
       return rng;
     },
     events: [],
+    damage: [],
     actorIndex: createActorIndex(),
     maxActorRadius: 0,
     ...createStores(),
@@ -135,6 +137,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
       radius: body.radius,
       hp: health.hp,
       maxHp: health.max,
+      alive: actor.alive,
       weapon: weapon.weapon,
       rounds: weapon.rounds,
       spareMagazines: weapon.spareMagazines,
@@ -168,6 +171,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
         speed: stats.speed,
         aim,
         input: { ...NEUTRAL_INPUT, aim },
+        alive: true,
       });
       world.health.set(id, { hp: stats.hitPoints, max: stats.hitPoints });
       world.weapon.set(id, createFirearmState(weapon));

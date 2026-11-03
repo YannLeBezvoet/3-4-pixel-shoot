@@ -54,6 +54,25 @@ export type SimEvent =
       readonly y: number;
       readonly z: number;
       readonly angle: number;
+    }
+  | {
+      /** A character lost hit points. */
+      readonly type: 'damaged';
+      readonly target: EntityId;
+      readonly attacker: EntityId;
+      readonly weapon: string;
+      readonly amount: number;
+      /** Hit points left. */
+      readonly hp: number;
+    }
+  | {
+      /** A character died; its corpse stays where it fell (Q28). */
+      readonly type: 'killed';
+      readonly victim: EntityId;
+      readonly killer: EntityId;
+      readonly weapon: string;
+      readonly x: number;
+      readonly y: number;
     };
 
 export type SimEventType = SimEvent['type'];

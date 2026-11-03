@@ -38,6 +38,16 @@ export interface Actor {
   aim: number;
   /** The input applied during the current tick. */
   input: InputCommand;
+  /** False once killed: a corpse ignores input, blocks nothing and cannot be hit (Q28). */
+  alive: boolean;
+}
+
+/** Damage waiting for the damage system (7) of the current tick. */
+export interface DamageRequest {
+  readonly target: EntityId;
+  readonly attacker: EntityId;
+  readonly weapon: string;
+  readonly amount: number;
 }
 
 export interface Health {
@@ -101,6 +111,7 @@ export interface WorldState {
   readonly random: (stream: string) => Rng;
   /** Events waiting to be returned by the next step. */
   readonly events: SimEvent[];
+  readonly damage: DamageRequest[];
   /** Actors by position; current after the movement system. */
   readonly actorIndex: SpatialHash;
   /** Largest collider radius among actors, to size neighbor queries. */
@@ -144,13 +155,14 @@ export function removeEntity(world: WorldState, id: EntityId): void {
 /** Cell size of the actor index: one tile. */
 export const ACTOR_INDEX_CELL = TILE_SIZE;
 
-/** Rebuilds the actor index from current positions. */
+/** Rebuilds the index of living actors from current positions. */
 export function indexActors(world: WorldState): void {
   world.actorIndex.clear();
-  for (const id of world.actor.ids()) {
+  for (const [id, actor] of world.actor.entries()) {
     const position = world.position.get(id);
     const body = world.body.get(id);
-    if (position && body) world.actorIndex.insert(id, position.x, position.y, body.radius);
+    if (actor.alive && position && body)
+      world.actorIndex.insert(id, position.x, position.y, body.radius);
   }
 }
 

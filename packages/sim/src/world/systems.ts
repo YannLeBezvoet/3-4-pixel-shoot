@@ -5,22 +5,23 @@ import type { EntityId } from '../core/entities';
 import type { InputCommand } from '../core/input';
 import { sanitizeInput } from '../core/input';
 import { projectiles, weapons } from '../systems/combat';
+import { damage } from '../systems/damage';
 import { movement } from '../systems/movement';
 import type { WorldState } from './state';
 
 export type System = (world: WorldState) => void;
 
 /**
- * 1. Apply inputs. An actor without input this tick stands still, holds no button and keeps
- * its aim.
+ * 1. Apply inputs. An actor without input this tick, or dead, stands still, holds no button
+ * and keeps its aim.
  */
 export function applyInputs(world: WorldState, inputs: ReadonlyMap<EntityId, InputCommand>): void {
   for (const [id, actor] of world.actor.entries()) {
-    const input = inputs.get(id);
+    const input = actor.alive ? inputs.get(id) : undefined;
     actor.input = input ? sanitizeInput(input) : { move: vec2.ZERO, aim: actor.aim, buttons: 0 };
     actor.aim = actor.input.aim;
   }
 }
 
 /** Systems 2 to 10, in order (2, mode pre-tick, arrives with the game-mode API). */
-export const SYSTEMS: readonly System[] = [movement, weapons, projectiles];
+export const SYSTEMS: readonly System[] = [movement, weapons, projectiles, damage];

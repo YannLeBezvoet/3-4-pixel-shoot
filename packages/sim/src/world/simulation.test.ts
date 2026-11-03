@@ -39,6 +39,7 @@ describe('createSimulation', () => {
       radius: 10,
       hp: 100,
       maxHp: 100,
+      alive: true,
       weapon: 'rifle',
       rounds: 20,
       spareMagazines: null,

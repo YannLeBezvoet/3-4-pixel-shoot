@@ -26,7 +26,7 @@ export function weapons(world: WorldState): void {
   for (const [id, state] of world.weapon.entries()) {
     const actor = world.actor.get(id);
     const stats = world.catalog.weapons.get(state.weapon);
-    if (actor && stats) WEAPON_UPDATERS[stats.behavior](world, id, actor, state, stats);
+    if (actor?.alive && stats) WEAPON_UPDATERS[stats.behavior](world, id, actor, state, stats);
   }
 }
 
