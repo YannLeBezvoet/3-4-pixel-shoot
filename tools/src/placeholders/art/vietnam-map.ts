@@ -10,7 +10,7 @@ export const MAP_WIDTH = 80;
 export const MAP_HEIGHT = 60;
 
 /** Tiled versions written in the files, matching what Tiled itself saves. */
-const TILED = { version: '1.10', tiledversion: '1.11.2' };
+export const TILED = { version: '1.10', tiledversion: '1.11.2' };
 
 const SOLID: readonly GroundTile[] = [
   'stone-wall-top',
@@ -23,10 +23,14 @@ const SOLID: readonly GroundTile[] = [
 ];
 const IMPASSABLE: readonly GroundTile[] = ['water'];
 
-const property = (name: string, type: string, value: unknown) => ({ name, type, value });
+export const property = (name: string, type: string, value: unknown) => ({
+  name,
+  type,
+  value,
+});
 
 /** Tiled JSON with tile data written one map row per line, as Tiled's CSV format reads. */
-function stringify(value: unknown, width: number): string {
+export function stringify(value: unknown, width: number): string {
   const rows: string[] = [];
   const text = JSON.stringify(
     value,
@@ -44,7 +48,8 @@ function stringify(value: unknown, width: number): string {
   return `${text.replace(/"@@data(\d+)@@"/g, (_, i: string) => `[\n${rows[Number(i)]}\n]`)}\n`;
 }
 
-export function groundTileset(): string {
+/** The ground tileset (.tsj) over an image of GROUND_TILES; `name` is also the image's name. */
+export function groundTileset(name = 'jungle-ground'): string {
   const tiles = GROUND_TILES.map((name, id) => {
     const properties = [
       ...(SOLID.includes(name) ? [property('solid', 'bool', true)] : []),
@@ -57,12 +62,12 @@ export function groundTileset(): string {
     {
       type: 'tileset',
       ...TILED,
-      name: 'jungle-ground',
+      name,
       tilewidth: T,
       tileheight: T,
       tilecount: GROUND_TILES.length,
       columns: GROUND_COLUMNS,
-      image: 'jungle-ground.png',
+      image: `${name}.png`,
       imagewidth: GROUND_COLUMNS * T,
       imageheight: rows * T,
       margin: 0,
