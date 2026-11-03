@@ -1,11 +1,11 @@
 {
   "theme": { "name": "Guerre du Viêt Nam" },
   "faction": {
-    "us-army": "Armée américaine",
-    "pavn": "APVN et Viet Cong"
+    "us-army": "US ARMY",
+    "pavn": "APVN"
   },
   "character": {
-    "us-rifleman": "Fusilier américain",
+    "us-rifleman": "Fusilier de l'US ARMY",
     "pavn-rifleman": "Fusilier de l'APVN"
   },
   "weapon": {
