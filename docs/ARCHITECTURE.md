@@ -9,7 +9,7 @@
 |---|---|---|
 | Workspace, boundaries | Every package exists; boundaries enforced by `tsc -b` and lint, proven by a test | `packages/*`, `apps/*`, `tools/`, `tsconfig/`, `eslint.config.js` |
 | `shared` | Vectors, angles and octants, seeded RNG, `Result` | `packages/shared/src/` |
-| `sim` | Behavior registry and the `firearm` parameter schema; `MapData` and the collision grid (tile flags `solid`, `impassable`; object footprints); ASCII maps for tests. No simulation loop yet | `packages/sim/src/` |
+| `sim` | World core: `createSimulation` (entity-component stores, 60 Hz `step()`, input commands, events, named random streams, state hash); `MapData` and the collision grid (tile flags `solid`, `impassable`; object footprints); ASCII maps for tests; behavior registry and the `firearm` parameter schema. No movement, weapons or game-mode API yet | `packages/sim/src/` |
 | `content` | Theme loading and validation, Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
 | `modes`, `bots`, `match`, `protocol`, `apps/server` | Empty entry points | — |
 | Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages | `apps/client/` |
@@ -115,9 +115,11 @@ flowchart TD
 - Platform-agnostic packages compile with `lib: ["ES2023"]` and no ambient types: any use of `window`, `document` or Node built-ins fails type-checking.
 - ESLint import rules (`eslint.config.js`), **generated from each package's declared dependencies**, forbid imports that cross the table above: an undeclared project package, a deep import into another package's files, a Node or presentation library in a platform-agnostic package, PixiJS outside `apps/client/src/render`.
 
-## 5. Simulation core (`packages/sim`) — *planned for milestone 1, except the behavior registry*
+## 5. Simulation core (`packages/sim`) — *being built in milestone 1*
 
 Decision [0002](decisions/0002-simulation-presentation-split.md).
+
+**What exists:** `createSimulation({ map, catalog, seed, rules })` returns a `Simulation` (`src/world/simulation.ts`): `spawnActor`, `removeActor`, `step(inputs)` returning the tick's events, read-only `actor`/`actors`, and `hash()`. Internally (`src/world/state.ts`) each component kind (`position`, `velocity`, `body`, `actor`, `health`) has its own store (`src/core/entities.ts`); systems (`src/world/systems.ts`) are functions over that state. The `Catalog` (`src/world/catalog.ts`) holds the gameplay content in engine units. Inputs are sanitized before use (`src/core/input.ts`); an actor with no input for a tick stands still and keeps its aim. Events produced between two steps (a spawn by the game mode) are returned by the next step.
 
 - **Fixed tick at 60 Hz.** Time inside the simulation is counted in ticks (integers). The clock is external: the client's frame loop or the server's scheduler calls `step()`.
 - **Inputs, not actions.** Every actor is driven by an `InputCommand` per tick (movement vector, aim angle, button bits). Humans and bots produce the same structure, so bots get no privileged access and the network only carries inputs upstream.
