@@ -10,7 +10,7 @@
 | Workspace, boundaries | Every package exists; boundaries enforced by `tsc -b` and lint, proven by a test | `packages/*`, `apps/*`, `tools/`, `tsconfig/`, `eslint.config.js` |
 | `shared` | Vectors, angles and octants, seeded RNG, `Result` | `packages/shared/src/` |
 | `sim` | World core: `createSimulation` (entity-component stores, 60 Hz `step()`, input commands, events, named random streams, state hash); `MapData` and the collision grid (tile flags `solid`, `impassable`; object footprints); ASCII maps for tests; behavior registry and the `firearm` parameter schema. Movement with acceleration (Q19), sliding collision against tiles and footprints, separation between characters (Q48), actor spatial hash, segment casts and line of sight; `firearm` weapon and `bullet` projectile behaviors; damage, deaths and corpses; determinism proven over 10,000 ticks. No game-mode API yet | `packages/sim/src/` |
-| `content` | Theme loading and validation (manifest, characters with gameplay values, weapons, projectiles, effects), conversion of a theme into the simulation catalog (`buildCatalog`), Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
+| `content` | Theme loading and validation (manifest, characters with gameplay values, weapons, projectiles, effects), conversion of a theme into the simulation catalog (`buildCatalog`), Tiled maps (`loadMap`, `MapSource`), Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
 | `modes`, `bots`, `match`, `protocol`, `apps/server` | Empty entry points | — |
 | Client | 960×540 integer-scaled renderer, content store, character and sheet views, translations, Preact interface layer, home screen, sprite viewer (`/dev/sprites`), hot reload of themes and languages | `apps/client/` |
 | Tools | Palette check, theme validation, JSON Schemas, i18n and font check, placeholder generator, Aseprite export, Lua character template | `tools/` |
@@ -237,20 +237,21 @@ The same validation runs in the browser (shown in a dev overlay), on the server 
 
 `content` reads files through a `FileProvider` interface: `fetch` in the browser, the file system on the server and in tools, an in-memory map in tests.
 
-## 9. Maps — *planned for milestone 1*
+## 9. Maps — *being built in milestone 1*
 
 Decision [0008](decisions/0008-tiled-maps.md).
 
-- **`MapSource`** (interface): `load(request) → MapData`. Milestone 1 ships `TiledMapSource`; milestone 5 adds a procedural generator in its own package. Nothing else depends on Tiled.
+- **`MapSource`** (interface, `packages/content/src/maps/load-map.ts`): `load(ref) → { map, issues }`. `tiledMapSource` reads a theme's Tiled files (exists); milestone 5 adds a procedural generator in its own package. Nothing else depends on Tiled.
+- **`loadMap`** (exists) reads a `.tmj` map and its external `.tsj` tilesets (`src/maps/tiled-json.ts` lists the fields read) and returns `MapData` or the problems found, each naming the file, the layer, the object and its position. Maps are discovered: every `maps/*.tmj` of a theme is listed in the content index and checked by `validate:themes`. The rules for map makers are in the guide [create a map](guides/create-a-map.md).
 - **`MapData`** (defined in `sim`, exists: `packages/sim/src/map/map-data.ts`): size in tiles, tile layers (`ground` with gameplay flags, `overhead` drawn on top) referencing a catalog of tile types (flags + picture), placed objects (picture, ground point, collision footprints), spawn areas per team (Q52). Planned: zones (rectangles/polygons with a type) and map elements with behavior parameters (M2).
 - **Collision grid** (`packages/sim/src/map/collision-grid.ts`): the flags of each tile combined from the ground layers, plus object footprints indexed by the tiles they touch; outside the map is solid. Flags: `solid` blocks movement, projectiles and sight; `impassable` blocks movement only (Q50); `cover` arrives in M2.
 - **ASCII maps** (`asciiMap` in `packages/sim/src/testing/`): `#` solid, `~` impassable, `o` solid object, `1`–`9` team spawn; used by the tests of every package.
-- **Tiled conventions (draft):** maps saved directly as Tiled JSON (`.tmj`), external tilesets (`.tsj`), 48×48 orthogonal tiles. Layer roles declared with Tiled's *class* field:
+- **Tiled conventions:** maps saved directly as Tiled JSON (`.tmj`), external tilesets (`.tsj`) based on one image, 48×48 orthogonal tiles, CSV tile data. Layer roles declared with Tiled's *class* field:
   - `ground` tile layers: drawn below everything; carry tile flags.
   - `objects` object layer: tile objects (trees, huts, sandbags) sorted by their base; collision footprints from Tiled's collision editor.
   - `overhead` tile layer: always drawn on top (canopy, roofs).
-  - `gameplay` object layer: `spawn` points (with `team`), `zone` shapes (with `zoneType`); not drawn.
-- **Gameplay properties in Tiled:** set on tileset tiles (defaults) and overridable per object: `solid`, `cover`, `hp`, `flammable`, `destroyedTile`, … A Tiled project file in `tools/tiled/` defines these as typed custom classes, **generated from the engine's schemas** so Tiled and the engine never drift apart.
+  - `gameplay` object layer: `spawn` rectangles (with `team`, Q52); later `zone` shapes; not drawn.
+- **Gameplay properties in Tiled:** set on tileset tiles (defaults) and overridable per tile object: `solid`, `impassable` (exist); `cover`, `hp`, `flammable`, `destroyedTile`, … in M2. They are defined once in `packages/content/src/maps/properties.ts`. A Tiled project file in `tools/tiled/` defines them as typed custom classes, **generated from these definitions** so Tiled and the engine never drift apart (planned: task 7 of M1).
 
 ## 10. Sprites and animation
 
@@ -333,7 +334,7 @@ Out of scope, but reserved: behaviors declare sound cue names (`fire`, `reload`,
 
 Decision [0012](decisions/0012-tooling.md).
 
-- **Dev server** (Vite) serves the client, `themes/` and `locales/`, and watches them. The content plugin (`apps/client/vite/content-plugin.ts`) sends a `pixel-shoot:content-changed` message for each changed file; the client (`src/content/hot-reload.ts`) groups changes that arrive together and reloads only the affected theme, or the languages. Textures, animations and translations update in place, without a page reload. An invalid file shows the errors in a dev overlay (`src/dev/content-issues.tsx`) and the last valid version stays on screen. Maps join in milestone 1. In multiplayer development, the server will watch the same folders.
+- **Dev server** (Vite) serves the client, `themes/` and `locales/`, and watches them. The content plugin (`apps/client/vite/content-plugin.ts`) sends a `pixel-shoot:content-changed` message for each changed file; the client (`src/content/hot-reload.ts`) groups changes that arrive together and reloads only the affected theme, or the languages. Textures, animations and translations update in place, without a page reload. An invalid file shows the errors in a dev overlay (`src/dev/content-issues.tsx`) and the last valid version stays on screen. Maps are listed in the content index; their hot reload joins later in milestone 1. In multiplayer development, the server will watch the same folders.
 - **Palette check** (`check:palette`): scans every PNG; fails on any pixel whose color is not in Resurrect 64 (and, pending an open question, on partial transparency), reporting file, coordinates, color and nearest palette color.
 - **Placeholder generator** (`tools/src/placeholders/`): writes PNG + JSON in Aseprite's export format (same tags, directions and slices as real art), so replacing a placeholder is a file swap. `tools/placeholders.json` records the hash of each generated file: a file that no longer matches has been replaced by real art and is never overwritten; `assets:report` lists the placeholders still in use.
 - **Aseprite helpers**: an export script for all `.aseprite` files (when Aseprite is installed) and a Lua script that creates a new character file with the right size, palette, tags and slices.

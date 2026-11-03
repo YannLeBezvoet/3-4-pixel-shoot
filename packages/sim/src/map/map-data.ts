@@ -20,10 +20,14 @@ export const BLOCKS_PROJECTILES = TileFlag.solid;
 /** Flags that stop line of sight. */
 export const BLOCKS_SIGHT = TileFlag.solid;
 
-/** A tile picture: tile number `index` of the tileset `tileset` (asset path in the theme). */
+/** A picture cut from an image: the image's path in the theme folder and a rectangle in it. */
 export interface TileVisual {
-  readonly tileset: string;
-  readonly index: number;
+  /** Image path relative to the theme folder, e.g. "tilesets/jungle-ground.png". */
+  readonly image: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
 }
 
 /** One kind of tile used by the map: its gameplay flags and its picture. */
@@ -62,7 +66,7 @@ export interface MapObject {
   /** Ground point: bottom center of the picture. Objects are depth-sorted by it. */
   readonly x: number;
   readonly y: number;
-  readonly visual?: TileVisual & { readonly width: number; readonly height: number };
+  readonly visual?: TileVisual;
   /** Collision boxes in world coordinates. */
   readonly footprints: readonly Footprint[];
 }

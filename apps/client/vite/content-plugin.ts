@@ -34,12 +34,13 @@ async function list(dir: string): Promise<{ name: string; isDir: boolean }[]> {
   }
 }
 
-async function spriteRefs(themeDir: string, sub = 'sprites'): Promise<string[]> {
+/** Files with an extension under a theme sub-folder, as paths without extension. */
+async function assetRefs(themeDir: string, sub: string, extension: string): Promise<string[]> {
   const refs: string[] = [];
   for (const entry of await list(path.join(themeDir, sub))) {
     const rel = `${sub}/${entry.name}`;
-    if (entry.isDir) refs.push(...(await spriteRefs(themeDir, rel)));
-    else if (entry.name.endsWith('.json')) refs.push(rel.slice(0, -'.json'.length));
+    if (entry.isDir) refs.push(...(await assetRefs(themeDir, rel, extension)));
+    else if (entry.name.endsWith(extension)) refs.push(rel.slice(0, -extension.length));
   }
   return refs.sort();
 }
@@ -54,7 +55,11 @@ export async function buildContentIndex(root: string): Promise<ContentIndex> {
     const dir = path.join(root, 'themes', entry.name);
     if (!entry.isDir || !(await stat(path.join(dir, 'theme.json')).catch(() => undefined)))
       continue;
-    themes.push({ id: entry.name, sprites: await spriteRefs(dir) });
+    themes.push({
+      id: entry.name,
+      sprites: await assetRefs(dir, 'sprites', '.json'),
+      maps: await assetRefs(dir, 'maps', '.tmj'),
+    });
   }
   themes.sort((a, b) => a.id.localeCompare(b.id));
   return { languages, themes };

@@ -51,3 +51,13 @@ export type {
 } from './theme/load-theme';
 export { barrelLength, buildCatalog, handPosition } from './theme/catalog';
 export { THEME_FORMAT_VERSION } from './theme/schemas';
+export { MAX_MAP_SIZE, loadMap, mapFile, tiledMapSource } from './maps/load-map';
+export type { LoadMapResult, MapSource, MapTheme } from './maps/load-map';
+export {
+  GAMEPLAY_OBJECT_CLASSES,
+  LAYER_CLASSES,
+  MAP_PROPERTIES,
+  SPAWN_PROPERTIES,
+  TILE_PROPERTIES,
+} from './maps/properties';
+export type { LayerClass, PropertyDefinition, PropertyType } from './maps/properties';

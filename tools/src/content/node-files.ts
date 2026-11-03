@@ -55,3 +55,17 @@ export async function listLanguages(root = repoRoot): Promise<string[]> {
     .map((entry) => entry.name.slice(0, -'.json'.length))
     .sort();
 }
+
+/** Maps of a theme: the .tmj files under its maps/ folder, as references like "maps/village". */
+export async function listMaps(themeId: string, root = repoRoot): Promise<string[]> {
+  const refs: string[] = [];
+  const walk = async (sub: string) => {
+    for (const entry of await entries(path.join(root, 'themes', themeId, sub))) {
+      const rel = `${sub}/${entry.name}`;
+      if (entry.isDirectory()) await walk(rel);
+      else if (entry.name.endsWith('.tmj')) refs.push(rel.slice(0, -'.tmj'.length));
+    }
+  };
+  await walk('maps');
+  return refs.sort();
+}

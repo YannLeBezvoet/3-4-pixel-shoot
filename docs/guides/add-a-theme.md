@@ -1,6 +1,6 @@
 # Add a theme
 
-A theme is a folder of files: no code. This guide covers what themes contain today: factions, characters, weapons, projectiles, effects, sprites and texts. Maps arrive later in milestone 1 and sounds with the audio milestone; they will be documented here when they exist.
+A theme is a folder of files: no code. This guide covers what themes contain: factions, characters, weapons, projectiles, effects, sprites, texts and maps (made in Tiled: see [create a map](create-a-map.md)). Sounds arrive with the audio milestone.
 
 **Format changes during development (Q56).** The theme format stays version `1` throughout the 0.x versions, even when files or fields are added. The themes in this repository are updated in the same change, and this guide always describes the current format.
 
@@ -15,6 +15,8 @@ themes/<id>/
 ├── weapons.json       # what they fight with
 ├── projectiles.json   # what weapons fire
 ├── effects.json       # visual effects (optional)
+├── maps/<name>.tmj    # maps (Tiled), each listed automatically
+├── tilesets/<name>.tsj · .png
 ├── locales/
 │   ├── en.json        # every text of the theme in its default language
 │   └── fr.json        # the same texts in other languages

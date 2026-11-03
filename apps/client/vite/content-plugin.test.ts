@@ -17,5 +17,6 @@ describe('content plugin', () => {
     expect(vietnam?.sprites).toEqual(
       expect.arrayContaining(['sprites/characters/us-rifleman', 'sprites/effects/explosion']),
     );
+    expect(Array.isArray(vietnam?.maps)).toBe(true);
   });
 });
