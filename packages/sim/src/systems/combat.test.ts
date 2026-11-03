@@ -5,7 +5,7 @@ import type { InputCommand } from '../core/input';
 import { Button, NEUTRAL_INPUT } from '../core/input';
 import { tileOf } from '../map/collision-grid';
 import { BLOCKS_PROJECTILES, TileFlag } from '../map/map-data';
-import { castSegment } from '../physics/raycast';
+import { castSegment, lineOfSight } from '../physics/raycast';
 import { asciiMap } from '../testing/ascii-map';
 import type { TestCatalogOptions } from '../testing/test-catalog';
 import { testCatalog } from '../testing/test-catalog';
@@ -274,5 +274,64 @@ describe('bullet', () => {
       sim.removeActor(shooter);
     }
     expect(impacts).toBe(3 * 1440);
+  });
+});
+
+describe('cover (Q29)', () => {
+  // Sandbags (40 % pass) at tile 4 or tiles 4–5 of the middle row; the wall behind at x 432.
+  const one = asciiMap(`
+    ##########
+    #........#
+    #...s....#
+    #........#
+    ##########
+  `);
+  const two = asciiMap(`
+    ##########
+    #........#
+    #...ss...#
+    #........#
+    ##########
+  `);
+  const SANDBAGS = 192;
+
+  /** Fires 1000 bullets east along the sandbags' row; returns the share reaching the wall. */
+  function passRate(map: typeof one, shooterX: number, bullet = {}) {
+    const sim = createSimulation({
+      map,
+      seed: 'cover',
+      catalog: testCatalog({
+        weapon: { roundsPerMinute: 3600, magazine: 100_000 },
+        bullet: { range: 5000, ...bullet },
+      }),
+    });
+    const shooter = sim.spawnActor({ team: 1, character: 'rifleman', x: shooterX, y: 120 });
+    const fired = new Map([[shooter, aim(0, FIRE)]]);
+    const events = [...run(sim, fired, 1000), ...run(sim, new Map(), 200)];
+    expect(ofType(events, 'shotFired')).toHaveLength(1000);
+    const impacts = ofType(events, 'projectileImpact');
+    expect(impacts).toHaveLength(1000);
+    return impacts.filter((i) => i.x === 432).length / 1000;
+  }
+
+  it('lets every bullet pass when the weapon reaches over the sandbags', () => {
+    // The body touches the sandbags; the muzzle, 24 units ahead, is over them.
+    expect(passRate(one, SANDBAGS - 11)).toBe(1);
+  });
+
+  it('lets 40 % of the bullets through from farther away, drawn once per object', () => {
+    expect(passRate(one, SANDBAGS - 40)).toBeCloseTo(0.4, 1);
+    // A slow bullet takes several ticks to cross the sandbags: still one draw.
+    expect(passRate(one, SANDBAGS - 40, { speed: 300 })).toBeCloseTo(0.4, 1);
+    // Two sandbags in a row: two draws, 0.4 × 0.4.
+    expect(passRate(two, SANDBAGS - 40)).toBeCloseTo(0.16, 1);
+  });
+
+  it('blocks movement but not sight', () => {
+    const sim = createSimulation({ map: one, seed: 'cover', catalog: testCatalog() });
+    const walker = sim.spawnActor({ team: 1, character: 'rifleman', x: 120, y: 120 });
+    run(sim, new Map([[walker, { move: { x: 1, y: 0 }, aim: 0, buttons: 0 }]]), 60);
+    expect(sim.actor(walker)?.x).toBeCloseTo(SANDBAGS - 10, 9);
+    expect(lineOfSight(sim.grid, 120, 120, 400, 120)).toBe(true);
   });
 });

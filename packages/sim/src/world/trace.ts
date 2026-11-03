@@ -1,15 +1,21 @@
-// What a projectile's path meets first: an obstacle that stops projectiles, or a character it
-// may hit. Its owner is never hit; teammates only with friendly fire on (Q49).
+// What a projectile's path meets first: an obstacle that stops projectiles, cover it fails to
+// pass, or a character it may hit. Its owner is never hit; teammates only with friendly fire
+// on (Q49).
 import type { EntityId } from '../core/entities';
-import { BLOCKS_PROJECTILES } from '../map/map-data';
+import type { Footprint } from '../map/map-data';
+import { BLOCKS_PROJECTILES, TileFlag } from '../map/map-data';
 import { segmentEntersCircle } from '../physics/geometry';
 import { castSegment } from '../physics/raycast';
-import type { WorldState } from './state';
+import type { Projectile, WorldState } from './state';
 
 export type TraceResult =
   | { readonly kind: 'obstacle'; readonly x: number; readonly y: number }
   | { readonly kind: 'actor'; readonly target: EntityId; readonly x: number; readonly y: number };
 
+/**
+ * `passesCover` decides about each cover footprint met before any character, in path order;
+ * true lets the projectile through.
+ */
 export function traceProjectile(
   world: WorldState,
   owner: EntityId,
@@ -18,9 +24,9 @@ export function traceProjectile(
   ay: number,
   bx: number,
   by: number,
+  passesCover: (footprint: Footprint) => boolean,
 ): TraceResult | undefined {
-  const obstacle = castSegment(world.grid, ax, ay, bx, by, BLOCKS_PROJECTILES);
-  let bestT = obstacle?.t ?? Infinity;
+  let bestT = Infinity;
   let target: EntityId | undefined;
 
   const reach = world.maxActorRadius;
@@ -45,10 +51,43 @@ export function traceProjectile(
     }
   }
 
+  // Cover beyond the character hit is never tried. An obstacle wins a tie with a character.
+  const hitT = bestT;
+  const obstacle = castSegment(
+    world.grid,
+    ax,
+    ay,
+    bx,
+    by,
+    BLOCKS_PROJECTILES | TileFlag.cover,
+    (footprint, t) =>
+      t > hitT || ((footprint.flags & BLOCKS_PROJECTILES) === 0 && passesCover(footprint)),
+  );
+  if (obstacle && obstacle.t <= bestT) {
+    bestT = obstacle.t;
+    target = undefined;
+  }
+
   if (bestT === Infinity) return undefined;
   const x = ax + (bx - ax) * bestT;
   const y = ay + (by - ay) * bestT;
   return target === undefined ? { kind: 'obstacle', x, y } : { kind: 'actor', target, x, y };
+}
+
+/**
+ * Whether a flying projectile passes a cover footprint (Q29): always when it was fired over that
+ * object or already passed it, otherwise with the footprint's chance, drawn once per object.
+ */
+export function passesCover(
+  world: WorldState,
+  projectile: Projectile,
+  footprint: Footprint,
+): boolean {
+  const { object } = footprint;
+  if (object !== undefined && projectile.passed.includes(object)) return true;
+  if (!world.random('cover').chance((footprint.bulletPassPercent ?? 0) / 100)) return false;
+  if (object !== undefined) projectile.passed.push(object);
+  return true;
 }
 
 /** What a projectile carries when it stops. */

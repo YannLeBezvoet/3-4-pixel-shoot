@@ -87,8 +87,22 @@ function shoot(world: WorldState, id: EntityId, actor: Actor, stats: WeaponStats
     angle,
   };
 
-  // Between the body and the muzzle: nobody fires through a wall they stand against.
-  const blocked = traceProjectile(world, id, actor.team, position.x, position.y, muzzleX, muzzleY);
+  // Between the body and the muzzle: nobody fires through a wall they stand against, but the
+  // weapon reaches over cover, and every bullet it fires passes that cover (Q29).
+  const over: number[] = [];
+  const blocked = traceProjectile(
+    world,
+    id,
+    actor.team,
+    position.x,
+    position.y,
+    muzzleX,
+    muzzleY,
+    ({ object }) => {
+      if (object !== undefined && !over.includes(object)) over.push(object);
+      return true;
+    },
+  );
   let entity: EntityId | undefined;
   if (!blocked) {
     entity = world.nextEntity++;
@@ -104,6 +118,7 @@ function shoot(world: WorldState, id: EntityId, actor: Actor, stats: WeaponStats
       damage: stats.params.damage,
       z,
       remaining: projectile.params.range,
+      passed: over,
     });
   }
   world.events.push({

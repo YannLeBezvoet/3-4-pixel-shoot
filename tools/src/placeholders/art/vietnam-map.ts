@@ -125,13 +125,14 @@ function objectTileset(
 export const treeTileset = () => objectTileset('jungle-tree', 2 * T, 3 * T, TREE_TRUNK);
 
 /**
- * Sandbags are solid until cover arrives (milestone 2), and low: drawn below characters, so a
- * soldier's weapon is never hidden behind them.
+ * Sandbags are cover (Q29): bullets from a weapon reaching over them pass, 40 % of the others
+ * too. They are low: drawn below characters, so a soldier's weapon is never hidden behind them.
  */
 export const sandbagsTileset = () =>
   objectTileset('sandbags', T, T, SANDBAGS_FOOTPRINT, [
+    property('bulletPassPercent', 'int', 40),
+    property('cover', 'bool', true),
     property('low', 'bool', true),
-    property('solid', 'bool', true),
   ]);
 
 interface Rect {

@@ -28,7 +28,7 @@ Used in projectiles.json.
 
 ### `bullet`
 
-A projectile flying straight at gun height until it hits a character, a solid obstacle or reaches its range.
+A projectile flying straight at gun height until it hits a character, a solid obstacle or cover it fails to pass, or reaches its range.
 
 | Parameter | Type | Default | Meaning |
 |---|---|---|---|

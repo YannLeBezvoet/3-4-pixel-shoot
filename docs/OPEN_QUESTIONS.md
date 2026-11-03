@@ -22,6 +22,12 @@
 ### Raised by an owner request (2026-11-03)
 
 - **Q71. Characters next to sandbags.** The owner asked that a character's weapon be drawn in front of sandbags. *Proposal (implemented, awaiting confirmation):* tile objects with the `low` property, sandbags included, are drawn just above the ground, below corpses, characters, their weapons, bullets and effects. The sandbag picture is flat and its collision covers it, so no character ever stands on it and nothing needs to be hidden behind it. Alternative: keep sandbags depth-sorted with characters and lift only the weapon above them, which only matters if sandbags are later drawn with height (a front face that hides a soldier's legs).
+- **Q72. Details of the cover rule** (owner request, Q29). *Proposal (implemented, awaiting confirmation):*
+  - The weapon "reaches over" cover when the line from the shooter's center to the muzzle crosses the cover's collision box, on the ground (the gun's drawn height does not count). In the Vietnam theme the muzzle is 29 px from a soldier's center and the soldier's radius is 10 px, so the soldier must stand within about 19 px of the sandbags.
+  - The pass chance is drawn once per bullet and per cover object, from a seeded random stream: two sandbags in a row let about 16 % through (0.4 × 0.4). A bullet that hits a character in front of the sandbags draws nothing.
+  - The 40 % is data: the property `bulletPassPercent` of the sandbag tile in its tileset, so other cover (a low wall) can have its own value; without it, cover stops every bullet that does not come from over it.
+  - Cover works on tile objects only; a ground tile marked `cover` is refused by the validator.
+  - As settled in Q29, cover does not block sight: bots see enemies behind sandbags and shoot at them.
 
 ## Settled
 
@@ -82,7 +88,7 @@ On 2026-11-03 the owner also accepted Q48–Q60, raised with the detailed plan o
 
 ### Needed before M2
 
-- **Q29. Cover rules.** *Settled:* two kinds of obstacle. `solid` (walls, rocks, huts): blocks movement, bullets and line of sight. `cover` (sandbags, low walls): blocks movement and bullets but not line of sight, so you see over it. No shooting over cover, even when adjacent (simple arcade rule).
+- **Q29. Cover rules.** *Settled:* two kinds of obstacle. `solid` (walls, rocks, huts): blocks movement, bullets and line of sight. `cover` (sandbags, low walls): blocks movement but not line of sight, so you see over it. *Changed by the owner on 2026-11-03* (it first said: cover blocks bullets, no shooting over it even when adjacent): every bullet from a weapon reaching over cover passes it; bullets fired from farther away pass sandbags 40 % of the time. Details in Q72.
 - **Q30. Grenades.** *Settled:* thrown to the cursor, clamped to a maximum range; bounce off walls; 2.5 s fuse from the throw, no cooking; 2 per life; explosion blocked by walls; friendly fire follows the match setting.
 - **Q31. Fire.** *Settled:* the flamethrower ignites flammable tiles, objects and characters; fire spreads between adjacent flammable tiles and burns out, leaving a burnt variant; burning characters take damage for about 3 seconds; no way to extinguish.
 - **Q32. Blood and gore.** *Settled:* impact sprays, decals and pools under corpses that last for the round; no dismemberment. A blood setting (full / reduced / off), full by default.

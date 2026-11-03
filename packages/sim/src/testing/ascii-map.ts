@@ -16,6 +16,7 @@ import { TILE_SIZE, TileFlag } from '../map/map-data';
  * - `#` solid tile (wall)
  * - `~` impassable tile (deep water)
  * - `o` floor with a solid object whose footprint is a 16×16 box centered in the tile
+ * - `s` floor with sandbags: a cover object filling the tile, which 40 % of bullets pass
  * - `1`–`9` floor with a one-tile spawn area for that team
  *
  * Rows may be given as one string; blank lines and surrounding spaces are ignored.
@@ -46,20 +47,36 @@ export function asciiMap(rows: string | readonly string[], id = 'ascii'): MapDat
       const top = y * TILE_SIZE;
       if (char === '#') cells.push(2);
       else if (char === '~') cells.push(3);
-      else if (char === '.' || char === 'o' || /[1-9]/.test(char)) cells.push(1);
+      else if (char === '.' || char === 'o' || char === 's' || /[1-9]/.test(char)) cells.push(1);
       else throw new Error(`Unknown map character "${char}" at column ${x}, row ${y}.`);
       if (char === 'o') {
+        const id = objects.length + 1;
         const footprint: Footprint = {
           x: left + 16,
           y: top + 16,
           width: 16,
           height: 16,
           flags: TileFlag.solid,
+          object: id,
+        };
+        objects.push({ id, x: left + TILE_SIZE / 2, y: top + 32, footprints: [footprint] });
+      }
+      if (char === 's') {
+        const id = objects.length + 1;
+        const footprint: Footprint = {
+          x: left,
+          y: top,
+          width: TILE_SIZE,
+          height: TILE_SIZE,
+          flags: TileFlag.cover,
+          object: id,
+          bulletPassPercent: 40,
         };
         objects.push({
-          id: objects.length + 1,
+          id,
           x: left + TILE_SIZE / 2,
-          y: top + 32,
+          y: top + TILE_SIZE,
+          low: true,
           footprints: [footprint],
         });
       }

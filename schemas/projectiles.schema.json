@@ -38,7 +38,7 @@
           "behavior": {
             "type": "string",
             "const": "bullet",
-            "description": "A projectile flying straight at gun height until it hits a character, a solid obstacle or reaches its range."
+            "description": "A projectile flying straight at gun height until it hits a character, a solid obstacle or cover it fails to pass, or reaches its range."
           },
           "params": {
             "type": "object",

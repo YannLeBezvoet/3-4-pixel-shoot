@@ -11,11 +11,17 @@ export const TileFlag = {
   solid: 1,
   /** Blocks movement only; projectiles and sight pass: deep water, chasms (Q50). */
   impassable: 2,
+  /**
+   * Low obstacle such as sandbags (Q29), on map objects only: blocks movement, not sight.
+   * Projectiles pass it when fired from a weapon reaching over it, otherwise with the
+   * footprint's `bulletPassPercent` chance.
+   */
+  cover: 4,
 } as const;
 
 /** Flags that stop a character. */
-export const BLOCKS_MOVEMENT = TileFlag.solid | TileFlag.impassable;
-/** Flags that stop a projectile. */
+export const BLOCKS_MOVEMENT = TileFlag.solid | TileFlag.impassable | TileFlag.cover;
+/** Flags that always stop a projectile; `cover` stops it only on a failed pass. */
 export const BLOCKS_PROJECTILES = TileFlag.solid;
 /** Flags that stop line of sight. */
 export const BLOCKS_SIGHT = TileFlag.solid;
@@ -57,6 +63,13 @@ export interface Box {
 
 export interface Footprint extends Box {
   readonly flags: number;
+  /** Id of the map object it belongs to; cover is passed or not per object. */
+  readonly object?: number;
+  /**
+   * Cover only: chance in percent (0 to 100) that a projectile passes it when the shooter's
+   * weapon does not reach over it. Missing means 0.
+   */
+  readonly bulletPassPercent?: number;
 }
 
 /** A placed object made of one picture, possibly larger than a tile (a tree, a hut). */

@@ -89,6 +89,8 @@ export interface Projectile {
   readonly z: number;
   /** Distance it may still travel. */
   remaining: number;
+  /** Ids of the cover objects it was fired over or has passed: it flies on through them. */
+  readonly passed: number[];
 }
 
 /** Match rules the simulation applies. */

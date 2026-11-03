@@ -11,7 +11,7 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 - **Milestone 0 (Foundations) done**: version 0.0.0. Criteria results: [docs/ROADMAP.md](docs/ROADMAP.md#m0--foundations); C0.10 (Aseprite) awaits the owner's check.
 - **Milestone 1 (playable solo) done**: version 0.1.0, merged into `main` and pushed on 2026-11-03. Criteria results: [ROADMAP](docs/ROADMAP.md#m1--playable-solo).
 - **Next:** milestone 2 (combat), branch `milestone/2-combat`. Its detailed plan ([ROADMAP M2 tasks](docs/ROADMAP.md#m2--combat)) and questions Q61–Q70 ([OPEN_QUESTIONS](docs/OPEN_QUESTIONS.md#open)) await the owner's approval; no code before that.
-- Done ahead of the M2 plan on the owner's request: sandbags as tile objects, drawn below characters (`low`, Q71).
+- Done ahead of the M2 plan on the owner's request: sandbags as tile objects, drawn below characters (`low`, Q71) and acting as cover (Q29 changed, Q72).
 - What exists today: [ARCHITECTURE §0](docs/ARCHITECTURE.md#0-what-exists-end-of-milestone-1).
 
 ## Where to find what

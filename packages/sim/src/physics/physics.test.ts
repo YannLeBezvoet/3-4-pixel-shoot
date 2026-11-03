@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildCollisionGrid } from '../map/collision-grid';
-import { BLOCKS_MOVEMENT, BLOCKS_PROJECTILES, TILE_SIZE } from '../map/map-data';
+import type { Footprint } from '../map/map-data';
+import { BLOCKS_MOVEMENT, BLOCKS_PROJECTILES, TILE_SIZE, TileFlag } from '../map/map-data';
 import { asciiMap } from '../testing/ascii-map';
 import { circleOverlapsBox, pushCircleOutOfBox, segmentEntersBox } from './geometry';
 import { circleBlocked, moveCircle } from './move-circle';
@@ -121,6 +122,22 @@ describe('castSegment', () => {
   it('gives line of sight', () => {
     expect(lineOfSight(grid, 24, 24, 260, 24)).toBe(true);
     expect(lineOfSight(grid, 24, 72, 260, 72)).toBe(false);
+  });
+
+  it('asks about each footprint met, once and in path order, until one stops the segment', () => {
+    // Sandbags at tiles 1, 3 and 4 of a row, then a wall: cover blocks movement, not sight.
+    const row = buildCollisionGrid(asciiMap('.s.ss#'));
+    const mask = BLOCKS_PROJECTILES | TileFlag.cover;
+    const asked: number[] = [];
+    const passAll = (f: Footprint) => (asked.push(f.object!), true);
+    expect(castSegment(row, 10, 24, 280, 24, mask, passAll)?.x).toBeCloseTo(240, 9);
+    expect(asked).toEqual([1, 2, 3]);
+    asked.length = 0;
+    const stopAtSecond = (f: Footprint) => (asked.push(f.object!), f.object !== 2);
+    expect(castSegment(row, 280 - 50, 24, 10, 24, mask, stopAtSecond)?.x).toBeCloseTo(192, 9);
+    expect(asked).toEqual([3, 2]);
+    expect(lineOfSight(row, 10, 24, 230, 24)).toBe(true);
+    expect(circleBlocked(row, 72, 24, 10, BLOCKS_MOVEMENT)).toBe(true);
   });
 });
 

@@ -10,7 +10,7 @@ import type {
   TileType,
   TileVisual,
 } from '@pixel-shoot/sim';
-import { TILE_SIZE } from '@pixel-shoot/sim';
+import { TILE_SIZE, TileFlag } from '@pixel-shoot/sim';
 import type { FileProvider } from '../files/file-provider';
 import { joinPath } from '../files/file-provider';
 import { readJson } from '../files/read-json';
@@ -125,6 +125,23 @@ function tileFlags(values: { [K in keyof typeof TILE_FLAG_PROPERTIES]: boolean }
   return flags;
 }
 
+/** The bullet pass chance of cover, reporting a value outside 0–100 and keeping it in range. */
+function passPercent(value: number, file: string, location: string, issues: IssueCollector) {
+  if (value >= 0 && value <= 100) return value;
+  issues.error(
+    file,
+    location,
+    `Property "bulletPassPercent" must be between 0 and 100, got ${value}.`,
+  );
+  return Math.min(100, Math.max(0, value));
+}
+
+/** Names of the flags set, for messages: "solid", "cover"… */
+const flagNames = (flags: number) =>
+  Object.entries(TILE_FLAG_PROPERTIES)
+    .filter(([, flag]) => flags & flag)
+    .map(([name]) => name);
+
 /** Why a shape is not a plain rectangle, or undefined when it is one. */
 function notARectangle(object: TiledObject): string | undefined {
   if (object.ellipse) return 'an ellipse';
@@ -140,6 +157,7 @@ function notARectangle(object: TiledObject): string | undefined {
 interface TileProperties {
   readonly flags: number;
   readonly low: boolean;
+  readonly bulletPassPercent: number;
 }
 
 interface LoadedTileset {
@@ -204,7 +222,12 @@ async function loadTileset(
       }
       footprints.push({ x: shape.x, y: shape.y, width: shape.width, height: shape.height, flags });
     }
-    tiles.set(tile.id, { flags, low: values.low, footprints });
+    tiles.set(tile.id, {
+      flags,
+      low: values.low,
+      bulletPassPercent: passPercent(values.bulletPassPercent, file, location, issues),
+      footprints,
+    });
   }
   return {
     file,
@@ -415,6 +438,10 @@ export async function loadMap(
           return problem(
             `tiles of ${tileset.file} are ${tileset.tileWidth}×${tileset.tileHeight} px; tile layers use ${TILE_SIZE}×${TILE_SIZE} px tiles. Place larger pictures as tile objects in an "objects" layer.`,
           );
+        if (role === 'ground' && (tileset.tiles.get(localId)?.flags ?? 0) & TileFlag.cover)
+          return problem(
+            `tile ${localId} of ${tileset.file} is cover, which works on tile objects only: place it in an "objects" layer.`,
+          );
         const key = `${tileset.file}:${localId}`;
         let index = typeIndex.get(key);
         if (index === undefined) {
@@ -488,6 +515,9 @@ export async function loadMap(
           flags = values[name as keyof typeof TILE_FLAG_PROPERTIES] ? flags | flag : flags & ~flag;
         }
         const low = set.has('low') ? values.low : (tile?.low ?? false);
+        const bulletPassPercent = set.has('bulletPassPercent')
+          ? passPercent(values.bulletPassPercent, file, objectAt, issues)
+          : (tile?.bulletPassPercent ?? 0);
         const left = object.x;
         const top = object.y - object.height;
         const shapes = tile?.footprints ?? [];
@@ -495,7 +525,7 @@ export async function loadMap(
           issues.warning(
             file,
             objectAt,
-            `The tile is ${flags & 1 ? 'solid' : 'impassable'} but has no collision shape, so it blocks nothing. Draw its shapes in the tileset's collision editor.`,
+            `The tile is ${flagNames(flags).join(' and ')} but has no collision shape, so it blocks nothing. Draw its shapes in the tileset's collision editor.`,
           );
         objects.push({
           id: object.id,
@@ -512,6 +542,8 @@ export async function loadMap(
                   width: s.width,
                   height: s.height,
                   flags,
+                  object: object.id,
+                  ...(flags & TileFlag.cover ? { bulletPassPercent } : {}),
                 })),
         });
         continue;

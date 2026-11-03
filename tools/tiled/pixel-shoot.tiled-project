@@ -47,6 +47,16 @@
                     "value": false
                 },
                 {
+                    "name": "cover",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "bulletPassPercent",
+                    "type": "int",
+                    "value": 0
+                },
+                {
                     "name": "low",
                     "type": "bool",
                     "value": false

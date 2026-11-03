@@ -23,6 +23,18 @@ export const TILE_PROPERTIES = {
     default: false,
     description: 'Blocks movement only; bullets and sight pass (deep water).',
   },
+  cover: {
+    type: 'bool',
+    default: false,
+    description:
+      'Tile objects only: a low obstacle (sandbags) that blocks movement but not sight. Every bullet passes it when the weapon firing it reaches over it; otherwise with the bulletPassPercent chance (Q29).',
+  },
+  bulletPassPercent: {
+    type: 'int',
+    default: 0,
+    description:
+      'Cover only: chance in percent (0 to 100) that a bullet fired from a weapon not over the object passes it, drawn once per bullet and object.',
+  },
   low: {
     type: 'bool',
     default: false,
@@ -32,9 +44,10 @@ export const TILE_PROPERTIES = {
 } as const satisfies Record<string, PropertyDefinition>;
 
 /** The tile flag each boolean gameplay property sets; `low` only changes drawing. */
-export const TILE_FLAG_PROPERTIES: Readonly<Record<'solid' | 'impassable', number>> = {
+export const TILE_FLAG_PROPERTIES: Readonly<Record<'solid' | 'impassable' | 'cover', number>> = {
   solid: TileFlag.solid,
   impassable: TileFlag.impassable,
+  cover: TileFlag.cover,
 };
 
 /** Properties of the map itself. */

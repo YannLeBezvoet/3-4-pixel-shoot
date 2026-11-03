@@ -18,12 +18,17 @@
    "type": "tile",
    "properties": [
     {
-     "name": "low",
+     "name": "bulletPassPercent",
+     "type": "int",
+     "value": 40
+    },
+    {
+     "name": "cover",
      "type": "bool",
      "value": true
     },
     {
-     "name": "solid",
+     "name": "low",
      "type": "bool",
      "value": true
     }

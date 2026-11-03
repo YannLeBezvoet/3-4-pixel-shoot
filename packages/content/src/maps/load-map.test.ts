@@ -184,7 +184,7 @@ describe('loadMap', () => {
         x: 144,
         y: 144,
         visual: { image: 'tilesets/tree.png', x: 0, y: 0, width: 96, height: 144 },
-        footprints: [{ x: 136, y: 120, width: 16, height: 16, flags: TileFlag.solid }],
+        footprints: [{ x: 136, y: 120, width: 16, height: 16, flags: TileFlag.solid, object: 5 }],
       },
     ]);
     expect(map?.spawns).toEqual([
@@ -212,6 +212,46 @@ describe('loadMap', () => {
       }),
     );
     expect(raised.map?.objects[0]?.low).toBeUndefined();
+  });
+
+  it('reads cover and its bullet pass chance on tile objects, overridable on the object', async () => {
+    const coverTile = (f: Files) =>
+      (f[TREE].tiles[0].properties = [
+        prop('cover', 'bool', true),
+        prop('bulletPassPercent', 'int', 40),
+      ]);
+    const footprint = { x: 136, y: 120, width: 16, height: 16, object: 5 };
+    const cover = await load(broken(coverTile));
+    expect(cover.issues).toEqual([]);
+    expect(cover.map?.objects[0]?.footprints).toEqual([
+      { ...footprint, flags: TileFlag.cover, bulletPassPercent: 40 },
+    ]);
+    const tougher = await load(
+      broken((f) => {
+        coverTile(f);
+        f[MAP].layers[2].objects[0].properties = [prop('bulletPassPercent', 'int', 10)];
+      }),
+    );
+    expect(tougher.map?.objects[0]?.footprints[0]?.bulletPassPercent).toBe(10);
+  });
+
+  it('refuses a bullet pass chance outside 0–100 and cover in a ground layer', async () => {
+    const outOfRange = await load(
+      broken((f) => f[TREE].tiles[0].properties.push(prop('bulletPassPercent', 'int', 140))),
+    );
+    expect(outOfRange.issues).toEqual([
+      error(TREE, 'tile 0', 'Property "bulletPassPercent" must be between 0 and 100, got 140.'),
+    ]);
+    const groundCover = await load(
+      broken((f) => f[GROUND].tiles.push({ id: 0, properties: [prop('cover', 'bool', true)] })),
+    );
+    expect(groundCover.issues).toEqual([
+      error(
+        MAP,
+        'layer "ground"',
+        `tile (0, 0): tile 0 of ${GROUND} is cover, which works on tile objects only: place it in an "objects" layer. (and 8 more tiles)`,
+      ),
+    ]);
   });
 
   it('refuses maps that are not orthogonal, infinite or not on a 48 px grid', async () => {
@@ -452,7 +492,7 @@ describe('loadMap', () => {
       warning(
         GROUND,
         'tile 1',
-        'Unknown property "soild" (ignored). Known properties here: "solid", "impassable", "low".',
+        'Unknown property "soild" (ignored). Known properties here: "solid", "impassable", "cover", "bulletPassPercent", "low".',
       ),
     ]);
   });

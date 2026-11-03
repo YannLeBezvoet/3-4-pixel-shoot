@@ -193,7 +193,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 
 #### Simulation (`sim`)
 
-1. **Cover.** Tile flag `cover` (Q29): blocks movement and projectiles, not sight; line of sight, bullets and navigation follow. The 360° sweep and random-walk tests extended to cover (C2.1).
+1. **Cover.** *Done ahead of the plan on the owner's request (2026-11-03), with the rule changed (Q29, Q72):* object flag `cover`: blocks movement, not sight; bullets pass it from a weapon reaching over it, otherwise with the object's `bulletPassPercent` chance; navigation follows; the 10,000-tick random-walk test includes sandbags (C2.1).
 2. **Loadouts.** A character carries a primary weapon and a throwable with a count per life (Q61); a `throw` button (Q62); the world tracks both; `ActorState` and events report them.
 3. **Explosions.** An explosion system (step 6): damage falling off with distance as parameterized, blocked by obstacles per Q65, friendly fire and self-damage per Q64; `exploded` events; damage sources tagged (`bullet`, `explosion`, `fire`) for damage filters.
 4. **Grenades.** `thrown` weapon behavior (to the cursor, clamped to a maximum range, Q30) and `grenade` projectile: arc in height `z`, bounces off solid obstacles with a restitution factor, rolls to a stop, fuse of 2.5 s from the throw; tests for falloff, a wall shielding a character and a bounce (C2.2).
@@ -203,7 +203,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 #### Content, art, maps
 
 7. **Theme and map data.** Weapon and projectile entries for the new behaviors; character loadouts (Q61); Tiled properties `cover`, `hp`, `damageFilter`, `flammable`, `destroyedTile`, `burntTile`, `explosive` on tiles and objects; validation messages and broken fixtures; Tiled project file and behavior reference regenerated (C2.8).
-8. **Placeholder art and the Vietnam theme.** M26 and Type 67 grenades, M2A1-7 and LPO-50 flamethrowers and their troopers (Q61, Q23), burnt and destroyed tile variants, fuel barrel, smoke and fire effects, blood spray, decal and pool; the Vietnam map's sandbags (tile objects) become cover, destructible huts and fences, barrels and flammable tall grass (Q63); the example theme stays as it is.
+8. **Placeholder art and the Vietnam theme.** M26 and Type 67 grenades, M2A1-7 and LPO-50 flamethrowers and their troopers (Q61, Q23), burnt and destroyed tile variants, fuel barrel, smoke and fire effects, blood spray, decal and pool; destructible huts and fences, barrels and flammable tall grass (Q63); the example theme stays as it is.
 
 #### Presentation (client)
 
@@ -225,7 +225,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 
 ### Success criteria
 
-- [ ] **C2.1** Cover: over a 360° sweep, bullets never pass a `cover` tile; characters behave per Q29 (tests).
+- [ ] **C2.1** Cover: bullets pass cover per Q29 and Q72 (all from a weapon reaching over it, the object's chance otherwise); characters never cross it (tests). *(Reworded after the owner changed Q29 on 2026-11-03.)*
 - [ ] **C2.2** Grenades: damage decreases with distance as parameterized; a character behind a wall takes no damage; a grenade thrown at a wall bounces back (tests).
 - [ ] **C2.3** Destructibles: an element with `hp = N` is destroyed by exactly the damage that reaches N; it switches to its destroyed variant and stops blocking movement and bullets; the renderer updates the tile chunk (tests + dev scene).
 - [ ] **C2.4** Fire spreads only across flammable tiles and objects, burns out, and is deterministic for a given seed; burning characters take the configured damage over time (tests).

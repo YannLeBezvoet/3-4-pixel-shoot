@@ -12,6 +12,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 
 ### Added
 
+- Cover (Q29, changed by the owner, and Q72), ahead of the milestone 2 plan: the tile-object property `cover` blocks movement, not sight; every bullet from a weapon reaching over it passes, the others with the object's `bulletPassPercent` chance, drawn once per bullet and object. Vietnam sandbags are cover with a 40 % chance. Test maps gain `s` (sandbags).
 - Tile property `low` for tile objects (drawing only): the object is drawn just above the ground, below corpses, characters, their weapons and bullets, instead of being depth-sorted. Sandbags are `low`, so a soldier's weapon is never hidden behind them.
 
 ## [0.1.0] — 2026-11-03
