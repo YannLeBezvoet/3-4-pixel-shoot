@@ -1,5 +1,7 @@
 // Public entry point. Only what is exported here may be imported by other packages.
 export { joinPath, memoryFileProvider } from './files/file-provider';
+export { CONTENT_INDEX_FILE, contentIndexSchema } from './index-file/content-index';
+export type { ContentIndex } from './index-file/content-index';
 export type { FileProvider } from './files/file-provider';
 export { IssueCollector, describeJsonPath, formatIssue, formatIssues } from './issues/issues';
 export type { ContentIssue, Severity } from './issues/issues';

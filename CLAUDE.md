@@ -33,7 +33,7 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 - Never decide an unspecified point silently: propose, and add it to `docs/OPEN_QUESTIONS.md`.
 - Every structural choice gets a decision record in `docs/decisions/` (template in its README).
 - Everything in the repository is in English. The owner converses in French.
-- No displayed text in code: translation keys only.
+- No displayed text in code: translation keys only (`t('…')`), enforced by the local lint rule `tools/eslint/no-literal-ui-text.js` in `apps/client/src/ui` and `src/dev`.
 - Every code change updates the affected docs **in the same commit**.
 - Tests live next to the code as `*.test.ts`; tests may use Node to read fixtures, the code they test may not. Boundary rules are proven by `tools/src/boundaries/boundaries.test.ts`.
 
@@ -60,4 +60,5 @@ Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
 | `npm run validate:themes [ids…]` | Validate themes as the game loads them |
 | `npm run schemas` / `check:schemas` | Regenerate / verify `schemas/*.json` (run after changing a Zod schema) |
 | `npm run assets:placeholders` / `assets:report` | (Re)generate placeholder art; list placeholders still in use |
+| `npm run check:i18n` | Key parity with English, `{{variables}}`, and font coverage of every text |
 | `npm run check` | **Everything CI runs.** Must pass before every commit |

@@ -10,7 +10,10 @@
     "@pixel-shoot/protocol": "*",
     "@pixel-shoot/shared": "*",
     "@pixel-shoot/sim": "*",
-    "pixi.js": "^8.22.0"
+    "@preact/signals": "^2.11.4",
+    "i18next": "^26.7.1",
+    "pixi.js": "^8.22.0",
+    "preact": "^11.1.1"
   },
   "devDependencies": {
     "vite": "^8.3.5"

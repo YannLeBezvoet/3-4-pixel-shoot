@@ -266,11 +266,11 @@ Decision [0003](decisions/0003-rendering-pixijs.md).
 
 Decisions [0004](decisions/0004-ui.md) and [0009](decisions/0009-i18n.md).
 
-- **Menus** (main menu, solo setup, lobby, settings, room code entry) are DOM, built with Preact, scaled with the same integer factor.
+- **Menus** (main menu, solo setup, lobby, settings, room code entry) are DOM, built with Preact (`src/ui/`), in a 960×540 layer scaled with the same integer factor as the canvas, using the **Press Start 2P** pixel font (OFL) at multiples of 8 px.
 - **HUD** (health, ammo, grenades, kill feed, scores, timers, names) is drawn by PixiJS at internal resolution with a bitmap pixel font, so it is pixel-exact and in palette.
-- **Translations** with i18next. UI strings in `locales/<lang>.json`; theme strings in `themes/<id>/locales/<lang>.json` (a separate namespace per theme). The language list is built from the files found; the language's display name lives inside its file. Missing keys fall back to English and are reported by `check:i18n`.
+- **Translations** with i18next (`src/i18n/`). UI strings in `locales/<lang>.json`; theme strings in `themes/<id>/locales/<lang>.json` (namespace `theme.<id>`). The language list comes from `/content-index.json`, which the Vite content plugin (`apps/client/vite/`) builds from the files found; the language's display name lives inside its file. Missing keys fall back to English and are reported by `check:i18n`.
 - **The server and the simulation never produce text**: they emit translation keys with parameters (`killfeed.eliminated` + killer id, victim id, weapon id); the client resolves names in the player's language.
-- A **font coverage check** verifies that every character used in every locale exists in the bitmap font.
+- A **font coverage check** (`check:i18n`) verifies that every character used in every locale exists in the interface font (and, from milestone 1, in the HUD bitmap font).
 - Keyboard input uses physical key codes, so ZQSD on AZERTY and WASD on QWERTY are the same keys with no setting.
 
 ## 13. Networking (milestone 3)

@@ -5,6 +5,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
 import globals from 'globals';
+import pixelShoot from './tools/eslint/no-literal-ui-text.js';
 import tseslint from 'typescript-eslint';
 import { defineConfig } from 'eslint/config';
 
@@ -150,6 +151,12 @@ export default defineConfig(
       'apps/client/*.config.ts',
     ],
     languageOptions: { globals: { ...globals.node } },
+  },
+  {
+    // No displayed text in code (decision 0009): interface text comes from translation keys.
+    files: ['apps/client/src/ui/**/*.tsx', 'apps/client/src/dev/**/*.tsx'],
+    plugins: { 'pixel-shoot': pixelShoot },
+    rules: { 'pixel-shoot/no-literal-ui-text': 'error' },
   },
   prettier,
 );

@@ -116,6 +116,18 @@ describe('import lint rules', () => {
     expect(messages).toEqual([]);
   });
 
+  it('reject literal displayed text in interface components', async () => {
+    const [result] = await eslint.lintText(
+      'export const A = () => <button title="Close" class="menu">Play</button>;\nexport const B = (p: { t: (k: string) => string }) => <button class="menu">{p.t(\'menu.play\')}</button>;\n',
+      { filePath: fromRoot('apps/client/src/ui/probe.tsx') },
+    );
+    const literal = (result?.messages ?? []).filter(
+      (m) => m.ruleId === 'pixel-shoot/no-literal-ui-text',
+    );
+    expect(literal.map((m) => m.line)).toEqual([1, 1]);
+    expect(literal[0]?.message).toContain('translation key');
+  });
+
   it('keep PixiJS inside the client render folder', async () => {
     const code = "import { Sprite } from 'pixi.js';\nexport const x = Sprite;\n";
     expect(await restrictedImports('apps/client/src/ui/probe.ts', code)).toHaveLength(1);

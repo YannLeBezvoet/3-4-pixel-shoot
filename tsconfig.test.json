@@ -16,6 +16,7 @@
     "apps/*/src/**/*.test.tsx",
     "apps/client/vite/**/*.ts",
     "tools/src/**/*.test.ts",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "tools/src/**/*.d.ts"
   ]
 }

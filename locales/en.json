@@ -1,0 +1,11 @@
+{
+  "_meta": { "name": "English" },
+  "app": { "title": "Pixel Shoot" },
+  "home": { "status": "Work in progress: milestone 0, foundations." },
+  "settings": { "language": "Language" },
+  "dev": {
+    "tools": "Developer tools",
+    "spriteViewer": "Sprite viewer",
+    "back": "Back"
+  }
+}

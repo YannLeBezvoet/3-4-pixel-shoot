@@ -1,0 +1,11 @@
+{
+  "_meta": { "name": "Français" },
+  "app": { "title": "Pixel Shoot" },
+  "home": { "status": "En cours de développement : jalon 0, fondations." },
+  "settings": { "language": "Langue" },
+  "dev": {
+    "tools": "Outils de développement",
+    "spriteViewer": "Visionneuse de sprites",
+    "back": "Retour"
+  }
+}
