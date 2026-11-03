@@ -25,6 +25,8 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 | Themes (data only) | `themes/<id>/`; example: [themes/vietnam/](themes/vietnam/) |
 | Palette | [palette/resurrect-64.gpl](palette/resurrect-64.gpl) |
 | Editor JSON Schemas for theme files (generated) | `schemas/` |
+| Behaviors and their parameters (generated) | [docs/reference/behaviors.md](docs/reference/behaviors.md) |
+| Tiled project file (generated; open it in Tiled) | `tools/tiled/pixel-shoot.tiled-project` |
 | Licenses of every file | [REUSE.toml](REUSE.toml), [CREDITS.md](CREDITS.md), `LICENSES/` |
 | A package's role and allowed dependencies | `packages/*/README.md`, `apps/*/README.md`, [tools/README.md](tools/README.md) |
 
@@ -61,7 +63,7 @@ Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
 | `npm run test` / `test:watch` / `coverage` | Vitest, all workspaces |
 | `npm run check:palette [files…]` | Palette and transparency check of every PNG (or the given files) |
 | `npm run validate:themes [ids…]` | Validate themes as the game loads them |
-| `npm run schemas` / `check:schemas` | Regenerate / verify `schemas/*.json` (run after changing a Zod schema) |
+| `npm run schemas` / `check:schemas` | Regenerate / verify the generated files: `schemas/*.json`, the Tiled project file, `docs/reference/behaviors.md` (run after changing a Zod schema, a behavior or a map property) |
 | `npm run sprites:export [-- --watch]` | Export every `.aseprite` file (needs `ASEPRITE_PATH`) |
 | `npm run assets:placeholders` / `assets:report` | (Re)generate placeholder art; list placeholders still in use |
 | `npm run check:i18n` | Key parity with English, `{{variables}}`, and font coverage of every text |

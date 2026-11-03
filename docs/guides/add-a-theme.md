@@ -114,7 +114,7 @@ File names are fixed. Each JSON file starts with a `$schema` line: VS Code then 
 }
 ```
 
-- `behavior` picks how the weapon works. It is engine code; the theme only chooses it and sets `params`. Behaviors available today:
+- `behavior` picks how the weapon works. It is engine code; the theme only chooses it and sets `params`. The [behavior reference](../reference/behaviors.md), generated from the engine, lists every behavior and parameter. Behaviors available today:
 
   **`firearm`**: a gun firing projectiles from a magazine.
 

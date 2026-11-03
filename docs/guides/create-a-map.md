@@ -2,6 +2,10 @@
 
 Maps are made in [Tiled](https://www.mapeditor.org/) and saved directly in Tiled's JSON format: no export step. The game reads every `maps/<name>.tmj` file of a theme (Q55). This guide lists what the game understands; `npm run validate:themes` checks every map and names the file, the layer, the object and its position for each problem.
 
+## 0. Open the project once
+
+Open **`tools/tiled/pixel-shoot.tiled-project`** in Tiled (File › Open File or Project). It lists the themes folder and defines every class and property below, with their types and defaults, so they appear in Tiled's drop-down lists instead of being typed by hand. The file is generated from the engine (`npm run schemas`); never edit it.
+
 ## 1. Files
 
 ```
@@ -30,7 +34,7 @@ Group layers and image layers are not supported. Hidden layers still count.
 
 ## 3. Gameplay flags
 
-Set on tiles in the tileset editor (Tile Properties), as boolean custom properties:
+Set on tiles in the tileset editor: give the tile the class **`tile`** (Tile Properties › Class), then tick the properties it shows. Without the project, add them by hand as boolean custom properties:
 
 | Property | Effect |
 |---|---|

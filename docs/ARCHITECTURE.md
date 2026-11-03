@@ -251,7 +251,7 @@ Decision [0008](decisions/0008-tiled-maps.md).
   - `objects` object layer: tile objects (trees, huts, sandbags) sorted by their base; collision footprints from Tiled's collision editor.
   - `overhead` tile layer: always drawn on top (canopy, roofs).
   - `gameplay` object layer: `spawn` rectangles (with `team`, Q52); later `zone` shapes; not drawn.
-- **Gameplay properties in Tiled:** set on tileset tiles (defaults) and overridable per tile object: `solid`, `impassable` (exist); `cover`, `hp`, `flammable`, `destroyedTile`, … in M2. They are defined once in `packages/content/src/maps/properties.ts`. A Tiled project file in `tools/tiled/` defines them as typed custom classes, **generated from these definitions** so Tiled and the engine never drift apart (planned: task 7 of M1).
+- **Gameplay properties in Tiled:** set on tileset tiles (defaults) and overridable per tile object: `solid`, `impassable` (exist); `cover`, `hp`, `flammable`, `destroyedTile`, … in M2. They are defined once in `packages/content/src/maps/properties.ts`. The Tiled project file `tools/tiled/pixel-shoot.tiled-project` defines them as typed custom classes (with the layer classes and the `spawn` object class), **generated from these definitions** by `npm run schemas`, so Tiled and the engine never drift apart; `check:schemas` fails when it is stale.
 
 ## 10. Sprites and animation
 
@@ -338,7 +338,8 @@ Decision [0012](decisions/0012-tooling.md).
 - **Palette check** (`check:palette`): scans every PNG; fails on any pixel whose color is not in Resurrect 64 (and, pending an open question, on partial transparency), reporting file, coordinates, color and nearest palette color.
 - **Placeholder generator** (`tools/src/placeholders/`): writes PNG + JSON in Aseprite's export format (same tags, directions and slices as real art), so replacing a placeholder is a file swap. `tools/placeholders.json` records the hash of each generated file: a file that no longer matches has been replaced by real art and is never overwritten; `assets:report` lists the placeholders still in use.
 - **Aseprite helpers**: an export script for all `.aseprite` files (when Aseprite is installed) and a Lua script that creates a new character file with the right size, palette, tags and slices.
-- **Validators**: `validate:themes`, `check:i18n`, font coverage.
+- **Validators**: `validate:themes` (themes, catalog conversion, maps), `check:i18n`, font coverage.
+- **Generated files** (`npm run schemas`, verified by `check:schemas`): editor JSON Schemas (`schemas/`), the Tiled project file (`tools/tiled/`) and the behavior reference ([`docs/reference/behaviors.md`](reference/behaviors.md)), all derived from the engine's definitions.
 - **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse). Planned: collision and area-of-interest debug drawing.
 - **CI** (GitHub Actions): type-check, lint, tests, validators, palette check on every push.
 
