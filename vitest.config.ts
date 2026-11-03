@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    // Some tool tests generate every placeholder or play whole rounds: several seconds on a
+    // CI runner under coverage, more than Vitest's 5-second default.
+    testTimeout: 30_000,
     include: [
       'packages/*/src/**/*.test.ts',
       'apps/*/src/**/*.test.{ts,tsx}',
