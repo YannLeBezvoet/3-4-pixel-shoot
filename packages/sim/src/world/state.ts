@@ -7,6 +7,8 @@ import type { SimEvent } from '../core/events';
 import type { InputCommand } from '../core/input';
 import type { CollisionGrid } from '../map/collision-grid';
 import type { MapData } from '../map/map-data';
+import { TILE_SIZE } from '../map/map-data';
+import { SpatialHash } from '../physics/spatial-hash';
 import type { Catalog } from './catalog';
 
 /** Ground point, in world units. */
@@ -63,6 +65,10 @@ export interface WorldState {
   readonly random: (stream: string) => Rng;
   /** Events waiting to be returned by the next step. */
   readonly events: SimEvent[];
+  /** Actors by position; current after the movement system. */
+  readonly actorIndex: SpatialHash;
+  /** Largest collider radius among actors, to size neighbor queries. */
+  maxActorRadius: number;
   readonly position: ComponentStore<Position>;
   readonly velocity: ComponentStore<Velocity>;
   readonly body: ComponentStore<Body>;
@@ -85,4 +91,21 @@ export function createStores() {
 
 export function removeEntity(world: WorldState, id: EntityId): void {
   for (const store of STORES) world[store].delete(id);
+}
+
+/** Cell size of the actor index: one tile. */
+export const ACTOR_INDEX_CELL = TILE_SIZE;
+
+/** Rebuilds the actor index from current positions. */
+export function indexActors(world: WorldState): void {
+  world.actorIndex.clear();
+  for (const id of world.actor.ids()) {
+    const position = world.position.get(id);
+    const body = world.body.get(id);
+    if (position && body) world.actorIndex.insert(id, position.x, position.y, body.radius);
+  }
+}
+
+export function createActorIndex(): SpatialHash {
+  return new SpatialHash(ACTOR_INDEX_CELL);
 }

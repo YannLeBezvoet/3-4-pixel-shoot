@@ -4,6 +4,7 @@ import { vec2 } from '@pixel-shoot/shared';
 import type { EntityId } from '../core/entities';
 import type { InputCommand } from '../core/input';
 import { sanitizeInput } from '../core/input';
+import { movement } from '../systems/movement';
 import type { WorldState } from './state';
 
 export type System = (world: WorldState) => void;
@@ -20,5 +21,5 @@ export function applyInputs(world: WorldState, inputs: ReadonlyMap<EntityId, Inp
   }
 }
 
-/** Systems 2 to 10, in order. */
-export const SYSTEMS: readonly System[] = [];
+/** Systems 2 to 10, in order (2, mode pre-tick, arrives with the game-mode API). */
+export const SYSTEMS: readonly System[] = [movement];

@@ -35,3 +35,6 @@ export { DEFAULT_RULES } from './world/state';
 export type { Rules } from './world/state';
 export { createSimulation } from './world/simulation';
 export type { ActorSpec, ActorState, Simulation, SimulationOptions } from './world/simulation';
+export { circleBlocked, moveCircle } from './physics/move-circle';
+export { castSegment, lineOfSight } from './physics/raycast';
+export type { SegmentHit } from './physics/raycast';

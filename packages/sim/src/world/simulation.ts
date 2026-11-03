@@ -12,7 +12,14 @@ import { buildCollisionGrid } from '../map/collision-grid';
 import type { MapData } from '../map/map-data';
 import type { Catalog } from './catalog';
 import type { Rules, WorldState } from './state';
-import { DEFAULT_RULES, STORES, createStores, removeEntity } from './state';
+import {
+  DEFAULT_RULES,
+  STORES,
+  createActorIndex,
+  createStores,
+  indexActors,
+  removeEntity,
+} from './state';
 import { SYSTEMS, applyInputs } from './systems';
 
 export interface SimulationOptions {
@@ -82,6 +89,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
       return rng;
     },
     events: [],
+    actorIndex: createActorIndex(),
+    maxActorRadius: 0,
     ...createStores(),
   };
 
@@ -131,6 +140,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
         input: { ...NEUTRAL_INPUT, aim },
       });
       world.health.set(id, { hp: stats.hitPoints, max: stats.hitPoints });
+      world.maxActorRadius = Math.max(world.maxActorRadius, stats.radius);
+      indexActors(world);
       world.events.push({ type: 'actorSpawned', entity: id, team: spec.team, character: stats.id });
       return id;
     },
@@ -138,6 +149,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
     removeActor(id) {
       if (!world.actor.has(id)) return;
       removeEntity(world, id);
+      indexActors(world);
       world.events.push({ type: 'actorRemoved', entity: id });
     },
 
