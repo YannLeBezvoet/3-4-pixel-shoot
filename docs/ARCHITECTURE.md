@@ -1,16 +1,16 @@
 # Architecture
 
-> **Status: accepted on 2026-11-03; milestones 0 and 1 implemented.** §0 says what exists; sections describing later milestones are marked *planned*.
+> **Status: accepted on 2026-11-03; milestones 0, 1 and 2 implemented.** §0 says what exists; sections describing later milestones are marked *planned*.
 > The reasons behind each choice are in [`decisions/`](decisions/). Open points are in [`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md).
 
-## 0. What exists (end of milestone 1)
+## 0. What exists (end of milestone 2)
 
 | Area | State | Where |
 |---|---|---|
 | Workspace, boundaries | Every package exists; boundaries enforced by `tsc -b` and lint, proven by a test | `packages/*`, `apps/*`, `tools/`, `tsconfig/`, `eslint.config.js` |
 | `shared` | Vectors, angles and octants, seeded RNG, `Result` | `packages/shared/src/` |
-| `sim` | World core: `createSimulation` (entity-component stores, 60 Hz `step()`, input commands, events, named random streams, state hash); `MapData` and the collision grid (tile flags `solid`, `impassable`, `cover`; object footprints); ASCII maps for tests; behavior registry and the `firearm` parameter schema. Movement with acceleration (Q19), sliding collision against tiles and footprints, separation between characters (Q48), actor spatial hash, segment casts and line of sight; `firearm` weapon and `bullet` projectile behaviors; damage, deaths and corpses; determinism proven over 10,000 ticks; the game-mode API; map replacement for hot reload | `packages/sim/src/` |
-| `content` | Theme loading and validation (manifest, characters with gameplay values, weapons, projectiles, effects), conversion of a theme into the simulation catalog (`buildCatalog`), Tiled maps (`loadMap`, `MapSource`), Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
+| `sim` | World core: `createSimulation` (entity-component stores, 60 Hz `step()`, input commands, events, named random streams, state hash); `MapData` and the collision grid (tile flags `solid`, `impassable`, `cover`; object footprints); map elements that break and burn; ASCII maps for tests; behavior registry. Movement with acceleration (Q19), sliding collision against tiles and footprints, separation between characters (Q48), actor spatial hash, segment casts and line of sight; weapon behaviors `firearm`, `flamethrower` and `thrown`, projectile behaviors `bullet`, `flame` and `grenade`; explosions, fire, damage with its source, deaths and corpses; determinism proven over 10,000 ticks; the game-mode API; map replacement for hot reload | `packages/sim/src/` |
+| `content` | Theme loading and validation (manifest with fire values and world effects, characters with gameplay values and loadouts, weapons, projectiles, effects), conversion of a theme into the simulation catalog (`buildCatalog`), Tiled maps (`loadMap`, `MapSource`), Aseprite sprite sheets, sprite conventions, animation timing, translation files, palette, content index, JSON Schemas | `packages/content/src/` |
 | `match` | `createMatchHost`: participants, inputs, bots, mode lifecycle, kills and deaths, `WorldView` | `packages/match/src/` |
 | `modes` | Game-mode API in `sim` (`GameModeDefinition`, `ModeApi`, `ModeState`); `team-elimination` (Q21, Q51) and `sandbox` (development only) | `packages/sim/src/modes/`, `packages/modes/src/` |
 | `bots` | Perception (sight, hearing, memory), navigation (A*, path smoothing), utility-AI brain (take cover, engage, reload, chase, wander; flamethrowers and grenades) with easy / normal / hard difficulty; run by the match host for `bot` participants | `packages/bots/src/` |
@@ -119,7 +119,7 @@ flowchart TD
 - ESLint import rules (`eslint.config.js`), **generated from each package's declared dependencies**, forbid imports that cross the table above: an undeclared project package, a deep import into another package's files, a Node or presentation library in a platform-agnostic package, PixiJS outside `apps/client/src/render`.
 - Test files may also import Node (to read fixtures) and the packages declared as `devDependencies`: `modes` tests run modes inside a real `match` host, which production code of `modes` may not import.
 
-## 5. Simulation core (`packages/sim`) — *implemented in milestone 1; later behaviors planned*
+## 5. Simulation core (`packages/sim`) — *implemented in milestones 1 and 2*
 
 Decision [0002](decisions/0002-simulation-presentation-split.md).
 
@@ -250,7 +250,7 @@ The same validation runs in the browser (shown in a dev overlay), on the server 
 
 `content` reads files through a `FileProvider` interface: `fetch` in the browser, the file system on the server and in tools, an in-memory map in tests.
 
-## 9. Maps — *implemented in milestone 1; zones and map elements planned*
+## 9. Maps — *implemented in milestones 1 and 2; zones planned*
 
 Decision [0008](decisions/0008-tiled-maps.md).
 
@@ -308,9 +308,9 @@ Decision [0003](decisions/0003-rendering-pixijs.md).
 
 Decisions [0004](decisions/0004-ui.md) and [0009](decisions/0009-i18n.md).
 
-- **Menus** (main menu, solo setup, settings, pause, end of match; later lobby and room code entry) are DOM, built with Preact (`src/ui/`), in a 960×540 layer scaled with the same integer factor as the canvas, using the **Press Start 2P** pixel font (OFL) at multiples of 8 px. `src/game/game-app.ts` holds the current screen and the running match; the solo setup (Q59) offers the themes and maps that suit team elimination, the side, 0–7 allied and 1–8 enemy bots (Q24), the bot difficulty and friendly fire (Q49), and remembers the last choices; `src/game/solo.ts` builds the match from them (the player is "You", bots are "Bot n", Q57). Over a match the interface lets the mouse through, except on its panels: the pause menu (Escape, Q53) and the end screen (winner, round score, kills and deaths of every participant; play again, main menu).
+- **Menus** (main menu, solo setup, settings, pause, end of match; later lobby and room code entry) are DOM, built with Preact (`src/ui/`), in a 960×540 layer scaled with the same integer factor as the canvas, using the **Press Start 2P** pixel font (OFL) at multiples of 8 px. `src/game/game-app.ts` holds the current screen and the running match; the solo setup (Q59) offers the themes and maps that suit team elimination, the side, the character (Q61), 0–7 allied and 1–8 enemy bots (Q24), the bot difficulty and friendly fire (Q49), and remembers the last choices; `src/game/solo.ts` builds the match from them (the player is "You", bots are "Bot n", Q57). Over a match the interface lets the mouse through, except on its panels: the pause menu (Escape, Q53) and the end screen (winner, round score, kills and deaths of every participant; play again, main menu).
 - **Match controller** (`src/game/match-controller.ts`): runs a session on the canvas each frame (input → session → effects, world scene, HUD), pauses on Escape, follows a living teammate after death and switches on left or right click (`src/game/spectate.ts`, Q21, Q53), and keeps the last view when the mode declares a result.
-- The **HUD** (`render/hud.ts`, exists) is drawn by PixiJS at internal resolution with the **HUD bitmap font** (decision [0014](decisions/0014-hud-bitmap-font.md): a 1-bit atlas generated from the interface font, tinted to palette colors, `render/pixel-text.ts`), so it is pixel-exact and in palette (Q58): health and its bar bottom left; rounds, reserve or "reloading" bottom right; score with faction names, round and timer, survivors per team top center; the kill feed top right (5 lines, 5 s each, the player's own lines highlighted); the mode's banner in the middle at scale 2; "watching" while spectating; names and health bars above living teammates (Q26); the crosshair replacing the system cursor. Texts come from `i18n/hud-texts.ts`, which turns a `team` parameter into the faction name.
+- The **HUD** (`render/hud.ts`, exists) is drawn by PixiJS at internal resolution with the **HUD bitmap font** (decision [0014](decisions/0014-hud-bitmap-font.md): a 1-bit atlas generated from the interface font, tinted to palette colors, `render/pixel-text.ts`), so it is pixel-exact and in palette (Q58): health and its bar bottom left; throwables left, the current weapon, then rounds, reserve, fuel or "reloading" bottom right; score with faction names, round and timer, survivors per team top center; the kill feed top right (5 lines, 5 s each, the player's own lines highlighted); the mode's banner in the middle at scale 2; "watching" while spectating; names and health bars above living teammates (Q26); the crosshair replacing the system cursor. Texts come from `i18n/hud-texts.ts`, which turns a `team` parameter into the faction name.
 - **Translations** with i18next (`src/i18n/`). UI strings in `locales/<lang>.json`; theme strings in `themes/<id>/locales/<lang>.json` (namespace `theme.<id>`). The language list comes from `/content-index.json`, which the Vite content plugin (`apps/client/vite/`) builds from the files found; the language's display name lives inside its file. Missing keys fall back to English and are reported by `check:i18n`.
 - *Rule for milestones 1 and 3:* **the server and the simulation never produce text**: they emit translation keys with parameters (`killfeed.eliminated` + killer id, victim id, weapon id); the client resolves names in the player's language.
 - A **font coverage check** (`check:i18n`) verifies that every character used in every locale exists in the interface font and in the HUD bitmap font, and that the HUD font is up to date (`npm run assets:font`).
@@ -359,7 +359,7 @@ Decision [0012](decisions/0012-tooling.md).
 - **Validators**: `validate:themes` (themes, catalog conversion, maps), `check:i18n`, font coverage.
 - **Generated files** (`npm run schemas`, verified by `check:schemas`): editor JSON Schemas (`schemas/`), the Tiled project file (`tools/tiled/`) and the behavior reference ([`docs/reference/behaviors.md`](reference/behaviors.md)), all derived from the engine's definitions.
 - **FPS counter** (development builds only, `src/dev/fps-counter.tsx`): frames per second at the bottom of the screen, also exposed as `data-fps` for measurement scripts.
-- **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse); the test scene at `/dev/scene` (`src/dev/scene/`: a `sandbox` match on a map chosen with `?theme=<id>&map=<ref>`, by default the first map of the first theme that has one, the player in team 1 against three bots in team 2 who come looking for it, everyone back 2 seconds after dying; shots, impacts and hits show their effects). Planned: collision and area-of-interest debug drawing.
+- **Dev pages** in the client (development builds only): the sprite viewer at `/dev/sprites` (`src/dev/sprite-viewer/`: every sprite sheet of every theme, its animations, the 8 directions with mirroring, the weapon following the mouse); the test scene at `/dev/scene` (`src/dev/scene/`: a `sandbox` match on a map chosen with `?theme=<id>&map=<ref>`, by default the first map of the first theme that has one, the player in team 1 against bots split between the teams, everyone back 2 seconds after dying; the URL also takes `participants=<n>`, `character=<i>`, `at=<x>,<y>` and `stress`, the load of C2.7: 32 flamethrower troopers firing without end and 10 explosions at once every second). Planned: collision and area-of-interest debug drawing.
 - **CI** (GitHub Actions): `npm run check` (type-check, lint, tests, validators, palette check), the REUSE check and the Playwright smoke test, on every push.
 
 ## 17. Testing

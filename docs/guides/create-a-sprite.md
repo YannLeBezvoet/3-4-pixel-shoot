@@ -63,7 +63,7 @@ Quick start: the script `tools/aseprite/new-character.lua` creates a 48×48 file
 ## 6. Projectiles, effects and other sprites
 
 - **Projectiles** (bullets): draw them **pointing right**, with a `fly` tag and an `origin` slice at the projectile's tip. The game draws the sprite at the projectile's position, rotated to its direction.
-- **Effects** (muzzle flash, blood, impacts, explosions, flames): a `play` tag, usually with a repeat count of 1. Set an `origin` slice where the effect attaches: the base of the flash for a muzzle flash drawn pointing right, the center for an impact or an explosion. A theme lists its effects in `effects.json` ([add a theme](add-a-theme.md)).
+- **Effects** (muzzle flash, blood, impacts, explosions, flames): a `play` tag, usually with a repeat count of 1. Set an `origin` slice where the effect attaches: the base of the flash for a muzzle flash drawn pointing right, the center for an impact or an explosion. A theme lists its effects in `effects.json` ([add a theme](add-a-theme.md)). A flame on what burns stands on its `origin` (the bottom center without one) and loops. A blood decal or pool is painted on the ground: each frame of its `play` tag is one variant, picked at random, so draw flat stains and center the `origin`.
 
 ## 7. Export
 

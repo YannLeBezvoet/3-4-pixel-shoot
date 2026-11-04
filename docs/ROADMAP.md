@@ -10,7 +10,7 @@
 |---|---|---|
 | M0 | Foundations | **Done** — version 0.0.0, merged into `main` and pushed on 2026-11-03 (C0.10 to be checked by the owner) |
 | M1 | Playable solo | **Done** — version 0.1.0, merged into `main` and pushed on 2026-11-03 |
-| M2 | Combat | **In progress** — plan and questions Q61–Q70 approved by the owner on 2026-11-04 |
+| M2 | Combat | **Done** — version 0.2.0 on branch `milestone/2-combat`, awaiting the owner's decision to merge; Q71–Q76 and decision 0016 await confirmation |
 | M3 | Multiplayer | Not started |
 | M4 | Civilians, 64 participants, match settings | Not started |
 | M5 | Further modes, procedural maps, vehicles, audio | Not started |
@@ -189,7 +189,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 
 ### Tasks (one or a few commits each)
 
-*Approved by the owner on 2026-11-04.* Gameplay first (testable headless), then content and art, then presentation, bots and measurements. Each commit updates the docs it affects.
+*Approved by the owner on 2026-11-04, done the same day.* Gameplay first (testable headless), then content and art, then presentation, bots and measurements. Each commit updates the docs it affects.
 
 #### Simulation (`sim`)
 
@@ -227,14 +227,22 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 
 ### Success criteria
 
-- [ ] **C2.1** Cover: bullets pass cover per Q29 and Q72 (all from a weapon reaching over it, the object's chance otherwise); characters never cross it (tests). *(Reworded after the owner changed Q29 on 2026-11-03.)*
-- [ ] **C2.2** Grenades: damage decreases with distance as parameterized; a character behind a wall takes no damage; a grenade thrown at a wall bounces back (tests).
-- [ ] **C2.3** Destructibles: an element with `hp = N` is destroyed by exactly the damage that reaches N; it switches to its destroyed variant and stops blocking movement and bullets; the renderer updates the tile chunk (tests + dev scene).
-- [ ] **C2.4** Fire spreads only across flammable tiles and objects, burns out, and is deterministic for a given seed; burning characters take the configured damage over time (tests).
-- [ ] **C2.5** Bots: in a scenario test, a bot under fire reaches a position where cover or a solid obstacle stops its attacker's bullets within 3 seconds in ≥ 90 % of seeded runs. *(Reworded per Q68: under Q29 cover does not hide, it stops bullets.)*
-- [ ] **C2.6** Blood decals persist until the end of the round; the blood setting changes effects as specified (manual check + unit test on the effect factory).
-- [ ] **C2.7** Performance: 60 FPS on the reference machine with 32 participants, 200 flame particles and 10 simultaneous explosions (measured on a development page, Q69).
-- [ ] **C2.8** Every new Tiled property is available as a typed field in the Tiled project file, and the generated behavior reference is up to date (CI check).
+- [x] **C2.1** Cover: bullets pass cover per Q29 and Q72 (all from a weapon reaching over it, the object's chance otherwise); characters never cross it (tests). *(Reworded after the owner changed Q29 on 2026-11-03.)*
+  **Result:** `packages/sim/src/systems/combat.test.ts`: bullets from a weapon reaching over sandbags all pass, the others pass with the object's chance. `systems/movement.test.ts`: over 10,000 ticks of random walking among obstacles, sandbags included, no character overlaps one.
+- [x] **C2.2** Grenades: damage decreases with distance as parameterized; a character behind a wall takes no damage; a grenade thrown at a wall bounces back (tests).
+  **Result:** `systems/explosions.test.ts`: on a blast of radius 144 and damage 120, 120 at the center, 60 at 72 px, 0 at the radius; a character behind a wall or cover takes nothing. `behaviors/projectiles/grenade.test.ts`: a grenade thrown past a wall stays on the thrower's side and goes off there.
+- [x] **C2.3** Destructibles: an element with `hp = N` is destroyed by exactly the damage that reaches N; it switches to its destroyed variant and stops blocking movement and bullets; the renderer updates the tile chunk (tests + dev scene).
+  **Result:** `systems/map-elements.test.ts`: a wall of 60 hit points stands at 20 and falls at the third 20-point bullet, then lets movement, bullets and sight through, and crates lose their collision. Dev scene `/dev/scene?theme=vietnam&at=54,27&character=1&participants=1`: screenshots show a hut's walls and roof replaced by their burnt variants and its floor uncovered, and crates and barrels gone.
+- [x] **C2.4** Fire spreads only across flammable tiles and objects, burns out, and is deterministic for a given seed; burning characters take the configured damage over time (tests).
+  **Result:** `systems/fire.test.ts`: fire crosses a patch of tall grass, never the one-tile gap to the next, and every fire ends; equal seeds give equal hashes and equal fires, different seeds different ones; a burning character loses exactly 24 hit points in 3 s, the kill going to whoever started the fire.
+- [x] **C2.5** Bots: in a scenario test, a bot under fire reaches a position where cover or a solid obstacle stops its attacker's bullets within 3 seconds in ≥ 90 % of seeded runs. *(Reworded per Q68: under Q29 cover does not hide, it stops bullets.)*
+  **Result:** `packages/bots/src/cover.test.ts`, 30 seeded runs per scenario, from the open under a clear line of fire: 30 of 30 reach cover (longest 1.33 s), 30 of 30 reach a solid obstacle (longest 0.3 s). Without the *take cover* action, both tests fail.
+- [x] **C2.6** Blood decals persist until the end of the round; the blood setting changes effects as specified (manual check + unit test on the effect factory).
+  **Result:** `apps/client/src/render/blood.test.ts` covers the three settings. In a solo match in Chromium with the player idle, counting blood pixels on screenshots: blood appears at each death, stays until the end of the round and is gone at the next, three rounds in a row (2,172 → 1,084 → 0 at the new round). Stains and pools checked on a screenshot of `/dev/scene`.
+- [x] **C2.7** Performance: 60 FPS on the reference machine with 32 participants, 200 flame particles and 10 simultaneous explosions (measured on a development page, Q69).
+  **Result:** `/dev/scene?theme=vietnam&stress&at=24,30`, headless Chromium on the reference machine's AMD Radeon RX 5700 XT (ANGLE, OpenGL 4.6), 1920×1080, frames timed for 20 s: 32 participants, 200 to 233 flames in the air, 10 explosions at once every second: **60.0 FPS**, frame time p50 16.7 ms, p99 16.8 ms, longest 16.8 ms, no frame over 18.2 ms. The same with 32 participants in a normal fight.
+- [x] **C2.8** Every new Tiled property is available as a typed field in the Tiled project file, and the generated behavior reference is up to date (CI check).
+  **Result:** `tools/src/schemas/schemas.test.ts` checks every property in the generated Tiled project file, and `npm run check` (`check:schemas`) fails when the project file, the JSON Schemas or `docs/reference/behaviors.md` are out of date. The reference now lists the map element properties.
 
 ---
 

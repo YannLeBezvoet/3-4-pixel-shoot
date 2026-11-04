@@ -10,9 +10,9 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 
 - **Milestone 0 (Foundations) done**: version 0.0.0. Criteria results: [docs/ROADMAP.md](docs/ROADMAP.md#m0--foundations); C0.10 (Aseprite) awaits the owner's check.
 - **Milestone 1 (playable solo) done**: version 0.1.0, merged into `main` and pushed on 2026-11-03. Criteria results: [ROADMAP](docs/ROADMAP.md#m1--playable-solo).
-- **In progress:** milestone 2 (combat), branch `milestone/2-combat`. Its detailed plan ([ROADMAP M2 tasks](docs/ROADMAP.md#m2--combat)) and questions Q61–Q70 were approved by the owner on 2026-11-04.
-- Done ahead of the M2 plan on the owner's request: sandbags as tile objects, drawn below characters (`low`, Q71) and acting as cover (Q29 changed, Q72).
-- What exists today: [ARCHITECTURE §0](docs/ARCHITECTURE.md#0-what-exists-end-of-milestone-1).
+- **Milestone 2 (combat) done**: version 0.2.0, on branch `milestone/2-combat`, not merged. Criteria results: [ROADMAP](docs/ROADMAP.md#m2--combat). The owner decides about merging into `main` and pushing.
+- **Awaiting the owner:** Q71–Q76 ([OPEN_QUESTIONS](docs/OPEN_QUESTIONS.md#open)), decision [0016](docs/decisions/0016-map-elements.md), then the plan of milestone 3.
+- What exists today: [ARCHITECTURE §0](docs/ARCHITECTURE.md#0-what-exists-end-of-milestone-2).
 
 ## Where to find what
 
@@ -69,7 +69,7 @@ Node.js ≥ 24 (see `.nvmrc`). Run from the repository root.
 | `npm run schemas` / `check:schemas` | Regenerate / verify the generated files: `schemas/*.json`, the Tiled project file, `docs/reference/behaviors.md` (run after changing a Zod schema, a behavior or a map property) |
 | `npm run sprites:export [-- --watch]` | Export every `.aseprite` file (needs `ASEPRITE_PATH`) |
 | `npm run assets:placeholders` / `assets:report` | (Re)generate placeholder art; list placeholders still in use |
-| `npm run bench:sim [-- --rounds N]` | Headless bot-only rounds on the Vietnam map: round endings, blind shots, tick time (default 100 rounds, about 15 s) |
+| `npm run bench:sim [-- --rounds N]` | Headless bot-only rounds on the Vietnam map: round endings, blind shots, grenades, fires, tick time (default 100 rounds, about 40 s) |
 | `npm run assets:font` | Regenerate the HUD bitmap font from the interface font (decision 0014) |
 | `npm run check:i18n` | Key parity with English, `{{variables}}`, font coverage of every text, HUD font up to date |
 | `npm run check` | **Everything CI runs** except the browser smoke test (`.github/workflows/check.yml` also runs REUSE and `test:e2e`). Must pass before every commit |

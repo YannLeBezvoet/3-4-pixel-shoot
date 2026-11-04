@@ -46,3 +46,4 @@ What becomes easier, what becomes harder, what must be watched.
 | [0013](0013-licensing.md) | MIT for code, CC BY 4.0 for assets | Accepted |
 | [0014](0014-hud-bitmap-font.md) | HUD bitmap font generated from the interface font | Accepted |
 | [0015](0015-browser-smoke-tests.md) | Browser smoke tests with Playwright, outside `npm run check` | Accepted |
+| [0016](0016-map-elements.md) | Map elements as Tiled properties over an immutable map | Proposed |
