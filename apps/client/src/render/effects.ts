@@ -42,6 +42,7 @@ function cycleOf({ sheet }: LoadedSheet): number {
 
 export class Effects {
   readonly #layer: Container;
+  readonly #above: Container;
   readonly #textures: SheetTextures;
   readonly #effects: Effect[] = [];
   /** Flames on map elements, by element key. */
@@ -50,14 +51,23 @@ export class Effects {
   /** Picks stains; presentation only, so it needs no seed from the simulation. */
   readonly #random = createRng('decals');
 
-  constructor(layer: Container, textures: SheetTextures, decals: DecalLayer) {
+  /** `above` holds the flames of what burns over the world layer: roofs. */
+  constructor(layer: Container, above: Container, textures: SheetTextures, decals: DecalLayer) {
     this.#layer = layer;
+    this.#above = above;
     this.#textures = textures;
     this.#decals = decals;
   }
 
   /** Starts the effects of a tick's events. `view` is the tick the events belong to. */
-  play(events: readonly SimEvent[], view: WorldView, looks: ThemeLooks, blood: BloodSetting): void {
+  play(
+    events: readonly SimEvent[],
+    view: WorldView,
+    looks: ThemeLooks,
+    blood: BloodSetting,
+    /** Whether something overhead hides this point of the ground. */
+    covered: (x: number, y: number) => boolean,
+  ): void {
     for (const event of events) {
       if (event.type === 'shotFired')
         this.#add(looks.fireEffect(event.weapon), event.x, event.y, event.z, event.angle);
@@ -94,6 +104,7 @@ export class Effects {
         const look = looks.worldEffect('fire');
         const fire = this.#add(look, event.x, event.y + FLAME_BASE, 0, 0, true);
         if (fire) this.#fires.set(event.element, fire);
+        if (fire && covered(event.x, event.y)) this.#above.addChild(fire.sprite);
       } else if (event.type === 'fireEnded') this.#stopFire(event.element);
       else if (event.type === 'elementDestroyed') {
         const { x, y, width, height } = event.box;

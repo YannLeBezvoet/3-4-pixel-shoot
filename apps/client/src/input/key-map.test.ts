@@ -22,6 +22,7 @@ describe('moveFromKeys', () => {
 
   it('knows which keys belong to the game', () => {
     expect(isGameKey('KeyR')).toBe(true);
+    expect(isGameKey('KeyG')).toBe(true);
     expect(isGameKey('ArrowUp')).toBe(true);
     expect(isGameKey('KeyT')).toBe(false);
   });

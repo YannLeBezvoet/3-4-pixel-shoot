@@ -21,8 +21,9 @@
     "spriteViewer": "Visionneuse de sprites",
     "scene": {
       "title": "Scène de test",
-      "controls": "Déplacement : ZQSD (WASD en QWERTY) ou flèches. Viser et tirer : souris. Recharger : R.",
-      "noMap": "Aucun thème n'a encore de carte."
+      "controls": "Déplacement : ZQSD (WASD en QWERTY) ou flèches. Viser et tirer : souris. Recharger : R. Lancer : bouton droit ou G.",
+      "noMap": "Aucun thème n'a encore de carte.",
+      "flames": "{{count}} flammes en l'air"
     },
     "back": "Retour",
     "viewer": {
@@ -48,6 +49,8 @@
   "hud": {
     "reloading": "Rechargement",
     "ammoReserve": "{{rounds}} / {{spare}}",
+    "fuel": "Carburant {{percent}} %",
+    "throwables": "{{name}} x{{count}}",
     "score": "{{team1}} {{score1}} - {{score2}} {{team2}}",
     "round": "Manche {{round}}",
     "survivors": "Debout : {{team1}} contre {{team2}}",
@@ -96,6 +99,7 @@
     "theme": "Thème",
     "map": "Carte",
     "side": "Votre camp",
+    "character": "Votre personnage",
     "allies": "Bots alliés",
     "enemies": "Bots ennemis",
     "participants_one": "{{count}} participant",

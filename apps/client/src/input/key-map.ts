@@ -15,11 +15,13 @@ const MOVE_KEYS: Readonly<Record<string, Vec2>> = {
 };
 
 export const RELOAD_KEY = 'KeyR';
+/** An alternative to the right mouse button (Q62). */
+export const THROW_KEY = 'KeyG';
 export const PAUSE_KEY = 'Escape';
 
 /** Keys the game handles, so the browser does not also act on them (scrolling). */
 export function isGameKey(code: string): boolean {
-  return code in MOVE_KEYS || code === RELOAD_KEY;
+  return code in MOVE_KEYS || code === RELOAD_KEY || code === THROW_KEY;
 }
 
 /** Movement direction from the held keys: length 1, or zero when they cancel out. */

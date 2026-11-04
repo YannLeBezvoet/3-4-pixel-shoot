@@ -1,7 +1,7 @@
 import type { Theme } from '@pixel-shoot/content';
 import { asciiMap, testCatalog } from '@pixel-shoot/sim';
 import { describe, expect, it, vi } from 'vitest';
-import { clampBots, createSoloMatch, soloMaps } from './solo';
+import { botCharacter, charactersOf, clampBots, createSoloMatch, soloMaps } from './solo';
 
 // The theme's catalog is the test catalog: one character per faction is enough here.
 vi.mock('@pixel-shoot/content', () => ({ buildCatalog: () => testCatalog() }));
@@ -43,6 +43,32 @@ describe('solo setup', () => {
     expect(clampBots(-1, 3.4)).toEqual({ allies: 0, enemies: 3 });
   });
 
+  it('lists the characters of a side in the order of the theme (Q61)', () => {
+    const both = {
+      ...theme,
+      characters: new Map([
+        ['a', { id: 'a', faction: 'blue' }],
+        ['b', { id: 'b', faction: 'red' }],
+        ['c', { id: 'c', faction: 'blue' }],
+      ]),
+    } as unknown as Theme;
+    expect(charactersOf(both, 1)).toEqual(['a', 'c']);
+    expect(charactersOf(both, 2)).toEqual(['b']);
+    expect(() => charactersOf({ ...theme, characters: new Map() }, 1)).toThrow('no character');
+  });
+
+  it('makes one bot in four the second character, when there is one (Q61)', () => {
+    expect([0, 1, 2, 3, 4, 7].map((i) => botCharacter(['rifle', 'flame'], i))).toEqual([
+      'rifle',
+      'rifle',
+      'rifle',
+      'flame',
+      'rifle',
+      'flame',
+    ]);
+    expect(botCharacter(['only'], 3)).toBe('only');
+  });
+
   it('builds the match: the player on the chosen side, named bots on both sides', () => {
     const { host, local } = createSoloMatch(
       theme,
@@ -51,6 +77,7 @@ describe('solo setup', () => {
         themeId: 't',
         mapRef: 'maps/a',
         side: 2,
+        character: 0,
         allies: 2,
         enemies: 3,
         difficulty: 'hard',

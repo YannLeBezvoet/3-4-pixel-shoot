@@ -26,6 +26,11 @@ export interface MapView {
   destroyObject(id: number, remains: TileVisual | undefined): void;
   /** Bakes the chunks changed since the last call. */
   flush(): void;
+  /**
+   * Which things stand over a point of the ground within a distance: whether an overhead tile
+   * does, and the tall objects whose picture covers it from in front.
+   */
+  covering(x: number, y: number, distance: number): { overhead: boolean; objects: Sprite[] };
   /** Shows only the chunks that touch the visible rectangle (world pixels). */
   cull(left: number, top: number, width: number, height: number): void;
   destroy(): void;
@@ -128,8 +133,38 @@ export function createMapView(
         low.addChild(sprite);
       } else sprite.visible = false;
     },
+    covering(x, y, distance) {
+      const left = Math.floor((x - distance) / TILE_SIZE);
+      const right = Math.floor((x + distance) / TILE_SIZE);
+      const top = Math.floor((y - distance) / TILE_SIZE);
+      const bottom = Math.floor((y + distance) / TILE_SIZE);
+      let overhead = false;
+      map.layers.forEach((layer, index) => {
+        if (layer.role !== 'overhead' || overhead) return;
+        for (let ty = Math.max(0, top); ty <= Math.min(bottom, map.height - 1); ty++)
+          for (let tx = Math.max(0, left); tx <= Math.min(right, map.width - 1); tx++) {
+            const cx = tx - (tx % CHUNK);
+            const cy = ty - (ty % CHUNK);
+            const sprites = chunks.get(chunkKey(index, cx, cy))?.sprites;
+            if (sprites?.has(ty * map.width + tx)) overhead = true;
+          }
+      });
+      const tall = objects.filter(
+        (sprite) =>
+          sprite.visible &&
+          sprite.parent !== low &&
+          sprite.y > y &&
+          sprite.y - sprite.height < y + distance &&
+          Math.abs(sprite.x - x) < sprite.width / 2 + distance,
+      );
+      return { overhead, objects: tall };
+    },
     flush() {
-      for (const { container } of dirty) container.updateCacheTexture();
+      for (const { container, sprites } of dirty) {
+        // The last tile of a chunk may have burnt away: there is nothing left to bake.
+        if (sprites.size > 0) container.updateCacheTexture();
+        else container.cacheAsTexture(false);
+      }
       dirty.clear();
     },
     cull(left, top, width, height) {

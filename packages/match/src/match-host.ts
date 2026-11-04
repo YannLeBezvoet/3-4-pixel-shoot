@@ -61,6 +61,8 @@ export interface WorldView {
 
 export interface MatchHost {
   readonly map: MapData;
+  /** The simulation itself, for development pages and tests. A match never needs it. */
+  readonly simulation: Simulation;
   /** Swaps the map in place (development hot reload): collision, bot navigation, stuck characters. */
   replaceMap(map: MapData): void;
   readonly tick: number;
@@ -157,6 +159,7 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
   }
 
   return {
+    simulation: sim,
     get map() {
       return sim.map;
     },

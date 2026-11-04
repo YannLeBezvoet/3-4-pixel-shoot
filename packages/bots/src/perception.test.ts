@@ -31,6 +31,7 @@ function actor(id: number, team: number, x: number, y: number, alive = true): Ac
     rounds: 20,
     spareMagazines: null,
     reloadLeft: 0,
+    fuel: undefined,
     throwable: undefined,
     throwables: 0,
     burning: false,

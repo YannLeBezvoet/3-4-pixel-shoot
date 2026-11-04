@@ -4,8 +4,11 @@ import { useTranslator } from '../../ui/translator-context';
 
 export function ScenePage({
   status,
+  flames,
 }: {
   status: ReadonlySignal<'loading' | 'no-map' | 'playing'>;
+  /** Flames in flight, under stress. */
+  flames: ReadonlySignal<number | undefined>;
 }) {
   const { t } = useTranslator();
   return (
@@ -16,6 +19,11 @@ export function ScenePage({
           <p>{t('dev.scene.noMap')}</p>
         ) : (
           <p>{t('dev.scene.controls')}</p>
+        )}
+        {flames.value !== undefined && (
+          <p class="scene-flames" data-flames={flames.value}>
+            {t('dev.scene.flames', { count: flames.value })}
+          </p>
         )}
       </aside>
     </main>

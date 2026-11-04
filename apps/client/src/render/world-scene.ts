@@ -4,7 +4,7 @@
 // interpolated between the last two ticks; the camera keeps the followed character at the
 // exact center of the screen (Q20) and snaps to whole pixels.
 import type { EntityId, MapData } from '@pixel-shoot/sim';
-import type { Renderer } from 'pixi.js';
+import type { Renderer, Sprite } from 'pixi.js';
 import { Container } from 'pixi.js';
 import type { SimEvent } from '@pixel-shoot/sim';
 import type { SessionFrame } from '../session/session';
@@ -17,11 +17,16 @@ import { ImageTextures } from './image-textures';
 import type { MapView } from './map-view';
 import { createMapView } from './map-view';
 import { INTERNAL_HEIGHT, INTERNAL_WIDTH } from './screen-layout';
+import type { SeeThrough } from './see-through';
+import { SEE_THROUGH_RADIUS, createSeeThrough } from './see-through';
 import type { SheetTextures } from './sheet-textures';
 import type { ThemeLooks } from './theme-looks';
 
 /** Speed above which a character plays its walk animation, in pixels per second. */
 const WALKING_SPEED = 20;
+
+/** Height of the middle of a character above its ground point: the center of the see-through. */
+const CHEST_HEIGHT = 20;
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -39,6 +44,8 @@ export class WorldScene {
   readonly #corpses = new Container();
   readonly #world = new Container({ sortableChildren: true });
   readonly #overhead = new Container();
+  /** Flames of what burns overhead. */
+  readonly #above = new Container();
   readonly #sheets: SheetTextures;
   readonly #images = new ImageTextures();
   #map: MapView | undefined;
@@ -50,6 +57,9 @@ export class WorldScene {
   readonly #effects: Effects;
   readonly #decals: DecalLayer;
   readonly #blood: () => BloodSetting;
+  readonly #seeThrough: SeeThrough = createSeeThrough();
+  /** Objects cut by the see-through this frame. */
+  #cutObjects: readonly Sprite[] = [];
   /** Round of the last frame: blood stays until the next one (Q32). */
   #round: number | undefined;
   /** Top-left corner of the screen in world pixels. */
@@ -59,7 +69,7 @@ export class WorldScene {
     this.#sheets = sheets;
     this.#blood = blood;
     this.#decals = new DecalLayer(renderer);
-    this.#effects = new Effects(this.#world, sheets, this.#decals);
+    this.#effects = new Effects(this.#world, this.#above, sheets, this.#decals);
     this.root.addChild(
       this.#ground,
       this.#decals.root,
@@ -67,6 +77,7 @@ export class WorldScene {
       this.#corpses,
       this.#world,
       this.#overhead,
+      this.#above,
     );
   }
 
@@ -78,7 +89,13 @@ export class WorldScene {
       this.#decals.clear();
     }
     if (this.#looks && events.length > 0)
-      this.#effects.play(events, frame.current, this.#looks, this.#blood());
+      this.#effects.play(
+        events,
+        frame.current,
+        this.#looks,
+        this.#blood(),
+        (x, y) => this.#map?.covering(x, y, 0).overhead ?? false,
+      );
   }
 
   #changeMap(event: SimEvent): void {
@@ -195,9 +212,25 @@ export class WorldScene {
         y: Math.round(focus.y) - INTERNAL_HEIGHT / 2,
       };
     this.root.position.set(-this.#camera.x, -this.#camera.y);
+    if (focus) this.#cutThrough(focus.x, focus.y);
     this.#map?.flush();
     this.#map?.cull(this.#camera.x, this.#camera.y, INTERNAL_WIDTH, INTERNAL_HEIGHT);
     this.#decals.cull(this.#camera.x, this.#camera.y, INTERNAL_WIDTH, INTERNAL_HEIGHT);
+  }
+
+  /** Opens a window through what covers the followed character (Q34). */
+  #cutThrough(x: number, y: number): void {
+    const center = y - CHEST_HEIGHT;
+    const covering = this.#map?.covering(x, center, SEE_THROUGH_RADIUS);
+    const screen = this.toScreen(Math.round(x), Math.round(center));
+    this.#seeThrough.center(screen.x, screen.y);
+    const filters = [this.#seeThrough.filter];
+    this.#overhead.filters = covering?.overhead ? filters : [];
+    for (const sprite of this.#cutObjects)
+      if (!sprite.destroyed && !covering?.objects.includes(sprite)) sprite.filters = [];
+    for (const sprite of covering?.objects ?? [])
+      if (!this.#cutObjects.includes(sprite)) sprite.filters = filters;
+    this.#cutObjects = covering?.objects ?? [];
   }
 
   destroy(): void {

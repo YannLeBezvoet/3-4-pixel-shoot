@@ -21,8 +21,9 @@
     "spriteViewer": "Sprite viewer",
     "scene": {
       "title": "Test scene",
-      "controls": "Move: WASD (ZQSD on AZERTY) or arrows. Aim and fire: mouse. Reload: R.",
-      "noMap": "No theme has a map yet."
+      "controls": "Move: WASD (ZQSD on AZERTY) or arrows. Aim and fire: mouse. Reload: R. Throw: right button or G.",
+      "noMap": "No theme has a map yet.",
+      "flames": "{{count}} flames in the air"
     },
     "back": "Back",
     "viewer": {
@@ -46,6 +47,8 @@
   "hud": {
     "reloading": "Reloading",
     "ammoReserve": "{{rounds}} / {{spare}}",
+    "fuel": "Fuel {{percent}}%",
+    "throwables": "{{name}} x{{count}}",
     "score": "{{team1}} {{score1}} - {{score2}} {{team2}}",
     "round": "Round {{round}}",
     "survivors": "Standing: {{team1}} vs {{team2}}",
@@ -94,6 +97,7 @@
     "theme": "Theme",
     "map": "Map",
     "side": "Your side",
+    "character": "Your character",
     "allies": "Allied bots",
     "enemies": "Enemy bots",
     "participants_one": "{{count}} participant",

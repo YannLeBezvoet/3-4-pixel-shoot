@@ -1,10 +1,10 @@
-// Solo setup (Q59): theme, map (only maps that suit team elimination), side, allied and enemy
-// bots (16 participants at most, Q24), bot difficulty and friendly fire (Q49).
+// Solo setup (Q59): theme, map (only maps that suit team elimination), side, character (Q61),
+// allied and enemy bots (16 participants at most, Q24), bot difficulty and friendly fire (Q49).
 import type { DifficultyLevel } from '@pixel-shoot/bots';
 import { DIFFICULTY_LEVELS } from '@pixel-shoot/bots';
 import { useSignal } from '@preact/signals';
 import type { SoloChoices } from '../game/solo';
-import { SOLO_LIMITS, clampBots, soloMaps } from '../game/solo';
+import { SOLO_LIMITS, charactersOf, clampBots, soloMaps } from '../game/solo';
 import { ChoiceGroup, Stepper } from './choice-group';
 import { useGame } from './game-context';
 import { useTranslator } from './translator-context';
@@ -23,6 +23,7 @@ export function SoloSetup() {
         ? saved.mapRef!
         : soloMaps(initialTheme.maps)[0]!,
       side: saved.side ?? 1,
+      character: saved.character ?? 0,
       ...clampBots(saved.allies ?? 3, saved.enemies ?? 4),
       difficulty: saved.difficulty ?? 'normal',
       friendlyFire: saved.friendlyFire ?? false,
@@ -30,6 +31,7 @@ export function SoloSetup() {
   );
   const current = choices.value;
   const assets = current && game.store.themes.value.get(current.themeId);
+  const playable = current && assets ? charactersOf(assets.theme, current.side) : [];
   const update = (change: Partial<SoloChoices>) => {
     if (current) choices.value = { ...current, ...change };
   };
@@ -71,6 +73,20 @@ export function SoloSetup() {
             value={current.side}
             onChange={(side) => update({ side: side === 2 ? 2 : 1 })}
           />
+          {playable.length > 1 && (
+            <ChoiceGroup
+              legend={t('solo.character')}
+              options={playable.map((id, i) => ({
+                value: i,
+                label: translator.themeText(
+                  assets.theme,
+                  assets.theme.characters.get(id)?.nameKey ?? id,
+                ),
+              }))}
+              value={Math.min(current.character, playable.length - 1)}
+              onChange={(character) => update({ character })}
+            />
+          )}
           <div class="row">
             <Stepper
               legend={t('solo.allies')}

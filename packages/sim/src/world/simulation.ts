@@ -7,6 +7,7 @@ import type { SimEvent } from '../core/events';
 import { StateHasher } from '../core/hash';
 import type { InputCommand } from '../core/input';
 import { NEUTRAL_INPUT } from '../core/input';
+import { msToTicks } from '../core/time';
 import { createFirearmState } from '../behaviors/weapons/firearm';
 import { createFlamethrowerState } from '../behaviors/weapons/flamethrower';
 import { createThrowable } from '../behaviors/weapons/thrown';
@@ -69,6 +70,8 @@ export interface ActorState {
   readonly spareMagazines: number | null;
   /** Ticks left in the current reload; 0 when not reloading. */
   readonly reloadLeft: number;
+  /** Share of a flamethrower's tank left, from 0 to 1; undefined for other weapons. */
+  readonly fuel: number | undefined;
   /** Thrown weapon carried (weapon id in the catalog), if any. */
   readonly throwable: string | undefined;
   /** How many are left in this life. */
@@ -116,6 +119,8 @@ export interface Simulation {
   freeSpawnSpots(team: number, radius: number): { x: number; y: number }[];
   /** Sets off an explosion during the next step (development scenes, tests). */
   explode(explosion: ExplosionRequest): void;
+  /** Moves an actor at once (development scenes). */
+  teleport(id: EntityId, x: number, y: number): void;
   /** Advances one tick. Actors missing from `inputs` stand still and keep their aim. */
   step(inputs?: ReadonlyMap<EntityId, InputCommand>): readonly SimEvent[];
   actor(id: EntityId): ActorState | undefined;
@@ -165,6 +170,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
     if (!actor || !position || !velocity || !body || !health || !weapon) return undefined;
     const { team, character, aim } = actor;
     const throwable = world.throwable.get(id);
+    const stats = world.catalog.weapons.get(weapon.weapon);
     return {
       id,
       team,
@@ -182,6 +188,10 @@ export function createSimulation(options: SimulationOptions): Simulation {
       rounds: weapon.rounds,
       spareMagazines: weapon.spareMagazines,
       reloadLeft: weapon.reloadLeft,
+      fuel:
+        stats?.behavior === 'flamethrower'
+          ? weapon.rounds / msToTicks(stats.params.tankMs)
+          : undefined,
       throwable: throwable?.weapon,
       throwables: throwable?.count ?? 0,
       burning: world.burning.has(id),
@@ -292,6 +302,14 @@ export function createSimulation(options: SimulationOptions): Simulation {
 
     explode(explosion) {
       world.explosions.push(explosion);
+    },
+
+    teleport(id, x, y) {
+      const position = world.position.get(id);
+      if (!position) return;
+      position.x = x;
+      position.y = y;
+      indexActors(world);
     },
 
     step(inputs = new Map()) {

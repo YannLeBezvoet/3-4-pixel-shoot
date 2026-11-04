@@ -48,6 +48,7 @@ describe('createSimulation', () => {
       rounds: 20,
       spareMagazines: null,
       reloadLeft: 0,
+      fuel: undefined,
       throwable: 'frag',
       throwables: 2,
       burning: false,
