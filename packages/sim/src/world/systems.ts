@@ -3,7 +3,7 @@
 import { vec2 } from '@pixel-shoot/shared';
 import type { EntityId } from '../core/entities';
 import type { InputCommand } from '../core/input';
-import { sanitizeInput } from '../core/input';
+import { NEUTRAL_INPUT, sanitizeInput } from '../core/input';
 import { projectiles, weapons } from '../systems/combat';
 import { damage } from '../systems/damage';
 import { explosions } from '../systems/explosions';
@@ -23,7 +23,7 @@ export function applyInputs(world: WorldState, inputs: ReadonlyMap<EntityId, Inp
     actor.input =
       clean && !world.frozen
         ? clean
-        : { move: vec2.ZERO, aim: clean?.aim ?? actor.aim, buttons: 0 };
+        : { ...NEUTRAL_INPUT, move: vec2.ZERO, aim: clean?.aim ?? actor.aim };
     actor.aim = actor.input.aim;
   }
 }

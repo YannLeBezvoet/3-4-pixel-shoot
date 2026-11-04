@@ -27,6 +27,15 @@ export type SimEvent =
       readonly projectile: EntityId | undefined;
     }
   | {
+      /** A thrown weapon left the hands. (x, y) is the thrower's ground point. */
+      readonly type: 'thrown';
+      readonly thrower: EntityId;
+      readonly weapon: string;
+      readonly x: number;
+      readonly y: number;
+      readonly projectile: EntityId;
+    }
+  | {
       readonly type: 'reloadStarted';
       readonly entity: EntityId;
       readonly weapon: string;

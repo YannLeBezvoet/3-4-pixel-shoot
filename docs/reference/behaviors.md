@@ -22,6 +22,16 @@ A gun firing projectiles from a magazine, with a rate of fire, spread and reload
 | `reloadMs` | whole number ≥ 0 | required | Reload duration in milliseconds. |
 | `reserveMagazines` | whole number ≥ 0 or `null` | `null` | Spare magazines per life; null means unlimited. A reload uses one, and the rounds left in the old magazine are lost. |
 
+### `thrown`
+
+A throwable carried beside the primary weapon: thrown to the cursor up to a maximum range, one per press.
+
+| Parameter | Type | Default | Meaning |
+|---|---|---|---|
+| `count` | whole number ≥ 1, ≤ 20 | `2` | How many a character carries per life. |
+| `maxRange` | number > 0, ≤ 2000 | required | Farthest throw in pixels (one tile is 48 pixels); nearer targets are reached. |
+| `cooldownMs` | whole number ≥ 0 | `600` | Shortest time between two throws. |
+
 ## Projectile behaviors
 
 Used in projectiles.json.
@@ -34,6 +44,20 @@ A projectile flying straight at gun height until it hits a character, a solid ob
 |---|---|---|---|
 | `speed` | number > 0, ≤ 6000 | required | Speed in pixels per second (one tile is 48 pixels). |
 | `range` | number > 0, ≤ 5000 | required | Distance in pixels from the muzzle after which the bullet disappears. |
+
+### `grenade`
+
+A thrown explosive: an arc that lands on its target, bounces off solid obstacles, flies over cover, rolls to a stop and explodes at the end of its fuse.
+
+| Parameter | Type | Default | Meaning |
+|---|---|---|---|
+| `speed` | number > 0, ≤ 1500 | required | Speed over the ground in pixels per second (one tile is 48 pixels). |
+| `gravity` | number > 0 | `900` | Pixels per second squared. |
+| `restitution` | number ≥ 0, ≤ 1 | `0.4` | Share of its speed a bounce keeps: 0 stops dead, 1 loses nothing. |
+| `friction` | number ≥ 0 | `400` | Slowdown while rolling, in pixels per second squared. |
+| `fuseMs` | whole number > 0 | `2500` | Time from the throw to the explosion. |
+| `blastRadius` | number > 0, ≤ 1000 | required | Pixels; nothing is hurt at this distance or beyond. |
+| `blastDamage` | whole number > 0 | required | Damage at the center, falling linearly to 0. |
 
 ## Map-element behaviors
 

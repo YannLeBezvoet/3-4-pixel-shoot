@@ -1,7 +1,9 @@
 // The gameplay content a simulation runs with, already validated and converted to engine
 // units. `content` builds it from a theme; tests build it by hand.
 import type { BulletParams } from '../behaviors/projectiles/bullet';
+import type { GrenadeParams } from '../behaviors/projectiles/grenade';
 import type { FirearmParams } from '../behaviors/weapons/firearm';
+import type { ThrownParams } from '../behaviors/weapons/thrown';
 
 export interface CharacterStats {
   readonly id: string;
@@ -10,29 +12,55 @@ export interface CharacterStats {
   /** Radius of the collider circle around the ground point, in world units. */
   readonly radius: number;
   readonly hitPoints: number;
-  /** Default weapon (Q17). */
+  /** Primary weapon (Q17, Q61). */
   readonly weapon: string;
+  /** Thrown weapon carried along with the primary one, if any (Q61). */
+  readonly throwable?: string;
   /** Height of the hands above the ground point: projectiles fly at this height. */
   readonly gunHeight: number;
   /** How far ahead of the ground point the hands hold the weapon, in world units. */
   readonly handReach: number;
 }
 
-export interface WeaponStats {
+interface WeaponCommon {
   readonly id: string;
-  readonly behavior: 'firearm';
-  /** Parameters validated by the behavior's schema, defaults applied. */
-  readonly params: FirearmParams;
   readonly projectile: string;
   /** Distance from the grip to the muzzle, in world units. Shots start at hand reach + barrel. */
   readonly barrelLength: number;
 }
 
-export interface ProjectileStats {
+/** Parameters are validated by the behavior's schema, defaults applied. */
+export interface FirearmStats extends WeaponCommon {
+  readonly behavior: 'firearm';
+  readonly params: FirearmParams;
+}
+
+export interface ThrownStats extends WeaponCommon {
+  readonly behavior: 'thrown';
+  readonly params: ThrownParams;
+}
+
+export type WeaponStats = FirearmStats | ThrownStats;
+
+export interface BulletStats {
   readonly id: string;
   readonly behavior: 'bullet';
   readonly params: BulletParams;
 }
+
+export interface GrenadeStats {
+  readonly id: string;
+  readonly behavior: 'grenade';
+  readonly params: GrenadeParams;
+}
+
+export type ProjectileStats = BulletStats | GrenadeStats;
+
+/** The projectile behavior each weapon behavior fires. */
+export const PROJECTILE_OF_WEAPON = {
+  firearm: 'bullet',
+  thrown: 'grenade',
+} as const satisfies Record<WeaponStats['behavior'], ProjectileStats['behavior']>;
 
 export interface Catalog {
   readonly characters: ReadonlyMap<string, CharacterStats>;
@@ -53,11 +81,27 @@ export function createCatalog(content: {
     weapons: byId(content.weapons),
     projectiles: byId(content.projectiles),
   };
-  for (const character of content.characters)
-    if (!catalog.weapons.has(character.weapon))
+  for (const character of content.characters) {
+    const weapon = catalog.weapons.get(character.weapon);
+    if (!weapon)
       throw new Error(`Character "${character.id}" uses unknown weapon "${character.weapon}".`);
-  for (const weapon of content.weapons)
-    if (!catalog.projectiles.has(weapon.projectile))
+    if (weapon.behavior === 'thrown')
+      throw new Error(`Character "${character.id}" has a thrown weapon as its primary weapon.`);
+    if (character.throwable === undefined) continue;
+    const throwable = catalog.weapons.get(character.throwable);
+    if (throwable?.behavior !== 'thrown')
+      throw new Error(
+        `Character "${character.id}" carries "${character.throwable}", which is not a thrown weapon.`,
+      );
+  }
+  for (const weapon of content.weapons) {
+    const projectile = catalog.projectiles.get(weapon.projectile);
+    if (!projectile)
       throw new Error(`Weapon "${weapon.id}" uses unknown projectile "${weapon.projectile}".`);
+    if (projectile.behavior !== PROJECTILE_OF_WEAPON[weapon.behavior])
+      throw new Error(
+        `Weapon "${weapon.id}" (${weapon.behavior}) cannot fire "${projectile.id}" (${projectile.behavior}).`,
+      );
+  }
   return catalog;
 }

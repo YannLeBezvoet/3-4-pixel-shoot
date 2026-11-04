@@ -4,8 +4,12 @@ export type { BehaviorDefinition, BehaviorKind, BehaviorRegistry } from './behav
 export { builtInBehaviors } from './behaviors/built-in';
 export { firearm, firearmParams } from './behaviors/weapons/firearm';
 export type { FirearmParams } from './behaviors/weapons/firearm';
+export { thrown, thrownParams } from './behaviors/weapons/thrown';
+export type { ThrownParams } from './behaviors/weapons/thrown';
 export { MAX_BULLET_SPEED, bullet, bulletParams } from './behaviors/projectiles/bullet';
 export type { BulletParams } from './behaviors/projectiles/bullet';
+export { grenade, grenadeParams } from './behaviors/projectiles/grenade';
+export type { GrenadeParams } from './behaviors/projectiles/grenade';
 export {
   BLOCKS_MOVEMENT,
   BLOCKS_PROJECTILES,
@@ -33,8 +37,15 @@ export { Button, NEUTRAL_INPUT, hasButton, sanitizeInput } from './core/input';
 export type { InputCommand } from './core/input';
 export type { EntityId } from './core/entities';
 export type { DamageSource, SimEvent, SimEventType } from './core/events';
-export { createCatalog } from './world/catalog';
-export type { Catalog, CharacterStats, ProjectileStats, WeaponStats } from './world/catalog';
+export { PROJECTILE_OF_WEAPON, createCatalog } from './world/catalog';
+export type {
+  Catalog,
+  CharacterStats,
+  FirearmStats,
+  ProjectileStats,
+  ThrownStats,
+  WeaponStats,
+} from './world/catalog';
 export { DEFAULT_RULES } from './world/state';
 export type { ExplosionRequest, Rules } from './world/state';
 export { createSimulation } from './world/simulation';

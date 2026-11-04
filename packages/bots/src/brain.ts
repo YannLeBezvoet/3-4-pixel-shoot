@@ -143,7 +143,7 @@ export class BotBrain {
       if (move.x !== 0 || move.y !== 0) this.#turnToward(Math.atan2(move.y, move.x));
       if (this.#action === 'reload') buttons |= Button.reload;
     }
-    return { move, aim: this.#aim, buttons };
+    return { move, aim: this.#aim, aimDistance: 0, buttons };
   }
 
   #think(surroundings: BotSurroundings): void {

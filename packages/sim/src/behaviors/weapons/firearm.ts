@@ -5,7 +5,7 @@ import { z } from 'zod';
 import type { EntityId } from '../../core/entities';
 import { Button, hasButton } from '../../core/input';
 import { TICK_RATE, msToTicks } from '../../core/time';
-import type { WeaponStats } from '../../world/catalog';
+import type { FirearmStats } from '../../world/catalog';
 import type { Actor, WeaponState, WorldState } from '../../world/state';
 import { resolveTrace, traceProjectile } from '../../world/trace';
 import type { BehaviorDefinition } from '../registry';
@@ -45,7 +45,7 @@ export const firearm: BehaviorDefinition<FirearmParams> = {
 };
 
 /** A full weapon at the start of a life. */
-export function createFirearmState(stats: WeaponStats): WeaponState {
+export function createFirearmState(stats: FirearmStats): WeaponState {
   return {
     weapon: stats.id,
     rounds: stats.params.magazine,
@@ -56,7 +56,7 @@ export function createFirearmState(stats: WeaponStats): WeaponState {
   };
 }
 
-function startReload(world: WorldState, id: EntityId, state: WeaponState, stats: WeaponStats) {
+function startReload(world: WorldState, id: EntityId, state: WeaponState, stats: FirearmStats) {
   const { magazine, reloadMs } = stats.params;
   if (state.reloadLeft > 0 || state.rounds >= magazine || state.spareMagazines === 0) return;
   const ticks = Math.max(1, msToTicks(reloadMs));
@@ -64,11 +64,11 @@ function startReload(world: WorldState, id: EntityId, state: WeaponState, stats:
   world.events.push({ type: 'reloadStarted', entity: id, weapon: stats.id, ticks });
 }
 
-function shoot(world: WorldState, id: EntityId, actor: Actor, stats: WeaponStats): void {
+function shoot(world: WorldState, id: EntityId, actor: Actor, stats: FirearmStats): void {
   const position = world.position.get(id);
   const character = world.catalog.characters.get(actor.character);
   const projectile = world.catalog.projectiles.get(stats.projectile);
-  if (!position || !character || !projectile) return;
+  if (!position || !character || projectile?.behavior !== 'bullet') return;
 
   const spread = degToRad(stats.params.spreadDeg);
   const angle = actor.aim + (spread > 0 ? world.random('weapons').range(-spread, spread) : 0);
@@ -140,7 +140,7 @@ export function updateFirearm(
   id: EntityId,
   actor: Actor,
   state: WeaponState,
-  stats: WeaponStats,
+  stats: FirearmStats,
 ): void {
   const { fireMode, magazine, roundsPerMinute } = stats.params;
 

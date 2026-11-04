@@ -110,7 +110,7 @@ describe('BotBrain', () => {
       events = sim.step(
         new Map([
           [bot, input],
-          [enemy, { move: { x: 0, y: 0 }, aim: 0, buttons: 1 }],
+          [enemy, { move: { x: 0, y: 0 }, aim: 0, aimDistance: 0, buttons: 1 }],
         ]),
       );
       actions.add(brain.action);
@@ -134,6 +134,7 @@ describe('BotBrain', () => {
     expect(brain.update({ self, actors: [self], events: [], tick: 0 })).toEqual({
       move: { x: 0, y: 0 },
       aim: 0,
+      aimDistance: 0,
       buttons: 0,
     });
   });

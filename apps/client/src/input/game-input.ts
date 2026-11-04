@@ -60,6 +60,7 @@ export function createGameInput(layout: () => ScreenLayout): GameInput {
       return {
         move: moveFromKeys(held),
         aim: Math.atan2(pointer.y - origin.y, pointer.x - origin.x),
+        aimDistance: Math.hypot(pointer.x - origin.x, pointer.y - origin.y),
         buttons: (mouseButtons & 1 ? Button.fire : 0) | (held.has(RELOAD_KEY) ? Button.reload : 0),
       };
     },

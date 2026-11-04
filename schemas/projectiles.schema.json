@@ -10,66 +10,165 @@
       "minItems": 1,
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-            "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
-          },
-          "sprite": {
-            "type": "string",
-            "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
-            "description": "Projectile sprite, drawn pointing right, with a \"fly\" animation and an \"origin\" slice at the projectile position."
-          },
-          "effects": {
-            "default": {},
-            "description": "Visual effects of this projectile.",
+        "oneOf": [
+          {
             "type": "object",
             "properties": {
-              "impact": {
-                "description": "Effect shown where the projectile stops against an obstacle.",
+              "id": {
                 "type": "string",
-                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
-              }
-            },
-            "additionalProperties": false
-          },
-          "behavior": {
-            "type": "string",
-            "const": "bullet",
-            "description": "A projectile flying straight at gun height until it hits a character, a solid obstacle or cover it fails to pass, or reaches its range."
-          },
-          "params": {
-            "type": "object",
-            "properties": {
-              "speed": {
-                "type": "number",
-                "exclusiveMinimum": 0,
-                "maximum": 6000,
-                "description": "Speed in pixels per second (one tile is 48 pixels)."
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
               },
-              "range": {
-                "type": "number",
-                "exclusiveMinimum": 0,
-                "maximum": 5000,
-                "description": "Distance in pixels from the muzzle after which the bullet disappears."
+              "sprite": {
+                "type": "string",
+                "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
+                "description": "Projectile sprite, drawn pointing right, with a \"fly\" animation and an \"origin\" slice at the projectile position."
+              },
+              "effects": {
+                "default": {},
+                "description": "Visual effects of this projectile.",
+                "type": "object",
+                "properties": {
+                  "impact": {
+                    "description": "Effect shown where the projectile stops against an obstacle.",
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "behavior": {
+                "type": "string",
+                "const": "bullet",
+                "description": "A projectile flying straight at gun height until it hits a character, a solid obstacle or cover it fails to pass, or reaches its range."
+              },
+              "params": {
+                "type": "object",
+                "properties": {
+                  "speed": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 6000,
+                    "description": "Speed in pixels per second (one tile is 48 pixels)."
+                  },
+                  "range": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 5000,
+                    "description": "Distance in pixels from the muzzle after which the bullet disappears."
+                  }
+                },
+                "required": [
+                  "speed",
+                  "range"
+                ],
+                "additionalProperties": false
               }
             },
             "required": [
-              "speed",
-              "range"
+              "id",
+              "sprite",
+              "behavior",
+              "params"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
+              },
+              "sprite": {
+                "type": "string",
+                "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
+                "description": "Projectile sprite, drawn pointing right, with a \"fly\" animation and an \"origin\" slice at the projectile position."
+              },
+              "effects": {
+                "default": {},
+                "description": "Visual effects of this projectile.",
+                "type": "object",
+                "properties": {
+                  "impact": {
+                    "description": "Effect shown where the projectile stops against an obstacle.",
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "behavior": {
+                "type": "string",
+                "const": "grenade",
+                "description": "A thrown explosive: an arc that lands on its target, bounces off solid obstacles, flies over cover, rolls to a stop and explodes at the end of its fuse."
+              },
+              "params": {
+                "type": "object",
+                "properties": {
+                  "speed": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1500,
+                    "description": "Speed over the ground in pixels per second (one tile is 48 pixels)."
+                  },
+                  "gravity": {
+                    "default": 900,
+                    "description": "Pixels per second squared.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "restitution": {
+                    "default": 0.4,
+                    "description": "Share of its speed a bounce keeps: 0 stops dead, 1 loses nothing.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "friction": {
+                    "default": 400,
+                    "description": "Slowdown while rolling, in pixels per second squared.",
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "fuseMs": {
+                    "default": 2500,
+                    "description": "Time from the throw to the explosion.",
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "blastRadius": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1000,
+                    "description": "Pixels; nothing is hurt at this distance or beyond."
+                  },
+                  "blastDamage": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Damage at the center, falling linearly to 0."
+                  }
+                },
+                "required": [
+                  "speed",
+                  "blastRadius",
+                  "blastDamage"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "sprite",
+              "behavior",
+              "params"
             ],
             "additionalProperties": false
           }
-        },
-        "required": [
-          "id",
-          "sprite",
-          "behavior",
-          "params"
-        ],
-        "additionalProperties": false
+        ]
       }
     }
   },

@@ -8,6 +8,7 @@ import { StateHasher } from '../core/hash';
 import type { InputCommand } from '../core/input';
 import { NEUTRAL_INPUT } from '../core/input';
 import { createFirearmState } from '../behaviors/weapons/firearm';
+import { createThrowable } from '../behaviors/weapons/thrown';
 import type { CollisionGrid } from '../map/collision-grid';
 import { buildCollisionGrid } from '../map/collision-grid';
 import type { MapData } from '../map/map-data';
@@ -65,6 +66,10 @@ export interface ActorState {
   readonly spareMagazines: number | null;
   /** Ticks left in the current reload; 0 when not reloading. */
   readonly reloadLeft: number;
+  /** Thrown weapon carried (weapon id in the catalog), if any. */
+  readonly throwable: string | undefined;
+  /** How many are left in this life. */
+  readonly throwables: number;
 }
 
 /** A read-only copy of a projectile's state. */
@@ -148,6 +153,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
     const weapon = world.weapon.get(id);
     if (!actor || !position || !velocity || !body || !health || !weapon) return undefined;
     const { team, character, aim } = actor;
+    const throwable = world.throwable.get(id);
     return {
       id,
       team,
@@ -165,6 +171,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
       rounds: weapon.rounds,
       spareMagazines: weapon.spareMagazines,
       reloadLeft: weapon.reloadLeft,
+      throwable: throwable?.weapon,
+      throwables: throwable?.count ?? 0,
     };
   };
 
@@ -190,7 +198,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
       const stats = world.catalog.characters.get(spec.character);
       if (!stats) throw new Error(`Unknown character "${spec.character}".`);
       const weapon = world.catalog.weapons.get(stats.weapon);
-      if (!weapon) throw new Error(`Unknown weapon "${stats.weapon}".`);
+      if (weapon?.behavior !== 'firearm') throw new Error(`Unknown weapon "${stats.weapon}".`);
       if (!Number.isInteger(spec.team) || spec.team < 1)
         throw new Error(`Teams are numbered from 1; got ${spec.team}.`);
       const id = world.nextEntity++;
@@ -208,6 +216,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
       });
       world.health.set(id, { hp: stats.hitPoints, max: stats.hitPoints });
       world.weapon.set(id, createFirearmState(weapon));
+      const thrown = stats.throwable && world.catalog.weapons.get(stats.throwable);
+      if (thrown && thrown.behavior === 'thrown') world.throwable.set(id, createThrowable(thrown));
       world.maxActorRadius = Math.max(world.maxActorRadius, stats.radius);
       indexActors(world);
       world.events.push({ type: 'actorSpawned', entity: id, team: spec.team, character: stats.id });

@@ -80,7 +80,9 @@ describe('damage and death', () => {
     // The corpse neither moves nor fires.
     const events = run(
       sim,
-      new Map([[target, { move: { x: -1, y: 0 }, aim: Math.PI, buttons: Button.fire }]]),
+      new Map([
+        [target, { move: { x: -1, y: 0 }, aim: Math.PI, aimDistance: 0, buttons: Button.fire }],
+      ]),
       30,
     );
     expect(events.filter((e) => e.type === 'shotFired' && e.shooter === target)).toEqual([]);
@@ -155,6 +157,7 @@ describe('determinism (C1.5)', () => {
           current.set(id, {
             move: { x: rng.range(-1, 1), y: rng.range(-1, 1) },
             aim: rng.range(-Math.PI, Math.PI),
+            aimDistance: 0,
             buttons: rng.chance(0.6) ? Button.fire : rng.chance(0.1) ? Button.reload : 0,
           });
       for (const event of sim.step(current)) {

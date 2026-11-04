@@ -213,6 +213,54 @@ describe('loadTheme', () => {
     ]);
   });
 
+  it('checks the throwable of a character (Q61)', async () => {
+    const { issues } = await load(
+      broken((f) => {
+        json(f, 'characters.json').characters[0].throwable = 'rifle';
+        json(f, 'characters.json').characters[1].throwable = 'frag';
+      }),
+    );
+    expect(issues).toEqual([
+      error(
+        'characters.json',
+        'characters[0] ("blue-soldier").throwable',
+        '"rifle" is not a thrown weapon: its behavior must be "thrown".',
+      ),
+      error(
+        'characters.json',
+        'characters[1] ("red-soldier").throwable',
+        'Unknown weapon "frag". Known weapons (weapons.json): rifle.',
+      ),
+    ]);
+  });
+
+  it('refuses a thrown weapon as primary weapon and a projectile of the wrong kind', async () => {
+    const { issues } = await load(
+      broken((f) => {
+        const rifle = json(f, 'weapons.json').weapons[0];
+        rifle.behavior = 'thrown';
+        rifle.params = { maxRange: 384 };
+      }),
+    );
+    expect(issues).toEqual([
+      error(
+        'characters.json',
+        'characters[0] ("blue-soldier").weapon',
+        '"rifle" is a thrown weapon: use it as "throwable", with a primary weapon as "weapon".',
+      ),
+      error(
+        'characters.json',
+        'characters[1] ("red-soldier").weapon',
+        '"rifle" is a thrown weapon: use it as "throwable", with a primary weapon as "weapon".',
+      ),
+      error(
+        'weapons.json',
+        'weapons[0] ("rifle").projectile',
+        'A weapon of behavior "thrown" fires a projectile of behavior "grenade"; "bullet" is "bullet".',
+      ),
+    ]);
+  });
+
   it('reports an unknown faction', async () => {
     const { issues } = await load(
       broken((f) => (json(f, 'characters.json').characters[1].faction = 'green')),
@@ -296,7 +344,7 @@ describe('loadTheme', () => {
       error(
         'weapons.json',
         'weapons[0] ("rifle").behavior',
-        'Unknown weapon behavior "firarm". Known weapon behaviors: firearm.',
+        'Unknown weapon behavior "firarm". Known weapon behaviors: firearm, thrown.',
       ),
     ]);
   });
@@ -462,7 +510,7 @@ describe('loadTheme', () => {
       error(
         'projectiles.json',
         'projectiles[0] ("bullet").behavior',
-        'Unknown projectile behavior "rocket". Known projectile behaviors: bullet.',
+        'Unknown projectile behavior "rocket". Known projectile behaviors: bullet, grenade.',
       ),
     ]);
     const tooFast = await load(

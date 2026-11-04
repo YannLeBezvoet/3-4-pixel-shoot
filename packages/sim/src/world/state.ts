@@ -88,6 +88,27 @@ export interface WeaponState {
   triggerWasHeld: boolean;
 }
 
+/** The throwable an actor carries and how many are left (Q61). */
+export interface ThrowableState {
+  /** Weapon id in the catalog. */
+  readonly weapon: string;
+  count: number;
+  /** Ticks before the next throw. */
+  cooldown: number;
+  /** Whether the button was held during the previous tick: one throw per press. */
+  buttonWasHeld: boolean;
+}
+
+/** The flight of a thrown projectile, on top of its `Projectile` component (Q30). */
+export interface Grenade {
+  /** Ground velocity and vertical velocity, world units per second. */
+  vx: number;
+  vy: number;
+  vz: number;
+  /** Ticks before it goes off. */
+  fuse: number;
+}
+
 /** A projectile in flight. Its position is in the position store. */
 export interface Projectile {
   /** Projectile id in the catalog. */
@@ -97,13 +118,13 @@ export interface Projectile {
   /** Weapon that fired it. */
   readonly weapon: string;
   /** Unit direction. */
-  readonly dirX: number;
-  readonly dirY: number;
+  dirX: number;
+  dirY: number;
   /** World units per tick. */
   readonly speed: number;
   readonly damage: number;
   /** Height above the ground, for drawing; collision happens on the ground plane. */
-  readonly z: number;
+  z: number;
   /** Distance it may still travel. */
   remaining: number;
   /** Ids of the cover objects it was fired over or has passed: it flies on through them. */
@@ -145,7 +166,9 @@ export interface WorldState {
   readonly actor: ComponentStore<Actor>;
   readonly health: ComponentStore<Health>;
   readonly weapon: ComponentStore<WeaponState>;
+  readonly throwable: ComponentStore<ThrowableState>;
   readonly projectile: ComponentStore<Projectile>;
+  readonly grenade: ComponentStore<Grenade>;
 }
 
 /** Every component store, in the fixed order used for hashing and removal. */
@@ -156,7 +179,9 @@ export const STORES = [
   'actor',
   'health',
   'weapon',
+  'throwable',
   'projectile',
+  'grenade',
 ] as const;
 
 export function createStores() {
@@ -167,7 +192,9 @@ export function createStores() {
     actor: new ComponentStore<Actor>(),
     health: new ComponentStore<Health>(),
     weapon: new ComponentStore<WeaponState>(),
+    throwable: new ComponentStore<ThrowableState>(),
     projectile: new ComponentStore<Projectile>(),
+    grenade: new ComponentStore<Grenade>(),
   } satisfies Record<(typeof STORES)[number], ComponentStore<unknown>>;
 }
 

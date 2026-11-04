@@ -16,20 +16,31 @@ describe('time', () => {
 
 describe('sanitizeInput', () => {
   it('keeps valid input as it is', () => {
-    const input = { move: { x: 0.6, y: -0.8 }, aim: 1, buttons: Button.fire };
+    const input = { move: { x: 0.6, y: -0.8 }, aim: 1, aimDistance: 200, buttons: Button.fire };
     expect(sanitizeInput(input)).toEqual(input);
   });
 
   it('shortens movement longer than 1 and normalizes the aim', () => {
-    const result = sanitizeInput({ move: { x: 1, y: 1 }, aim: 3 * Math.PI, buttons: 0 });
+    const result = sanitizeInput({ ...NEUTRAL_INPUT, move: { x: 1, y: 1 }, aim: 3 * Math.PI });
     expect(Math.hypot(result.move.x, result.move.y)).toBeCloseTo(1, 12);
     expect(result.aim).toBeCloseTo(Math.PI, 12);
   });
 
   it('replaces non-finite values and drops unknown buttons', () => {
     expect(
-      sanitizeInput({ move: { x: Number.NaN, y: Infinity }, aim: Number.NaN, buttons: 0xff }),
-    ).toEqual({ move: { x: 0, y: 0 }, aim: 0, buttons: Button.fire | Button.reload });
+      sanitizeInput({
+        move: { x: Number.NaN, y: Infinity },
+        aim: Number.NaN,
+        aimDistance: Number.NaN,
+        buttons: 0xff,
+      }),
+    ).toEqual({
+      move: { x: 0, y: 0 },
+      aim: 0,
+      aimDistance: 0,
+      buttons: Button.fire | Button.reload | Button.throw,
+    });
+    expect(sanitizeInput({ ...NEUTRAL_INPUT, aimDistance: -5 }).aimDistance).toBe(0);
     expect(sanitizeInput({ ...NEUTRAL_INPUT, buttons: 1.5 }).buttons).toBe(0);
   });
 

@@ -205,7 +205,11 @@ describe('bullet', () => {
   it('stops at once when the muzzle is past a wall', () => {
     const { sim, shooter } = setup({ barrelLength: 40 });
     // Walk against the left wall: the muzzle, 40 units ahead, is then inside it.
-    run(sim, new Map([[shooter, { move: { x: -1, y: 0 }, aim: Math.PI, buttons: 0 }]]), 30);
+    run(
+      sim,
+      new Map([[shooter, { move: { x: -1, y: 0 }, aim: Math.PI, aimDistance: 0, buttons: 0 }]]),
+      30,
+    );
     expect(sim.actor(shooter)?.x).toBeCloseTo(58, 9);
     const events = run(sim, new Map([[shooter, aim(Math.PI, FIRE)]]), 1);
     const [shot] = ofType(events, 'shotFired');
@@ -330,7 +334,7 @@ describe('cover (Q29)', () => {
   it('blocks movement but not sight', () => {
     const sim = createSimulation({ map: one, seed: 'cover', catalog: testCatalog() });
     const walker = sim.spawnActor({ team: 1, character: 'rifleman', x: 120, y: 120 });
-    run(sim, new Map([[walker, { move: { x: 1, y: 0 }, aim: 0, buttons: 0 }]]), 60);
+    run(sim, new Map([[walker, { move: { x: 1, y: 0 }, aim: 0, aimDistance: 0, buttons: 0 }]]), 60);
     expect(sim.actor(walker)?.x).toBeCloseTo(SANDBAGS - 10, 9);
     expect(lineOfSight(sim.grid, 120, 120, 400, 120)).toBe(true);
   });

@@ -16,6 +16,10 @@
   - Cover works on tile objects only; a ground tile marked `cover` is refused by the validator.
   - As settled in Q29, cover does not block sight: bots see enemies behind sandbags and shoot at them.
 
+### Raised while building M2 (2026-11-04)
+
+- **Q73. Grenade details.** *Proposal (implemented, awaiting confirmation):* the throw has a 0.6 s pause between two throws and needs a new press. A grenade flies at 420 px/s over the ground and first touches the ground on the cursor, then bounces (each bounce keeps 40 % of its speed) and rolls to a stop, about 1.5 tiles farther. It passes through characters, flies over cover from 16 px of height and hits cover below that, and crosses deep water like any ground. All of this except the 16 px is theme data.
+
 ## Settled
 
 On 2026-11-03 the owner accepted every proposal below as written (Q1–Q47).

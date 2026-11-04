@@ -64,7 +64,10 @@ export const characterSchema = z.strictObject({
   sprite: assetRef.describe(
     'Character sprite: tags idle, walk, death in the 5 drawn directions and a "hand" slice.',
   ),
-  weapon: id.describe('Default weapon (weapons.json).'),
+  weapon: id.describe('Primary weapon (weapons.json); not a thrown weapon.'),
+  throwable: id
+    .optional()
+    .describe('Thrown weapon carried along with the primary one (weapons.json).'),
   speed: z
     .number()
     .positive()
