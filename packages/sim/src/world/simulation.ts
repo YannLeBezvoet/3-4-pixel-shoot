@@ -100,9 +100,9 @@ export interface Simulation {
   readonly grid: CollisionGrid;
   readonly rules: Rules;
   /**
-   * Swaps the map in place (development hot reload): new tiles and collision; living actors
-   * left inside an obstacle move to the nearest free spot. Spawn areas apply from the next
-   * spawn.
+   * Swaps the map in place (development hot reload): new tiles, collision and map elements,
+   * reported by `mapReset`; living actors left inside an obstacle move to the nearest free spot.
+   * Spawn areas apply from the next spawn.
    */
   replaceMap(map: MapData): void;
   /** While frozen (a countdown), actors may aim but neither move nor fire. */
@@ -263,6 +263,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
       world.map = map;
       world.grid = buildCollisionGrid(map);
       world.elements = new MapElements(map, world.grid);
+      world.events.push({ type: 'mapReset' });
       for (const [id, actor] of world.actor.entries()) {
         const position = world.position.get(id);
         const body = world.body.get(id);

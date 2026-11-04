@@ -58,7 +58,8 @@ export class WorldScene {
   readonly #decals: DecalLayer;
   readonly #blood: () => BloodSetting;
   readonly #seeThrough: SeeThrough = createSeeThrough();
-  /** Objects cut by the see-through this frame. */
+  /** What the see-through cuts this frame. */
+  #overheadCut = false;
   #cutObjects: readonly Sprite[] = [];
   /** Round of the last frame: blood stays until the next one (Q32). */
   #round: number | undefined;
@@ -225,7 +226,10 @@ export class WorldScene {
     const screen = this.toScreen(Math.round(x), Math.round(center));
     this.#seeThrough.center(screen.x, screen.y);
     const filters = [this.#seeThrough.filter];
-    this.#overhead.filters = covering?.overhead ? filters : [];
+    if (covering?.overhead !== this.#overheadCut) {
+      this.#overheadCut = covering?.overhead ?? false;
+      this.#overhead.filters = this.#overheadCut ? filters : [];
+    }
     for (const sprite of this.#cutObjects)
       if (!sprite.destroyed && !covering?.objects.includes(sprite)) sprite.filters = [];
     for (const sprite of covering?.objects ?? [])
