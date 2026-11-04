@@ -1739,6 +1739,78 @@
          "y":0
         }, 
         {
+         "class":"objects",
+         "draworder":"topdown",
+         "id":6,
+         "name":"barrels",
+         "objects":[
+                {
+                 "gid":28,
+                 "height":48,
+                 "id":129,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":48,
+                 "x":2784,
+                 "y":1200
+                }, 
+                {
+                 "gid":28,
+                 "height":48,
+                 "id":130,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":48,
+                 "x":2400,
+                 "y":1248
+                }, 
+                {
+                 "gid":28,
+                 "height":48,
+                 "id":131,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":48,
+                 "x":3360,
+                 "y":1200
+                }, 
+                {
+                 "gid":28,
+                 "height":48,
+                 "id":132,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":48,
+                 "x":2784,
+                 "y":1584
+                }, 
+                {
+                 "gid":28,
+                 "height":48,
+                 "id":133,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":48,
+                 "x":2976,
+                 "y":1920
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
          "class":"overhead",
          "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1858,8 +1930,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":6,
- "nextobjectid":129,
+ "nextlayerid":7,
+ "nextobjectid":134,
  "orientation":"orthogonal",
  "properties":[
         {
@@ -1882,6 +1954,10 @@
         {
          "firstgid":26,
          "source":"..\/tilesets\/sandbags.tsj"
+        }, 
+        {
+         "firstgid":28,
+         "source":"..\/tilesets\/fuel-barrel.tsj"
         }],
  "tilewidth":48,
  "type":"map",

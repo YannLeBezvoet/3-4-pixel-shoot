@@ -7,6 +7,16 @@
       "faction": "us-army",
       "sprite": "sprites/characters/us-rifleman",
       "weapon": "m16a1",
+      "throwable": "m26",
+      "effects": { "hit": "blood-splat" }
+    },
+    {
+      "id": "us-flamethrower",
+      "nameKey": "character.us-flamethrower",
+      "faction": "us-army",
+      "sprite": "sprites/characters/us-flamethrower",
+      "weapon": "m2a1-7",
+      "throwable": "m26",
       "effects": { "hit": "blood-splat" }
     },
     {
@@ -15,6 +25,16 @@
       "faction": "pavn",
       "sprite": "sprites/characters/pavn-rifleman",
       "weapon": "ak47",
+      "throwable": "type-67",
+      "effects": { "hit": "blood-splat" }
+    },
+    {
+      "id": "pavn-flamethrower",
+      "nameKey": "character.pavn-flamethrower",
+      "faction": "pavn",
+      "sprite": "sprites/characters/pavn-flamethrower",
+      "weapon": "lpo-50",
+      "throwable": "type-67",
       "effects": { "hit": "blood-splat" }
     }
   ]

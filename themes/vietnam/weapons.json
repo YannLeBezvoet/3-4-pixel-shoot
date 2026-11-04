@@ -34,6 +34,50 @@
       "projectile": "rifle-bullet",
       "effects": { "fire": "muzzle-flash" },
       "sounds": { "fire": "ak47-fire", "reload": "rifle-reload" }
+    },
+    {
+      "id": "m2a1-7",
+      "nameKey": "weapon.m2a1-7.name",
+      "behavior": "flamethrower",
+      "params": {
+        "flamesPerSecond": 12,
+        "damage": 10,
+        "spreadDeg": 6,
+        "tankMs": 3000,
+        "refillMs": 3000
+      },
+      "sprite": "sprites/weapons/m2a1-7",
+      "projectile": "flame-jet"
+    },
+    {
+      "id": "lpo-50",
+      "nameKey": "weapon.lpo-50.name",
+      "behavior": "flamethrower",
+      "params": {
+        "flamesPerSecond": 12,
+        "damage": 10,
+        "spreadDeg": 6,
+        "tankMs": 3000,
+        "refillMs": 3000
+      },
+      "sprite": "sprites/weapons/lpo-50",
+      "projectile": "flame-jet"
+    },
+    {
+      "id": "m26",
+      "nameKey": "weapon.m26.name",
+      "behavior": "thrown",
+      "params": { "count": 2, "maxRange": 384 },
+      "sprite": "sprites/weapons/m26",
+      "projectile": "m26-grenade"
+    },
+    {
+      "id": "type-67",
+      "nameKey": "weapon.type-67.name",
+      "behavior": "thrown",
+      "params": { "count": 2, "maxRange": 384 },
+      "sprite": "sprites/weapons/type-67",
+      "projectile": "type-67-grenade"
     }
   ]
 }

@@ -1,0 +1,66 @@
+{
+ "type": "tileset",
+ "version": "1.10",
+ "tiledversion": "1.11.2",
+ "name": "fuel-barrel",
+ "tilewidth": 48,
+ "tileheight": 48,
+ "tilecount": 2,
+ "columns": 2,
+ "image": "fuel-barrel.png",
+ "imagewidth": 96,
+ "imageheight": 48,
+ "margin": 0,
+ "spacing": 0,
+ "tiles": [
+  {
+   "id": 0,
+   "type": "tile",
+   "properties": [
+    {
+     "name": "destroyedTile",
+     "type": "int",
+     "value": 1
+    },
+    {
+     "name": "explosive",
+     "type": "bool",
+     "value": true
+    },
+    {
+     "name": "hp",
+     "type": "int",
+     "value": 30
+    },
+    {
+     "name": "solid",
+     "type": "bool",
+     "value": true
+    }
+   ],
+   "objectgroup": {
+    "draworder": "index",
+    "id": 2,
+    "name": "",
+    "opacity": 1,
+    "type": "objectgroup",
+    "visible": true,
+    "x": 0,
+    "y": 0,
+    "objects": [
+     {
+      "id": 1,
+      "name": "",
+      "type": "",
+      "rotation": 0,
+      "visible": true,
+      "x": 12,
+      "y": 24,
+      "width": 24,
+      "height": 22
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -7,6 +7,26 @@
       "params": { "speed": 1500, "range": 900 },
       "sprite": "sprites/projectiles/rifle-bullet",
       "effects": { "impact": "bullet-impact" }
+    },
+    {
+      "id": "flame-jet",
+      "behavior": "flame",
+      "params": { "speed": 360, "range": 192 },
+      "sprite": "sprites/projectiles/flame-jet"
+    },
+    {
+      "id": "m26-grenade",
+      "behavior": "grenade",
+      "params": { "speed": 420, "blastRadius": 144, "blastDamage": 120 },
+      "sprite": "sprites/projectiles/m26-grenade",
+      "effects": { "impact": "explosion" }
+    },
+    {
+      "id": "type-67-grenade",
+      "behavior": "grenade",
+      "params": { "speed": 420, "blastRadius": 144, "blastDamage": 120 },
+      "sprite": "sprites/projectiles/type-67-grenade",
+      "effects": { "impact": "explosion" }
     }
   ]
 }

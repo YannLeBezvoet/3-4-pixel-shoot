@@ -6,11 +6,17 @@
   },
   "character": {
     "us-rifleman": "Fusilier de l'US ARMY",
-    "pavn-rifleman": "Fusilier de l'APVN"
+    "pavn-rifleman": "Fusilier de l'APVN",
+    "us-flamethrower": "Lance-flammes de l'US ARMY",
+    "pavn-flamethrower": "Lance-flammes de l'APVN"
   },
   "weapon": {
     "m16a1": { "name": "M16A1" },
-    "ak47": { "name": "AK-47" }
+    "ak47": { "name": "AK-47" },
+    "m2a1-7": { "name": "M2A1-7" },
+    "lpo-50": { "name": "LPO-50" },
+    "m26": { "name": "M26" },
+    "type-67": { "name": "Type 67" }
   },
   "map": {
     "river-village": "Le village de la rivière"

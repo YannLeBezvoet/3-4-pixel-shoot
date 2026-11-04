@@ -202,6 +202,8 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 
 #### Content, art, maps
 
+*Tasks 7 and 8: the ground tileset already had `burnt-ground`, `rubble` and `bamboo-wall-destroyed`, and the map already placed tall grass, bamboo walls, crates, fences and thatch roofs as tiles: they only gained their properties. New: sandbags have 200 hit points and a rubble tile, fuel barrels are new tile objects. The owner's tile art, map and sandbag collision are untouched.*
+
 7. **Theme and map data.** Weapon and projectile entries for the new behaviors; character loadouts (Q61); Tiled properties `cover`, `hp`, `damageFilter`, `flammable`, `destroyedTile`, `burntTile`, `explosive` on tiles and objects; validation messages and broken fixtures; Tiled project file and behavior reference regenerated (C2.8).
 8. **Placeholder art and the Vietnam theme.** M26 and Type 67 grenades, M2A1-7 and LPO-50 flamethrowers and their troopers (Q61, Q23), burnt and destroyed tile variants, fuel barrel, smoke and fire effects, blood spray, decal and pool; destructible huts and fences, barrels and flammable tall grass (Q63); the example theme stays as it is.
 

@@ -4,20 +4,31 @@ import type { DrawnDirection } from '@pixel-shoot/content';
 import { DRAWN_DIRECTIONS } from '@pixel-shoot/content';
 import type { Canvas, ColorPicker } from './canvas';
 import {
+  drawBloodDecal,
+  drawBloodPool,
   drawBloodSplat,
   drawBulletImpact,
   drawExplosion,
   drawFlame,
+  drawFlameJet,
+  drawGrenade,
   drawMuzzleFlash,
   drawRifleBullet,
+  drawSmoke,
 } from './art/effects';
 import type { SoldierPose, SoldierStyle } from './art/soldier';
 import { drawSoldier } from './art/soldier';
-import { drawGroundTileset, drawJungleTree, drawSandbags } from './art/tiles';
+import { drawFuelBarrel, drawGroundTileset, drawJungleTree, drawSandbagTiles } from './art/tiles';
 import { exampleMap } from './art/example-map';
-import { groundTileset, sandbagsTileset, treeTileset, vietnamMap } from './art/vietnam-map';
+import {
+  fuelBarrelTileset,
+  groundTileset,
+  sandbagsTileset,
+  treeTileset,
+  vietnamMap,
+} from './art/vietnam-map';
 import type { WeaponArt } from './art/weapons';
-import { drawAk47, drawM16 } from './art/weapons';
+import { drawAk47, drawFlamethrower, drawHandGrenade, drawM16 } from './art/weapons';
 import { SheetBuilder, imageOnly } from './sheet';
 import type { SheetOutput } from './sheet';
 
@@ -80,9 +91,17 @@ function weaponSheet(name: string, art: WeaponArt): SheetOutput {
   return sheet.build();
 }
 
-function projectileSheet(name: string, canvas: Canvas, origin: { x: number; y: number }) {
+function projectileSheet(
+  name: string,
+  frames: Canvas | readonly Canvas[],
+  origin: { x: number; y: number },
+) {
   const sheet = new SheetBuilder(name, 48, 48);
-  sheet.addAnimation('fly', [{ canvas, durationMs: 100, slices: { origin } }]);
+  const canvases = frames instanceof Array ? frames : [frames as Canvas];
+  sheet.addAnimation(
+    'fly',
+    canvases.map((canvas) => ({ canvas, durationMs: 100, slices: { origin } })),
+  );
   return sheet.build();
 }
 
@@ -136,11 +155,83 @@ export function vietnamPlaceholders(p: ColorPicker): PlaceholderFile[] {
     pack: p.hex('676633'),
   };
   const root = 'themes/vietnam';
+  const center = { x: 24, y: 24 };
+  const frames = (count: number, draw: (step: number) => Canvas, ms: number) =>
+    Array.from({ length: count }, (_, step) => ({ canvas: draw(step), ms }));
+  // A flamethrower trooper carries a fuel tank on the back instead of a pack.
+  const tank = p.hex('ae2334');
   return [
     ...sheetFiles(`${root}/sprites/characters/us-rifleman`, soldierSheet('us-rifleman', us)),
     ...sheetFiles(`${root}/sprites/characters/pavn-rifleman`, soldierSheet('pavn-rifleman', pavn)),
+    ...sheetFiles(
+      `${root}/sprites/characters/us-flamethrower`,
+      soldierSheet('us-flamethrower', { ...us, pack: tank }),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/characters/pavn-flamethrower`,
+      soldierSheet('pavn-flamethrower', { ...pavn, pack: tank }),
+    ),
     ...sheetFiles(`${root}/sprites/weapons/m16a1`, weaponSheet('m16a1', drawM16(p))),
     ...sheetFiles(`${root}/sprites/weapons/ak47`, weaponSheet('ak47', drawAk47(p))),
+    ...sheetFiles(
+      `${root}/sprites/weapons/m26`,
+      weaponSheet('m26', drawHandGrenade(p, '547e64', 'f9c22b')),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/weapons/type-67`,
+      weaponSheet('type-67', drawHandGrenade(p, '676633', '9e4539')),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/weapons/m2a1-7`,
+      weaponSheet('m2a1-7', drawFlamethrower(p, '374e4a', '3e3546')),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/weapons/lpo-50`,
+      weaponSheet('lpo-50', drawFlamethrower(p, '4c3e24', '3e3546')),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/projectiles/m26-grenade`,
+      projectileSheet('m26-grenade', drawGrenade(p, '547e64'), center),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/projectiles/type-67-grenade`,
+      projectileSheet('type-67-grenade', drawGrenade(p, '676633'), center),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/projectiles/flame-jet`,
+      projectileSheet(
+        'flame-jet',
+        [0, 1, 2].map((s) => drawFlameJet(p, s)),
+        center,
+      ),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/effects/smoke`,
+      effectSheet(
+        'smoke',
+        48,
+        frames(5, (s) => drawSmoke(p, s), 160),
+        center,
+      ),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/effects/blood-decal`,
+      effectSheet(
+        'blood-decal',
+        48,
+        frames(4, (s) => drawBloodDecal(p, s), 100),
+        center,
+      ),
+    ),
+    ...sheetFiles(
+      `${root}/sprites/effects/blood-pool`,
+      effectSheet(
+        'blood-pool',
+        48,
+        frames(3, (s) => drawBloodPool(p, s), 100),
+        center,
+      ),
+    ),
     ...sheetFiles(
       `${root}/sprites/effects/muzzle-flash`,
       effectSheet(
@@ -191,10 +282,12 @@ export function vietnamPlaceholders(p: ColorPicker): PlaceholderFile[] {
     ),
     { path: `${root}/tilesets/jungle-ground.png`, content: imageOnly(drawGroundTileset(p)) },
     { path: `${root}/tilesets/jungle-tree.png`, content: imageOnly(drawJungleTree(p)) },
-    { path: `${root}/tilesets/sandbags.png`, content: imageOnly(drawSandbags(p)) },
+    { path: `${root}/tilesets/sandbags.png`, content: imageOnly(drawSandbagTiles(p)) },
+    { path: `${root}/tilesets/fuel-barrel.png`, content: imageOnly(drawFuelBarrel(p)) },
     { path: `${root}/tilesets/jungle-ground.tsj`, content: groundTileset() },
     { path: `${root}/tilesets/jungle-tree.tsj`, content: treeTileset() },
     { path: `${root}/tilesets/sandbags.tsj`, content: sandbagsTileset() },
+    { path: `${root}/tilesets/fuel-barrel.tsj`, content: fuelBarrelTileset() },
     { path: `${root}/maps/river-village.tmj`, content: vietnamMap() },
   ];
 }
@@ -257,7 +350,10 @@ export function examplePlaceholders(p: ColorPicker): PlaceholderFile[] {
       ),
     ),
     { path: `${root}/tilesets/training-ground.png`, content: imageOnly(drawGroundTileset(p)) },
-    { path: `${root}/tilesets/training-ground.tsj`, content: groundTileset('training-ground') },
+    {
+      path: `${root}/tilesets/training-ground.tsj`,
+      content: groundTileset('training-ground', false),
+    },
     { path: `${root}/maps/arena.tmj`, content: exampleMap() },
   ];
 }

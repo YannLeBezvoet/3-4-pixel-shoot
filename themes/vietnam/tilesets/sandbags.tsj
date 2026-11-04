@@ -5,10 +5,10 @@
  "name": "sandbags",
  "tilewidth": 48,
  "tileheight": 48,
- "tilecount": 1,
- "columns": 1,
+ "tilecount": 2,
+ "columns": 2,
  "image": "sandbags.png",
- "imagewidth": 48,
+ "imagewidth": 96,
  "imageheight": 48,
  "margin": 0,
  "spacing": 0,
@@ -26,6 +26,21 @@
      "name": "cover",
      "type": "bool",
      "value": true
+    },
+    {
+     "name": "damageFilter",
+     "type": "string",
+     "value": "explosion"
+    },
+    {
+     "name": "destroyedTile",
+     "type": "int",
+     "value": 1
+    },
+    {
+     "name": "hp",
+     "type": "int",
+     "value": 200
     },
     {
      "name": "low",

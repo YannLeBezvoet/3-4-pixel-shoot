@@ -6,11 +6,17 @@
   },
   "character": {
     "us-rifleman": "US rifleman",
-    "pavn-rifleman": "PAVN rifleman"
+    "pavn-rifleman": "PAVN rifleman",
+    "us-flamethrower": "US flamethrower trooper",
+    "pavn-flamethrower": "PAVN flamethrower trooper"
   },
   "weapon": {
     "m16a1": { "name": "M16A1" },
-    "ak47": { "name": "AK-47" }
+    "ak47": { "name": "AK-47" },
+    "m2a1-7": { "name": "M2A1-7" },
+    "lpo-50": { "name": "LPO-50" },
+    "m26": { "name": "M26" },
+    "type-67": { "name": "Type 67" }
   },
   "map": {
     "river-village": "River Village"
