@@ -40,7 +40,15 @@ describe('damage and death', () => {
     const { sim, shooter, target } = duel({ weapon: { fireMode: 'semi' } });
     const events = run(sim, new Map([[shooter, fireAt(0)]]), 30);
     expect(events.filter((e) => e.type === 'damaged')).toEqual([
-      { type: 'damaged', target, attacker: shooter, weapon: 'rifle', amount: 28, hp: 72 },
+      {
+        type: 'damaged',
+        target,
+        attacker: shooter,
+        weapon: 'rifle',
+        source: 'bullet',
+        amount: 28,
+        hp: 72,
+      },
     ]);
     expect(sim.actor(target)?.hp).toBe(72);
   });
@@ -52,7 +60,15 @@ describe('damage and death', () => {
     expect(damaged).toEqual([72, 44, 16, 0]);
     const killed = events.filter((e) => e.type === 'killed');
     expect(killed).toEqual([
-      { type: 'killed', victim: target, killer: shooter, weapon: 'rifle', x: 400, y: 120 },
+      {
+        type: 'killed',
+        victim: target,
+        killer: shooter,
+        weapon: 'rifle',
+        source: 'bullet',
+        x: 400,
+        y: 120,
+      },
     ]);
     expect(sim.actor(target)).toMatchObject({ alive: false, hp: 0 });
   });

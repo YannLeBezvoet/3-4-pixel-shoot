@@ -3,7 +3,7 @@
 import type { Rng } from '@pixel-shoot/shared';
 import type { EntityId } from '../core/entities';
 import { ComponentStore } from '../core/entities';
-import type { SimEvent } from '../core/events';
+import type { DamageSource, SimEvent } from '../core/events';
 import type { InputCommand } from '../core/input';
 import type { CollisionGrid } from '../map/collision-grid';
 import type { MapData } from '../map/map-data';
@@ -48,6 +48,23 @@ export interface DamageRequest {
   readonly attacker: EntityId;
   readonly weapon: string;
   readonly amount: number;
+  readonly source: DamageSource;
+}
+
+/** An explosion waiting for the explosion system (6). */
+export interface ExplosionRequest {
+  readonly x: number;
+  readonly y: number;
+  /** World units; nothing is hurt at this distance or beyond. */
+  readonly radius: number;
+  /** Damage at the center, falling linearly to 0 at the radius. */
+  readonly damage: number;
+  /** Who is responsible for it; hurt by it even with friendly fire off (Q64). */
+  readonly owner: EntityId;
+  readonly team: number;
+  readonly weapon: string;
+  /** Projectile id in the catalog, when a projectile exploded. */
+  readonly kind: string | undefined;
 }
 
 export interface Health {
@@ -117,6 +134,7 @@ export interface WorldState {
   /** Events waiting to be returned by the next step. */
   readonly events: SimEvent[];
   readonly damage: DamageRequest[];
+  readonly explosions: ExplosionRequest[];
   /** Actors by position; current after the movement system. */
   readonly actorIndex: SpatialHash;
   /** Largest collider radius among actors, to size neighbor queries. */

@@ -119,6 +119,7 @@ export function resolveTrace(world: WorldState, result: TraceResult, shot: ShotI
     attacker: shot.owner,
     weapon: shot.weapon,
     amount: shot.damage,
+    source: 'bullet',
   });
   world.events.push({
     type: 'hit',

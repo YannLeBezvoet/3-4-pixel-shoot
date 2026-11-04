@@ -2,6 +2,9 @@
 // events; none of them poll simulation internals (ARCHITECTURE §5).
 import type { EntityId } from './entities';
 
+/** What caused damage; a map element's damage filter selects among them (Q33). */
+export type DamageSource = 'bullet' | 'explosion' | 'fire';
+
 export type SimEvent =
   | {
       readonly type: 'actorSpawned';
@@ -56,11 +59,23 @@ export type SimEvent =
       readonly angle: number;
     }
   | {
+      /** Something blew up. Characters and map elements in the blast get their damage. */
+      readonly type: 'exploded';
+      readonly x: number;
+      readonly y: number;
+      readonly radius: number;
+      readonly owner: EntityId;
+      readonly weapon: string;
+      /** Projectile id in the catalog, when a projectile exploded. */
+      readonly kind: string | undefined;
+    }
+  | {
       /** A character lost hit points. */
       readonly type: 'damaged';
       readonly target: EntityId;
       readonly attacker: EntityId;
       readonly weapon: string;
+      readonly source: DamageSource;
       readonly amount: number;
       /** Hit points left. */
       readonly hp: number;
@@ -71,6 +86,7 @@ export type SimEvent =
       readonly victim: EntityId;
       readonly killer: EntityId;
       readonly weapon: string;
+      readonly source: DamageSource;
       readonly x: number;
       readonly y: number;
     };

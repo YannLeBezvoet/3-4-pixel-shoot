@@ -13,7 +13,7 @@ import { buildCollisionGrid } from '../map/collision-grid';
 import type { MapData } from '../map/map-data';
 import { nearestFreeSpot, spawnSpots } from '../map/spawn';
 import type { Catalog } from './catalog';
-import type { Rules, WorldState } from './state';
+import type { ExplosionRequest, Rules, WorldState } from './state';
 import {
   DEFAULT_RULES,
   STORES,
@@ -104,6 +104,8 @@ export interface Simulation {
   clear(): void;
   /** Free spots of a team's spawn areas for a character of `radius`, avoiding living actors. */
   freeSpawnSpots(team: number, radius: number): { x: number; y: number }[];
+  /** Sets off an explosion during the next step (development scenes, tests). */
+  explode(explosion: ExplosionRequest): void;
   /** Advances one tick. Actors missing from `inputs` stand still and keep their aim. */
   step(inputs?: ReadonlyMap<EntityId, InputCommand>): readonly SimEvent[];
   actor(id: EntityId): ActorState | undefined;
@@ -131,6 +133,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
     },
     events: [],
     damage: [],
+    explosions: [],
     actorIndex: createActorIndex(),
     maxActorRadius: 0,
     ...createStores(),
@@ -237,6 +240,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
     clear() {
       for (const id of [...world.actor.ids()]) this.removeActor(id);
       for (const id of [...world.projectile.ids()]) removeEntity(world, id);
+      world.explosions.length = 0;
     },
 
     freeSpawnSpots(team, radius) {
@@ -252,6 +256,10 @@ export function createSimulation(options: SimulationOptions): Simulation {
           );
         }),
       );
+    },
+
+    explode(explosion) {
+      world.explosions.push(explosion);
     },
 
     step(inputs = new Map()) {

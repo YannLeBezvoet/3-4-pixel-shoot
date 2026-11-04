@@ -32,11 +32,11 @@ export { TICK_RATE, TICK_SECONDS, msToTicks, ticksToMs } from './core/time';
 export { Button, NEUTRAL_INPUT, hasButton, sanitizeInput } from './core/input';
 export type { InputCommand } from './core/input';
 export type { EntityId } from './core/entities';
-export type { SimEvent, SimEventType } from './core/events';
+export type { DamageSource, SimEvent, SimEventType } from './core/events';
 export { createCatalog } from './world/catalog';
 export type { Catalog, CharacterStats, ProjectileStats, WeaponStats } from './world/catalog';
 export { DEFAULT_RULES } from './world/state';
-export type { Rules } from './world/state';
+export type { ExplosionRequest, Rules } from './world/state';
 export { createSimulation } from './world/simulation';
 export type {
   ActorSpec,
