@@ -10,7 +10,7 @@
 |---|---|---|
 | M0 | Foundations | **Done** — version 0.0.0, merged into `main` and pushed on 2026-11-03 (C0.10 to be checked by the owner) |
 | M1 | Playable solo | **Done** — version 0.1.0, merged into `main` and pushed on 2026-11-03 |
-| M2 | Combat | **Plan proposed** on 2026-11-03 (tasks below, questions Q61–Q70); awaiting the owner's approval |
+| M2 | Combat | **In progress** — plan and questions Q61–Q70 approved by the owner on 2026-11-04 |
 | M3 | Multiplayer | Not started |
 | M4 | Civilians, 64 participants, match settings | Not started |
 | M5 | Further modes, procedural maps, vehicles, audio | Not started |
@@ -189,7 +189,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 
 ### Tasks (one or a few commits each)
 
-*Proposed on 2026-11-03, awaiting approval.* Gameplay first (testable headless), then content and art, then presentation, bots and measurements. Each commit updates the docs it affects.
+*Approved by the owner on 2026-11-04.* Gameplay first (testable headless), then content and art, then presentation, bots and measurements. Each commit updates the docs it affects.
 
 #### Simulation (`sim`)
 
@@ -229,7 +229,7 @@ Unless stated otherwise, every milestone also requires: `npm run check` passes; 
 - [ ] **C2.2** Grenades: damage decreases with distance as parameterized; a character behind a wall takes no damage; a grenade thrown at a wall bounces back (tests).
 - [ ] **C2.3** Destructibles: an element with `hp = N` is destroyed by exactly the damage that reaches N; it switches to its destroyed variant and stops blocking movement and bullets; the renderer updates the tile chunk (tests + dev scene).
 - [ ] **C2.4** Fire spreads only across flammable tiles and objects, burns out, and is deterministic for a given seed; burning characters take the configured damage over time (tests).
-- [ ] **C2.5** Bots: in a scenario test, a bot under fire reaches a position where cover or a solid obstacle stops its attacker's bullets within 3 seconds in ≥ 90 % of seeded runs. *(Proposed rewording, Q68: under Q29 cover does not hide, it stops bullets.)*
+- [ ] **C2.5** Bots: in a scenario test, a bot under fire reaches a position where cover or a solid obstacle stops its attacker's bullets within 3 seconds in ≥ 90 % of seeded runs. *(Reworded per Q68: under Q29 cover does not hide, it stops bullets.)*
 - [ ] **C2.6** Blood decals persist until the end of the round; the blood setting changes effects as specified (manual check + unit test on the effect factory).
 - [ ] **C2.7** Performance: 60 FPS on the reference machine with 32 participants, 200 flame particles and 10 simultaneous explosions (measured on a development page, Q69).
 - [ ] **C2.8** Every new Tiled property is available as a typed field in the Tiled project file, and the generated behavior reference is up to date (CI check).
