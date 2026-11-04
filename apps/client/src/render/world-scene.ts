@@ -39,6 +39,8 @@ export class WorldScene {
   readonly #sheets: SheetTextures;
   readonly #images = new ImageTextures();
   #map: MapView | undefined;
+  /** What the map view was built from, to build it again when the map is reset. */
+  #mapSource: { map: MapData; images: ReadonlyMap<string, ImageBitmap> } | undefined;
   #looks: ThemeLooks | undefined;
   readonly #characters = new Map<EntityId, CharacterView>();
   readonly #projectiles = new Map<EntityId, SheetView>();
@@ -52,9 +54,23 @@ export class WorldScene {
     this.root.addChild(this.#ground, this.#low, this.#corpses, this.#world, this.#overhead);
   }
 
-  /** Starts the visual effects of events (shots, impacts, hits) from the session. */
+  /** Follows the events of the session: what changed on the map, and the visual effects. */
   playEvents(events: readonly SimEvent[], frame: SessionFrame): void {
+    for (const event of events) this.#changeMap(event);
     if (this.#looks && events.length > 0) this.#effects.play(events, frame.current, this.#looks);
+  }
+
+  #changeMap(event: SimEvent): void {
+    if (event.type === 'tileChanged')
+      this.#map?.setTile(event.layer, event.tileX, event.tileY, event.tile);
+    else if (event.type === 'elementDestroyed' && event.object !== undefined) {
+      const object = this.#mapSource?.map.objects.find((o) => o.id === event.object);
+      const remains = event.burnt
+        ? (object?.burntVisual ?? object?.destroyedVisual)
+        : object?.destroyedVisual;
+      this.#map?.destroyObject(event.object, remains);
+    } else if (event.type === 'mapReset' && this.#mapSource)
+      this.setMap(this.#mapSource.map, this.#mapSource.images);
   }
 
   setMap(map: MapData, images: ReadonlyMap<string, ImageBitmap>): void {
@@ -62,6 +78,7 @@ export class WorldScene {
       for (const sprite of this.#map.objects) this.#world.removeChild(sprite);
       this.#map.destroy();
     }
+    this.#mapSource = { map, images };
     this.#map = createMapView(map, images, this.#images);
     this.#ground.addChild(this.#map.ground);
     this.#low.addChild(this.#map.low);
@@ -135,7 +152,8 @@ export class WorldScene {
       const old = beforeShots.get(projectile.id) ?? projectile;
       const x = lerp(old.x, projectile.x, alpha);
       const y = lerp(old.y, projectile.y, alpha);
-      view.root.position.set(Math.round(x), Math.round(y - projectile.z));
+      const z = lerp(old.z, projectile.z, alpha);
+      view.root.position.set(Math.round(x), Math.round(y - z));
       view.root.rotation = projectile.angle;
       view.root.zIndex = depthOf(y, projectile.id);
       view.update(deltaMs);
@@ -155,6 +173,7 @@ export class WorldScene {
         y: Math.round(focus.y) - INTERNAL_HEIGHT / 2,
       };
     this.root.position.set(-this.#camera.x, -this.#camera.y);
+    this.#map?.flush();
     this.#map?.cull(this.#camera.x, this.#camera.y, INTERNAL_WIDTH, INTERNAL_HEIGHT);
   }
 
