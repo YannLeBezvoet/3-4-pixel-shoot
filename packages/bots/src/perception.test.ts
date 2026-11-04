@@ -33,6 +33,7 @@ function actor(id: number, team: number, x: number, y: number, alive = true): Ac
     reloadLeft: 0,
     throwable: undefined,
     throwables: 0,
+    burning: false,
   };
 }
 

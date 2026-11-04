@@ -121,6 +121,21 @@ export interface Grenade {
   fuse: number;
 }
 
+/** Who is responsible for a fire: its damage counts for them (Q64). */
+export interface FireOrigin {
+  readonly owner: EntityId;
+  readonly team: number;
+  readonly weapon: string;
+}
+
+/** A character on fire (Q31). */
+export interface Burning extends FireOrigin {
+  /** Ticks before it goes out. */
+  ticks: number;
+  /** Fraction of a hit point not taken yet, so that any rate of damage is exact. */
+  carry: number;
+}
+
 /** A projectile in flight. Its position is in the position store. */
 export interface Projectile {
   /** Projectile id in the catalog. */
@@ -170,6 +185,8 @@ export interface WorldState {
   readonly events: SimEvent[];
   readonly damage: DamageRequest[];
   readonly elementDamage: ElementDamage[];
+  /** Keys of the elements that finished burning, for the map element system (8). */
+  readonly burntOut: number[];
   readonly explosions: ExplosionRequest[];
   /** Actors by position; current after the movement system. */
   readonly actorIndex: SpatialHash;
@@ -180,6 +197,7 @@ export interface WorldState {
   readonly body: ComponentStore<Body>;
   readonly actor: ComponentStore<Actor>;
   readonly health: ComponentStore<Health>;
+  readonly burning: ComponentStore<Burning>;
   readonly weapon: ComponentStore<WeaponState>;
   readonly throwable: ComponentStore<ThrowableState>;
   readonly projectile: ComponentStore<Projectile>;
@@ -193,6 +211,7 @@ export const STORES = [
   'body',
   'actor',
   'health',
+  'burning',
   'weapon',
   'throwable',
   'projectile',
@@ -206,6 +225,7 @@ export function createStores() {
     body: new ComponentStore<Body>(),
     actor: new ComponentStore<Actor>(),
     health: new ComponentStore<Health>(),
+    burning: new ComponentStore<Burning>(),
     weapon: new ComponentStore<WeaponState>(),
     throwable: new ComponentStore<ThrowableState>(),
     projectile: new ComponentStore<Projectile>(),

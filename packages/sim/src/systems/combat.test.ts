@@ -165,6 +165,7 @@ describe('bullet', () => {
         attacker: shooter,
         target: near,
         weapon: 'rifle',
+        source: 'bullet',
         damage: 28,
         x: 290,
         y: 120,

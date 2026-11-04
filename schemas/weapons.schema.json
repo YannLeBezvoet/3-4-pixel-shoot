@@ -187,6 +187,111 @@
               },
               "behavior": {
                 "type": "string",
+                "const": "flamethrower",
+                "description": "A jet of flames while the fire button is held, for as long as the tank lasts; it refills on the reload button or by itself when empty."
+              },
+              "params": {
+                "type": "object",
+                "properties": {
+                  "flamesPerSecond": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 60,
+                    "description": "Flames thrown while firing."
+                  },
+                  "damage": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Hit points removed by one flame."
+                  },
+                  "spreadDeg": {
+                    "default": 0,
+                    "description": "Random deviation of each flame, in degrees on each side of the aim.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 45
+                  },
+                  "tankMs": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "How long a full tank fires, in milliseconds."
+                  },
+                  "refillMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "How long a refill takes, in milliseconds."
+                  }
+                },
+                "required": [
+                  "flamesPerSecond",
+                  "damage",
+                  "tankMs",
+                  "refillMs"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "nameKey",
+              "sprite",
+              "projectile",
+              "behavior",
+              "params"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
+              },
+              "nameKey": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*$",
+                "description": "Key of a text in the theme translation files (locales/<language>.json)."
+              },
+              "sprite": {
+                "type": "string",
+                "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
+                "description": "Weapon sprite, drawn pointing right, with \"grip\" and \"muzzle\" slices."
+              },
+              "projectile": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "description": "Projectile this weapon fires (projectiles.json)."
+              },
+              "effects": {
+                "default": {},
+                "description": "Visual effects of this weapon.",
+                "type": "object",
+                "properties": {
+                  "fire": {
+                    "description": "Effect shown at the muzzle at each shot.",
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "sounds": {
+                "description": "Reserved for the audio milestone: sound cue name → sound id.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "behavior": {
+                "type": "string",
                 "const": "thrown",
                 "description": "A throwable carried beside the primary weapon: thrown to the cursor up to a maximum range, one per press."
               },

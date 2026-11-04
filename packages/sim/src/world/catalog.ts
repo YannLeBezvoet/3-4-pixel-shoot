@@ -1,8 +1,10 @@
 // The gameplay content a simulation runs with, already validated and converted to engine
 // units. `content` builds it from a theme; tests build it by hand.
 import type { BulletParams } from '../behaviors/projectiles/bullet';
+import type { FlameParams } from '../behaviors/projectiles/flame';
 import type { GrenadeParams } from '../behaviors/projectiles/grenade';
 import type { FirearmParams } from '../behaviors/weapons/firearm';
+import type { FlamethrowerParams } from '../behaviors/weapons/flamethrower';
 import type { ThrownParams } from '../behaviors/weapons/thrown';
 
 export interface CharacterStats {
@@ -40,7 +42,12 @@ export interface ThrownStats extends WeaponCommon {
   readonly params: ThrownParams;
 }
 
-export type WeaponStats = FirearmStats | ThrownStats;
+export interface FlamethrowerStats extends WeaponCommon {
+  readonly behavior: 'flamethrower';
+  readonly params: FlamethrowerParams;
+}
+
+export type WeaponStats = FirearmStats | ThrownStats | FlamethrowerStats;
 
 export interface BulletStats {
   readonly id: string;
@@ -54,18 +61,46 @@ export interface GrenadeStats {
   readonly params: GrenadeParams;
 }
 
-export type ProjectileStats = BulletStats | GrenadeStats;
+export interface FlameStats {
+  readonly id: string;
+  readonly behavior: 'flame';
+  readonly params: FlameParams;
+}
+
+export type ProjectileStats = BulletStats | GrenadeStats | FlameStats;
 
 /** The projectile behavior each weapon behavior fires. */
 export const PROJECTILE_OF_WEAPON = {
   firearm: 'bullet',
   thrown: 'grenade',
+  flamethrower: 'flame',
 } as const satisfies Record<WeaponStats['behavior'], ProjectileStats['behavior']>;
+
+/** How fire behaves (Q31, Q63, Q70). */
+export interface FireStats {
+  /** How long a tile or object burns, in ticks. */
+  readonly burnTicks: number;
+  /** Chance, each second, of catching each adjacent flammable element, from 0 to 1. */
+  readonly spreadChance: number;
+  /** How long a character burns after leaving the fire, in ticks. */
+  readonly characterBurnTicks: number;
+  /** Hit points a burning character loses per second. */
+  readonly characterDamagePerSecond: number;
+}
+
+/** The initial values of Q63 and Q70. */
+export const DEFAULT_FIRE: FireStats = {
+  burnTicks: 300,
+  spreadChance: 0.3,
+  characterBurnTicks: 180,
+  characterDamagePerSecond: 8,
+};
 
 export interface Catalog {
   readonly characters: ReadonlyMap<string, CharacterStats>;
   readonly weapons: ReadonlyMap<string, WeaponStats>;
   readonly projectiles: ReadonlyMap<string, ProjectileStats>;
+  readonly fire: FireStats;
 }
 
 /** Builds a catalog from lists, checking references. For tests, tools and content loading. */
@@ -73,6 +108,7 @@ export function createCatalog(content: {
   characters: readonly CharacterStats[];
   weapons: readonly WeaponStats[];
   projectiles: readonly ProjectileStats[];
+  fire?: FireStats;
 }): Catalog {
   const byId = <T extends { id: string }>(items: readonly T[]) =>
     new Map(items.map((item) => [item.id, item]));
@@ -80,6 +116,7 @@ export function createCatalog(content: {
     characters: byId(content.characters),
     weapons: byId(content.weapons),
     projectiles: byId(content.projectiles),
+    fire: content.fire ?? DEFAULT_FIRE,
   };
   for (const character of content.characters) {
     const weapon = catalog.weapons.get(character.weapon);

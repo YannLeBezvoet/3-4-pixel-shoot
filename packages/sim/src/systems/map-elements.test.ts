@@ -50,7 +50,9 @@ const WALL = `
 describe('destructible tiles', () => {
   it('is destroyed by exactly the damage that reaches its hit points (C2.3)', () => {
     const { sim, shooter } = world(asciiMap(WALL));
-    expect(sim.elements()).toEqual([{ key: 11, object: undefined, tileX: 3, tileY: 1, hp: 60 }]);
+    expect(sim.elements()).toEqual([
+      { key: 11, object: undefined, tileX: 3, tileY: 1, hp: 60, burning: 0 },
+    ]);
     shoot(sim, shooter);
     shoot(sim, shooter);
     expect(sim.elements()[0]?.hp).toBe(20);
@@ -68,6 +70,7 @@ describe('destructible tiles', () => {
       object: undefined,
       box: { x: 144, y: 48, width: 48, height: 48 },
       attacker: shooter,
+      burnt: false,
     });
     expect(sim.elements()).toEqual([]);
   });
@@ -124,6 +127,7 @@ describe('destructible objects', () => {
       object: 1,
       box: { x: 152, y: 56, width: 32, height: 32 },
       attacker: shooter,
+      burnt: false,
     });
     expect(sim.grid.footprintsAt(3, 1)).toEqual([]);
     expect(circleBlocked(sim.grid, 168, 72, 10, BLOCKS_MOVEMENT)).toBe(false);

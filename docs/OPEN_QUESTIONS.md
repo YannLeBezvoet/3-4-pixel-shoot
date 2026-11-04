@@ -19,6 +19,7 @@
 ### Raised while building M2 (2026-11-04)
 
 - **Q73. Grenade details.** *Proposal (implemented, awaiting confirmation):* the throw has a 0.6 s pause between two throws and needs a new press. A grenade flies at 420 px/s over the ground and first touches the ground on the cursor, then bounces (each bounce keeps 40 % of its speed) and rolls to a stop, about 1.5 tiles farther. It passes through characters, flies over cover from 16 px of height and hits cover below that, and crosses deep water like any ground. All of this except the 16 px is theme data.
+- **Q74. Fire details.** *Proposal (implemented, awaiting confirmation):* a flame stops at the first character it hits; cover stops flames unless the flamethrower reaches over it, with no chance of passing, since `bulletPassPercent` is about bullets. Fire spreads to the 4 adjacent tiles with a 30 % chance each second. An element burning out is consumed whatever its hit points, and an explosive one then goes off. Explosions do not ignite anything. A fire damages by igniting: a character standing in it burns for the full 3 s from the moment it leaves.
 
 ## Settled
 

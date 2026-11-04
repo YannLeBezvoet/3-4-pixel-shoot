@@ -18,8 +18,9 @@ import { DamageFilter, TILE_SIZE, TileFlag } from '../map/map-data';
  * - `o` floor with a solid object whose footprint is a 16×16 box centered in the tile
  * - `s` floor with sandbags: a cover object filling the tile, which 40 % of bullets pass
  * - `S` the same sandbags with 200 hit points, only hurt by explosions (Q33, Q70)
- * - `w` destructible wall: a solid tile of 60 hit points, leaving rubble
- * - `c` floor with a crate: a solid object of 80 hit points
+ * - `w` bamboo wall: a solid, flammable tile of 60 hit points, leaving rubble or burnt ground
+ * - `g` tall grass: a flammable tile leaving burnt ground
+ * - `c` floor with a crate: a solid, flammable object of 80 hit points
  * - `x` floor with a fuel barrel: a solid object of 30 hit points, explosive
  * - `1`–`9` floor with a one-tile spawn area for that team
  *
@@ -33,14 +34,22 @@ export function asciiMap(rows: string | readonly string[], id = 'ascii'): MapDat
   const width = lines[0]?.length ?? 0;
   if (width === 0) throw new Error('An ASCII map needs at least one row.');
 
-  // Tile types: 0 = none, 1 = floor, 2 = solid, 3 = impassable, 4 = rubble, 5 = wall.
+  // Tile types: 0 = none, 1 = floor, 2 = solid, 3 = impassable, 4 = rubble, 5 = wall,
+  // 6 = burnt ground, 7 = tall grass.
   const tileTypes: TileType[] = [
     { flags: 0 },
     { flags: 0 },
     { flags: TileFlag.solid },
     { flags: TileFlag.impassable },
     { flags: 0 },
-    { flags: TileFlag.solid, element: { hp: 60 }, destroyedTile: 4 },
+    {
+      flags: TileFlag.solid,
+      element: { hp: 60, flammable: true },
+      destroyedTile: 4,
+      burntTile: 6,
+    },
+    { flags: 0 },
+    { flags: 0, element: { flammable: true }, burntTile: 6 },
   ];
   const cells: number[] = [];
   const objects: MapObject[] = [];
@@ -54,6 +63,7 @@ export function asciiMap(rows: string | readonly string[], id = 'ascii'): MapDat
       if (char === '#') cells.push(2);
       else if (char === '~') cells.push(3);
       else if (char === 'w') cells.push(5);
+      else if (char === 'g') cells.push(7);
       else if (/[.oscSx1-9]/.test(char)) cells.push(1);
       else throw new Error(`Unknown map character "${char}" at column ${x}, row ${y}.`);
       if (char === 'o') {
@@ -103,7 +113,10 @@ export function asciiMap(rows: string | readonly string[], id = 'ascii'): MapDat
           x: left + TILE_SIZE / 2,
           y: top + 40,
           footprints: [footprint],
-          element: char === 'c' ? { hp: 80 } : { hp: 30, explosive: { radius: 144, damage: 120 } },
+          element:
+            char === 'c'
+              ? { hp: 80, flammable: true }
+              : { hp: 30, explosive: { radius: 144, damage: 120 } },
         });
       }
       if (/[1-9]/.test(char))

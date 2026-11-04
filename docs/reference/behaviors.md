@@ -22,6 +22,18 @@ A gun firing projectiles from a magazine, with a rate of fire, spread and reload
 | `reloadMs` | whole number ≥ 0 | required | Reload duration in milliseconds. |
 | `reserveMagazines` | whole number ≥ 0 or `null` | `null` | Spare magazines per life; null means unlimited. A reload uses one, and the rounds left in the old magazine are lost. |
 
+### `flamethrower`
+
+A jet of flames while the fire button is held, for as long as the tank lasts; it refills on the reload button or by itself when empty.
+
+| Parameter | Type | Default | Meaning |
+|---|---|---|---|
+| `flamesPerSecond` | number > 0, ≤ 60 | required | Flames thrown while firing. |
+| `damage` | whole number > 0 | required | Hit points removed by one flame. |
+| `spreadDeg` | number ≥ 0, ≤ 45 | `0` | Random deviation of each flame, in degrees on each side of the aim. |
+| `tankMs` | whole number > 0 | required | How long a full tank fires, in milliseconds. |
+| `refillMs` | whole number ≥ 0 | required | How long a refill takes, in milliseconds. |
+
 ### `thrown`
 
 A throwable carried beside the primary weapon: thrown to the cursor up to a maximum range, one per press.
@@ -58,6 +70,15 @@ A thrown explosive: an arc that lands on its target, bounces off solid obstacles
 | `fuseMs` | whole number > 0 | `2500` | Time from the throw to the explosion. |
 | `blastRadius` | number > 0, ≤ 1000 | required | Pixels; nothing is hurt at this distance or beyond. |
 | `blastDamage` | whole number > 0 | required | Damage at the center, falling linearly to 0. |
+
+### `flame`
+
+A short-lived particle of fire: it hurts and ignites the character it hits, ignites flammable tiles and objects it touches, and stops at obstacles.
+
+| Parameter | Type | Default | Meaning |
+|---|---|---|---|
+| `speed` | number > 0, ≤ 1200 | required | Speed in pixels per second (one tile is 48 pixels). |
+| `range` | number > 0, ≤ 1000 | required | Distance in pixels from the muzzle after which the flame disappears. |
 
 ## Map-element behaviors
 

@@ -1,10 +1,12 @@
 // A small catalog for the tests of every package: one rifleman with a rifle and grenades, with
 // the initial gameplay values of Q54 and Q70. Parameters can be overridden per test.
 import type { BulletParams } from '../behaviors/projectiles/bullet';
+import type { FlameParams } from '../behaviors/projectiles/flame';
 import type { GrenadeParams } from '../behaviors/projectiles/grenade';
 import type { FirearmParams } from '../behaviors/weapons/firearm';
+import type { FlamethrowerParams } from '../behaviors/weapons/flamethrower';
 import type { ThrownParams } from '../behaviors/weapons/thrown';
-import type { Catalog, CharacterStats } from '../world/catalog';
+import type { Catalog, CharacterStats, FireStats } from '../world/catalog';
 import { createCatalog } from '../world/catalog';
 
 export interface TestCatalogOptions {
@@ -15,11 +17,15 @@ export interface TestCatalogOptions {
   readonly bullet?: Partial<BulletParams>;
   readonly thrown?: Partial<ThrownParams>;
   readonly grenade?: Partial<GrenadeParams>;
+  readonly flamethrower?: Partial<FlamethrowerParams>;
+  readonly flame?: Partial<FlameParams>;
+  readonly fire?: FireStats;
 }
 
 /**
  * Character "rifleman" carrying weapon "rifle", which fires projectile "bullet", and throwable
- * "frag", which throws projectile "grenade".
+ * "frag", which throws projectile "grenade"; character "trooper" (same values) carrying weapon
+ * "flamer", which fires projectile "flame".
  */
 export function testCatalog(options: TestCatalogOptions = {}): Catalog {
   return createCatalog({
@@ -34,6 +40,16 @@ export function testCatalog(options: TestCatalogOptions = {}): Catalog {
         ...options.character,
         weapon: 'rifle',
         throwable: 'frag',
+      },
+      {
+        id: 'trooper',
+        speed: 180,
+        radius: 10,
+        hitPoints: 100,
+        gunHeight: 20,
+        handReach: 0,
+        ...options.character,
+        weapon: 'flamer',
       },
     ],
     weapons: [
@@ -54,6 +70,20 @@ export function testCatalog(options: TestCatalogOptions = {}): Catalog {
         barrelLength: options.barrelLength ?? 24,
       },
       {
+        id: 'flamer',
+        behavior: 'flamethrower',
+        params: {
+          flamesPerSecond: 12,
+          damage: 10,
+          spreadDeg: 0,
+          tankMs: 3000,
+          refillMs: 3000,
+          ...options.flamethrower,
+        },
+        projectile: 'flame',
+        barrelLength: 24,
+      },
+      {
         id: 'frag',
         behavior: 'thrown',
         params: { count: 2, maxRange: 384, cooldownMs: 600, ...options.thrown },
@@ -63,6 +93,7 @@ export function testCatalog(options: TestCatalogOptions = {}): Catalog {
     ],
     projectiles: [
       { id: 'bullet', behavior: 'bullet', params: { speed: 1500, range: 900, ...options.bullet } },
+      { id: 'flame', behavior: 'flame', params: { speed: 360, range: 192, ...options.flame } },
       {
         id: 'grenade',
         behavior: 'grenade',
@@ -78,5 +109,6 @@ export function testCatalog(options: TestCatalogOptions = {}): Catalog {
         },
       },
     ],
+    ...(options.fire && { fire: options.fire }),
   });
 }

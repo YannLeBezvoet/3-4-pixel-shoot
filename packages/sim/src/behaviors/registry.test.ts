@@ -7,7 +7,11 @@ describe('behavior registry', () => {
   it('finds behaviors by kind and id', () => {
     expect(builtInBehaviors.get('weapon', 'firearm')).toBe(firearm);
     expect(builtInBehaviors.get('projectile', 'firearm')).toBeUndefined();
-    expect(builtInBehaviors.list('weapon').map((b) => b.id)).toEqual(['firearm', 'thrown']);
+    expect(builtInBehaviors.list('weapon').map((b) => b.id)).toEqual([
+      'firearm',
+      'flamethrower',
+      'thrown',
+    ]);
   });
 
   it('refuses duplicate registrations', () => {

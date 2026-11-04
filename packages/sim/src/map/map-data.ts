@@ -52,6 +52,8 @@ export interface ElementProperties {
   readonly damageFilter?: number;
   /** Blast when destroyed. */
   readonly explosive?: ElementBlast;
+  /** Catches fire and burns out (Q31). On a tile, also true of overhead layers (thatch roofs). */
+  readonly flammable?: boolean;
 }
 
 /** A picture cut from an image: the image's path in the theme folder and a rectangle in it. */
@@ -72,6 +74,8 @@ export interface TileType {
   readonly element?: ElementProperties;
   /** Tile kind left once destroyed (an index into `MapData.tileTypes`); 0 is no tile. */
   readonly destroyedTile?: number;
+  /** Tile kind left once burnt out; without it, the destroyed one, or no tile. */
+  readonly burntTile?: number;
 }
 
 export interface TileLayer {
@@ -123,6 +127,8 @@ export interface MapObject {
   readonly element?: ElementProperties;
   /** Picture left once destroyed; without it, the object disappears. */
   readonly destroyedVisual?: TileVisual;
+  /** Picture left once burnt out; without it, the destroyed one. */
+  readonly burntVisual?: TileVisual;
 }
 
 /** An area where the members of a team appear at the start of a round (Q52). */

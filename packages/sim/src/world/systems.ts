@@ -7,6 +7,7 @@ import { NEUTRAL_INPUT, sanitizeInput } from '../core/input';
 import { projectiles, weapons } from '../systems/combat';
 import { damage } from '../systems/damage';
 import { explosions } from '../systems/explosions';
+import { fire } from '../systems/fire';
 import { mapElements } from '../systems/map-elements';
 import { movement } from '../systems/movement';
 import type { WorldState } from './state';
@@ -38,6 +39,7 @@ export const SYSTEMS: readonly System[] = [
   weapons,
   projectiles,
   explosions,
+  fire,
   damage,
   mapElements,
 ];

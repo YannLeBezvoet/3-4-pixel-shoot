@@ -167,6 +167,68 @@
               "params"
             ],
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
+              },
+              "sprite": {
+                "type": "string",
+                "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
+                "description": "Projectile sprite, drawn pointing right, with a \"fly\" animation and an \"origin\" slice at the projectile position."
+              },
+              "effects": {
+                "default": {},
+                "description": "Visual effects of this projectile.",
+                "type": "object",
+                "properties": {
+                  "impact": {
+                    "description": "Effect shown where the projectile stops against an obstacle.",
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "behavior": {
+                "type": "string",
+                "const": "flame",
+                "description": "A short-lived particle of fire: it hurts and ignites the character it hits, ignites flammable tiles and objects it touches, and stops at obstacles."
+              },
+              "params": {
+                "type": "object",
+                "properties": {
+                  "speed": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1200,
+                    "description": "Speed in pixels per second (one tile is 48 pixels)."
+                  },
+                  "range": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1000,
+                    "description": "Distance in pixels from the muzzle after which the flame disappears."
+                  }
+                },
+                "required": [
+                  "speed",
+                  "range"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "sprite",
+              "behavior",
+              "params"
+            ],
+            "additionalProperties": false
           }
         ]
       }

@@ -344,7 +344,7 @@ describe('loadTheme', () => {
       error(
         'weapons.json',
         'weapons[0] ("rifle").behavior',
-        'Unknown weapon behavior "firarm". Known weapon behaviors: firearm, thrown.',
+        'Unknown weapon behavior "firarm". Known weapon behaviors: firearm, flamethrower, thrown.',
       ),
     ]);
   });
@@ -510,7 +510,7 @@ describe('loadTheme', () => {
       error(
         'projectiles.json',
         'projectiles[0] ("bullet").behavior',
-        'Unknown projectile behavior "rocket". Known projectile behaviors: bullet, grenade.',
+        'Unknown projectile behavior "rocket". Known projectile behaviors: bullet, grenade, flame.',
       ),
     ]);
     const tooFast = await load(

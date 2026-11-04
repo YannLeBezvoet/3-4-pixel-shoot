@@ -8,6 +8,7 @@ import { StateHasher } from '../core/hash';
 import type { InputCommand } from '../core/input';
 import { NEUTRAL_INPUT } from '../core/input';
 import { createFirearmState } from '../behaviors/weapons/firearm';
+import { createFlamethrowerState } from '../behaviors/weapons/flamethrower';
 import { createThrowable } from '../behaviors/weapons/thrown';
 import type { CollisionGrid } from '../map/collision-grid';
 import { buildCollisionGrid } from '../map/collision-grid';
@@ -72,6 +73,8 @@ export interface ActorState {
   readonly throwable: string | undefined;
   /** How many are left in this life. */
   readonly throwables: number;
+  /** Whether the character is on fire. */
+  readonly burning: boolean;
 }
 
 /** A read-only copy of a projectile's state. */
@@ -145,6 +148,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
     events: [],
     damage: [],
     elementDamage: [],
+    burntOut: [],
     explosions: [],
     actorIndex: createActorIndex(),
     maxActorRadius: 0,
@@ -180,6 +184,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
       reloadLeft: weapon.reloadLeft,
       throwable: throwable?.weapon,
       throwables: throwable?.count ?? 0,
+      burning: world.burning.has(id),
     };
   };
 
@@ -205,7 +210,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
       const stats = world.catalog.characters.get(spec.character);
       if (!stats) throw new Error(`Unknown character "${spec.character}".`);
       const weapon = world.catalog.weapons.get(stats.weapon);
-      if (weapon?.behavior !== 'firearm') throw new Error(`Unknown weapon "${stats.weapon}".`);
+      if (!weapon || weapon.behavior === 'thrown')
+        throw new Error(`Unknown weapon "${stats.weapon}".`);
       if (!Number.isInteger(spec.team) || spec.team < 1)
         throw new Error(`Teams are numbered from 1; got ${spec.team}.`);
       const id = world.nextEntity++;
@@ -222,7 +228,12 @@ export function createSimulation(options: SimulationOptions): Simulation {
         alive: true,
       });
       world.health.set(id, { hp: stats.hitPoints, max: stats.hitPoints });
-      world.weapon.set(id, createFirearmState(weapon));
+      world.weapon.set(
+        id,
+        weapon.behavior === 'firearm'
+          ? createFirearmState(weapon)
+          : createFlamethrowerState(weapon),
+      );
       const thrown = stats.throwable && world.catalog.weapons.get(stats.throwable);
       if (thrown && thrown.behavior === 'thrown') world.throwable.set(id, createThrowable(thrown));
       world.maxActorRadius = Math.max(world.maxActorRadius, stats.radius);
@@ -260,6 +271,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
       for (const id of [...world.projectile.ids()]) removeEntity(world, id);
       world.explosions.length = 0;
       world.elementDamage.length = 0;
+      world.burntOut.length = 0;
       if (world.elements.reset()) world.events.push({ type: 'mapReset' });
     },
 

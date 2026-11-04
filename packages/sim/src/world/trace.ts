@@ -151,6 +151,7 @@ export function resolveTrace(world: WorldState, result: TraceResult, shot: ShotI
     attacker: shot.owner,
     target: result.target,
     weapon: shot.weapon,
+    source: shot.source,
     damage: shot.damage,
     x,
     y,

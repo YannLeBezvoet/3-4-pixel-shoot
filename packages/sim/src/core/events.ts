@@ -62,6 +62,7 @@ export type SimEvent =
       readonly attacker: EntityId;
       readonly target: EntityId;
       readonly weapon: string;
+      readonly source: DamageSource;
       readonly damage: number;
       readonly x: number;
       readonly y: number;
@@ -80,6 +81,15 @@ export type SimEvent =
       readonly kind: string | undefined;
     }
   | {
+      /** A map element caught fire. (x, y) is its center. */
+      readonly type: 'fireStarted';
+      /** Key of the element, repeated by `fireEnded`. */
+      readonly element: number;
+      readonly x: number;
+      readonly y: number;
+    }
+  | { readonly type: 'fireEnded'; readonly element: number }
+  | {
       /** A tile of the map became another one. `tile` indexes `MapData.tileTypes`. */
       readonly type: 'tileChanged';
       /** Index in `MapData.layers`. */
@@ -96,6 +106,8 @@ export type SimEvent =
       /** What it covered. */
       readonly box: Box;
       readonly attacker: EntityId;
+      /** Whether fire consumed it, rather than damage. */
+      readonly burnt: boolean;
     }
   | {
       /** Every map element is back as the map describes it: a new round. */

@@ -1,8 +1,10 @@
 // 4. Weapons and 5. projectiles: each runs the behavior chosen by the theme for the weapon or
 // projectile (decision 0006). Adding a behavior means adding its case here.
 import { updateBullet } from '../behaviors/projectiles/bullet';
+import { updateFlame } from '../behaviors/projectiles/flame';
 import { updateGrenade } from '../behaviors/projectiles/grenade';
 import { updateFirearm } from '../behaviors/weapons/firearm';
+import { updateFlamethrower } from '../behaviors/weapons/flamethrower';
 import { updateThrown } from '../behaviors/weapons/thrown';
 import type { WorldState } from '../world/state';
 
@@ -12,6 +14,7 @@ export function weapons(world: WorldState): void {
     const stats = world.catalog.weapons.get(state.weapon);
     if (!actor?.alive || !stats) continue;
     if (stats.behavior === 'firearm') updateFirearm(world, id, actor, state, stats);
+    else if (stats.behavior === 'flamethrower') updateFlamethrower(world, id, actor, state, stats);
     const throwable = world.throwable.get(id);
     const thrown = throwable && world.catalog.weapons.get(throwable.weapon);
     if (thrown?.behavior === 'thrown') updateThrown(world, id, actor, throwable!, thrown);
@@ -24,5 +27,6 @@ export function projectiles(world: WorldState): void {
     const stats = world.catalog.projectiles.get(projectile.kind);
     if (stats?.behavior === 'bullet') updateBullet(world, id, projectile);
     else if (stats?.behavior === 'grenade') updateGrenade(world, id, projectile, stats);
+    else if (stats?.behavior === 'flame') updateFlame(world, id, projectile);
   }
 }

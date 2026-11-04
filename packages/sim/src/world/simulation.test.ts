@@ -50,6 +50,7 @@ describe('createSimulation', () => {
       reloadLeft: 0,
       throwable: 'frag',
       throwables: 2,
+      burning: false,
     });
     expect(sim.step()).toEqual([
       { type: 'actorSpawned', entity: id, team: 1, character: 'rifleman' },
