@@ -8,7 +8,13 @@
   "settings": {
     "language": "Language",
     "palettePass": "Palette pass",
-    "palettePassHint": "Keeps every pixel in the game palette, even where colors blend."
+    "palettePassHint": "Keeps every pixel in the game palette, even where colors blend.",
+    "blood": "Blood",
+    "bloodLevel": {
+      "full": "Full",
+      "reduced": "Reduced",
+      "off": "Off"
+    }
   },
   "dev": {
     "tools": "Developer tools",

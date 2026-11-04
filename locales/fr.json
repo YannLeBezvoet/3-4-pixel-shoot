@@ -8,7 +8,13 @@
   "settings": {
     "language": "Langue",
     "palettePass": "Passe palette",
-    "palettePassHint": "Garde chaque pixel dans la palette du jeu, même là où les couleurs se mélangent."
+    "palettePassHint": "Garde chaque pixel dans la palette du jeu, même là où les couleurs se mélangent.",
+    "blood": "Sang",
+    "bloodLevel": {
+      "full": "Complet",
+      "reduced": "Réduit",
+      "off": "Aucun"
+    }
   },
   "dev": {
     "tools": "Outils de développement",

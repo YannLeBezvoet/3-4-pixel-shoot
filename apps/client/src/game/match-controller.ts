@@ -11,6 +11,7 @@ import { hudTexts } from '../i18n/hud-texts';
 import type { Translator } from '../i18n/translator';
 import { createGameInput } from '../input/game-input';
 import { PAUSE_KEY } from '../input/key-map';
+import type { BloodSetting } from '../render/blood';
 import { Hud } from '../render/hud';
 import type { PixelFont } from '../render/pixel-text';
 import type { Renderer } from '../render/renderer';
@@ -35,13 +36,15 @@ export interface MatchControllerOptions {
   readonly pausable?: boolean;
   /** Content to watch for map hot reload (development). */
   readonly store?: ContentStore;
+  /** The blood setting (Q32); full by default. */
+  readonly blood?: () => BloodSetting;
 }
 
 export class MatchController {
   readonly #phase = signal<MatchPhase>('playing');
   readonly #final = signal<WorldView | undefined>(undefined);
   readonly #options: MatchControllerOptions;
-  readonly #scene = new WorldScene(new SheetTextures());
+  readonly #scene: WorldScene;
   readonly #hud: Hud;
   readonly #input;
   readonly #tick: (ticker: { deltaMS: number }) => void;
@@ -52,6 +55,11 @@ export class MatchController {
   constructor(options: MatchControllerOptions) {
     this.#options = options;
     const { renderer, assets } = options;
+    this.#scene = new WorldScene(
+      new SheetTextures(),
+      renderer.app.renderer,
+      options.blood ?? (() => 'full'),
+    );
     const map = assets.maps.get(options.mapRef);
     if (map) this.#scene.setMap(map, assets.images);
     this.#scene.setLooks(themeLooks(assets));

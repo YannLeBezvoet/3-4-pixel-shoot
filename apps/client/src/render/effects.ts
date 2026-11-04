@@ -4,10 +4,14 @@
 // is gone. Presentation only: effects never change the game.
 import { animationFrameAt, originOf } from '@pixel-shoot/content';
 import type { WorldView } from '@pixel-shoot/match';
+import { createRng } from '@pixel-shoot/shared';
 import type { SimEvent } from '@pixel-shoot/sim';
 import type { Container } from 'pixi.js';
 import { Sprite } from 'pixi.js';
 import type { LoadedSheet } from '../content/content-store';
+import type { BloodSetting } from './blood';
+import { bloodPool, woundEffects } from './blood';
+import type { DecalLayer } from './decals';
 import { depthOf } from './depth';
 import type { SheetTextures } from './sheet-textures';
 import type { SheetLook, ThemeLooks } from './theme-looks';
@@ -16,6 +20,8 @@ import { anchorOf } from './weapon-pose';
 const EFFECT_TAG = 'play';
 /** From the center of a burning tile to where its flames stand. */
 const FLAME_BASE = 20;
+/** Largest distance of a stain from the wound, on each axis. */
+const STAIN_SCATTER = 14;
 
 interface Effect {
   readonly sprite: Sprite;
@@ -40,14 +46,18 @@ export class Effects {
   readonly #effects: Effect[] = [];
   /** Flames on map elements, by element key. */
   readonly #fires = new Map<number, Effect>();
+  readonly #decals: DecalLayer;
+  /** Picks stains; presentation only, so it needs no seed from the simulation. */
+  readonly #random = createRng('decals');
 
-  constructor(layer: Container, textures: SheetTextures) {
+  constructor(layer: Container, textures: SheetTextures, decals: DecalLayer) {
     this.#layer = layer;
     this.#textures = textures;
+    this.#decals = decals;
   }
 
   /** Starts the effects of a tick's events. `view` is the tick the events belong to. */
-  play(events: readonly SimEvent[], view: WorldView, looks: ThemeLooks): void {
+  play(events: readonly SimEvent[], view: WorldView, looks: ThemeLooks, blood: BloodSetting): void {
     for (const event of events) {
       if (event.type === 'shotFired')
         this.#add(looks.fireEffect(event.weapon), event.x, event.y, event.z, event.angle);
@@ -55,9 +65,26 @@ export class Effects {
         this.#add(looks.impactEffect(event.kind), event.x, event.y, event.z, 0);
       else if (event.type === 'hit') {
         const target = view.actors.find((a) => a.id === event.target);
-        // Flames do not bleed: the character catches fire instead.
-        if (target && event.source !== 'fire')
-          this.#add(looks.hitEffect(target.character), event.x, event.y, event.z, 0);
+        if (!target) continue;
+        const wound = woundEffects(blood, event.source);
+        if (wound.sprayScale > 0) {
+          const spray = this.#add(looks.hitEffect(target.character), event.x, event.y, event.z, 0);
+          spray?.sprite.scale.set(wound.sprayScale);
+        }
+        if (wound.impact) this.#add(looks.impactEffect(event.kind), event.x, event.y, event.z, 0);
+        if (wound.decal) this.#stain(looks.worldEffect('bloodDecal'), event.x, event.y);
+      } else if (event.type === 'damaged' && event.source === 'explosion') {
+        const target = view.actors.find((a) => a.id === event.target);
+        if (!target) continue;
+        const wound = woundEffects(blood, event.source);
+        if (wound.sprayScale > 0) {
+          const spray = this.#add(looks.hitEffect(target.character), target.x, target.y, 16, 0);
+          spray?.sprite.scale.set(wound.sprayScale);
+        }
+        if (wound.decal) this.#stain(looks.worldEffect('bloodDecal'), target.x, target.y);
+      } else if (event.type === 'killed') {
+        if (bloodPool(blood, event.source))
+          this.#paint(looks.worldEffect('bloodPool'), event.x, event.y);
       } else if (event.type === 'exploded') {
         const look =
           (event.kind === undefined ? undefined : looks.impactEffect(event.kind)) ??
@@ -74,6 +101,23 @@ export class Effects {
       } else if (event.type === 'mapReset')
         for (const element of [...this.#fires.keys()]) this.#stopFire(element);
     }
+  }
+
+  /** A stain near a wound. */
+  #stain(look: SheetLook | undefined, x: number, y: number): void {
+    const scatter = () => this.#random.range(-STAIN_SCATTER, STAIN_SCATTER);
+    this.#paint(look, x + scatter(), y + scatter());
+  }
+
+  /** Paints one frame of an effect, picked at random, on the ground. */
+  #paint(look: SheetLook | undefined, x: number, y: number): void {
+    const animation = look?.sheet.sheet.animations.get(EFFECT_TAG);
+    if (!look || !animation) return;
+    const frame = this.#random.int(animation.from, animation.to);
+    const { sheet } = look.sheet;
+    const anchor = anchorOf(sheet, originOf(sheet, frame));
+    const texture = this.#textures.frame(look.key, look.sheet, frame);
+    this.#decals.stamp(texture, x, y, anchor.x, anchor.y);
   }
 
   #stopFire(element: number): void {

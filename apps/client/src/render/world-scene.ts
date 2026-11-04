@@ -1,13 +1,16 @@
-// The match drawn from a session frame (ARCHITECTURE §11): ground, low map objects (sandbags),
-// corpses, the depth-sorted world layer (map objects, characters, projectiles), then overhead
+// The match drawn from a session frame (ARCHITECTURE §11): ground, blood on it, low map objects
+// (sandbags), corpses, the depth-sorted world layer (map objects, characters, projectiles), then overhead
 // tiles. Positions are
 // interpolated between the last two ticks; the camera keeps the followed character at the
 // exact center of the screen (Q20) and snaps to whole pixels.
 import type { EntityId, MapData } from '@pixel-shoot/sim';
+import type { Renderer } from 'pixi.js';
 import { Container } from 'pixi.js';
 import type { SimEvent } from '@pixel-shoot/sim';
 import type { SessionFrame } from '../session/session';
+import type { BloodSetting } from './blood';
 import { CharacterView, SheetView } from './character-view';
+import { DecalLayer } from './decals';
 import { depthOf } from './depth';
 import { Effects } from './effects';
 import { ImageTextures } from './image-textures';
@@ -45,19 +48,37 @@ export class WorldScene {
   readonly #characters = new Map<EntityId, CharacterView>();
   readonly #projectiles = new Map<EntityId, SheetView>();
   readonly #effects: Effects;
+  readonly #decals: DecalLayer;
+  readonly #blood: () => BloodSetting;
+  /** Round of the last frame: blood stays until the next one (Q32). */
+  #round: number | undefined;
   /** Top-left corner of the screen in world pixels. */
   #camera = { x: 0, y: 0 };
 
-  constructor(sheets: SheetTextures) {
+  constructor(sheets: SheetTextures, renderer: Renderer, blood: () => BloodSetting) {
     this.#sheets = sheets;
-    this.#effects = new Effects(this.#world, sheets);
-    this.root.addChild(this.#ground, this.#low, this.#corpses, this.#world, this.#overhead);
+    this.#blood = blood;
+    this.#decals = new DecalLayer(renderer);
+    this.#effects = new Effects(this.#world, sheets, this.#decals);
+    this.root.addChild(
+      this.#ground,
+      this.#decals.root,
+      this.#low,
+      this.#corpses,
+      this.#world,
+      this.#overhead,
+    );
   }
 
   /** Follows the events of the session: what changed on the map, and the visual effects. */
   playEvents(events: readonly SimEvent[], frame: SessionFrame): void {
     for (const event of events) this.#changeMap(event);
-    if (this.#looks && events.length > 0) this.#effects.play(events, frame.current, this.#looks);
+    if (frame.current.mode.round !== this.#round) {
+      this.#round = frame.current.mode.round;
+      this.#decals.clear();
+    }
+    if (this.#looks && events.length > 0)
+      this.#effects.play(events, frame.current, this.#looks, this.#blood());
   }
 
   #changeMap(event: SimEvent): void {
@@ -176,10 +197,12 @@ export class WorldScene {
     this.root.position.set(-this.#camera.x, -this.#camera.y);
     this.#map?.flush();
     this.#map?.cull(this.#camera.x, this.#camera.y, INTERNAL_WIDTH, INTERNAL_HEIGHT);
+    this.#decals.cull(this.#camera.x, this.#camera.y, INTERNAL_WIDTH, INTERNAL_HEIGHT);
   }
 
   destroy(): void {
     this.#map?.destroy();
+    this.#decals.destroy();
     this.#images.destroy();
     this.root.destroy({ children: true });
     this.#characters.clear();
