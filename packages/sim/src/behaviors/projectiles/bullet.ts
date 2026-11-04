@@ -55,8 +55,10 @@ export function updateBullet(world: WorldState, id: EntityId, bullet: Projectile
       projectile: id,
       kind: bullet.kind,
       owner: bullet.owner,
+      team: bullet.team,
       weapon: bullet.weapon,
       damage: bullet.damage,
+      source: 'bullet',
       z: bullet.z,
       angle: Math.atan2(bullet.dirY, bullet.dirX),
     });

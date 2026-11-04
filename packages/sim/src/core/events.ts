@@ -1,5 +1,6 @@
 // What happened during a tick. Presentation, game modes, bots and the network consume
 // events; none of them poll simulation internals (ARCHITECTURE §5).
+import type { Box } from '../map/map-data';
 import type { EntityId } from './entities';
 
 /** What caused damage; a map element's damage filter selects among them (Q33). */
@@ -77,6 +78,28 @@ export type SimEvent =
       readonly weapon: string;
       /** Projectile id in the catalog, when a projectile exploded. */
       readonly kind: string | undefined;
+    }
+  | {
+      /** A tile of the map became another one. `tile` indexes `MapData.tileTypes`. */
+      readonly type: 'tileChanged';
+      /** Index in `MapData.layers`. */
+      readonly layer: number;
+      readonly tileX: number;
+      readonly tileY: number;
+      readonly tile: number;
+    }
+  | {
+      /** A map element was destroyed; a tile also reports its `tileChanged`. */
+      readonly type: 'elementDestroyed';
+      /** Id of the map object, when it was one. */
+      readonly object: number | undefined;
+      /** What it covered. */
+      readonly box: Box;
+      readonly attacker: EntityId;
+    }
+  | {
+      /** Every map element is back as the map describes it: a new round. */
+      readonly type: 'mapReset';
     }
   | {
       /** A character lost hit points. */

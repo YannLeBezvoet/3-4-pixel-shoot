@@ -11,14 +11,18 @@ export type { BulletParams } from './behaviors/projectiles/bullet';
 export { grenade, grenadeParams } from './behaviors/projectiles/grenade';
 export type { GrenadeParams } from './behaviors/projectiles/grenade';
 export {
+  ANY_DAMAGE,
   BLOCKS_MOVEMENT,
   BLOCKS_PROJECTILES,
   BLOCKS_SIGHT,
+  DamageFilter,
   TILE_SIZE,
   TileFlag,
 } from './map/map-data';
 export type {
   Box,
+  ElementBlast,
+  ElementProperties,
   Footprint,
   MapData,
   MapObject,
@@ -46,6 +50,7 @@ export type {
   ThrownStats,
   WeaponStats,
 } from './world/catalog';
+export type { ElementState } from './world/elements';
 export { DEFAULT_RULES } from './world/state';
 export type { ExplosionRequest, Rules } from './world/state';
 export { createSimulation } from './world/simulation';

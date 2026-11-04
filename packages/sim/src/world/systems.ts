@@ -7,6 +7,7 @@ import { NEUTRAL_INPUT, sanitizeInput } from '../core/input';
 import { projectiles, weapons } from '../systems/combat';
 import { damage } from '../systems/damage';
 import { explosions } from '../systems/explosions';
+import { mapElements } from '../systems/map-elements';
 import { movement } from '../systems/movement';
 import type { WorldState } from './state';
 
@@ -32,4 +33,11 @@ export function applyInputs(world: WorldState, inputs: ReadonlyMap<EntityId, Inp
  * Systems 3 to 8, in order. Steps 2 and 9 (mode pre-tick and post-tick) are run by the match
  * host around `step`, and step 10 (cleanup) by the systems themselves as they remove entities.
  */
-export const SYSTEMS: readonly System[] = [movement, weapons, projectiles, explosions, damage];
+export const SYSTEMS: readonly System[] = [
+  movement,
+  weapons,
+  projectiles,
+  explosions,
+  damage,
+  mapElements,
+];

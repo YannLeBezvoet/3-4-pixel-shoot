@@ -23,6 +23,8 @@ import {
   indexActors,
   removeEntity,
 } from './state';
+import type { ElementState } from './elements';
+import { MapElements } from './elements';
 import { SYSTEMS, applyInputs } from './systems';
 
 export interface SimulationOptions {
@@ -105,7 +107,7 @@ export interface Simulation {
    */
   spawnActor(spec: ActorSpec): EntityId;
   removeActor(id: EntityId): void;
-  /** Removes every actor (reported) and projectile (silently). */
+  /** Removes every actor (reported) and projectile (silently), and restores the map elements. */
   clear(): void;
   /** Free spots of a team's spawn areas for a character of `radius`, avoiding living actors. */
   freeSpawnSpots(team: number, radius: number): { x: number; y: number }[];
@@ -116,6 +118,8 @@ export interface Simulation {
   actor(id: EntityId): ActorState | undefined;
   actors(): readonly ActorState[];
   projectiles(): readonly ProjectileState[];
+  /** Map elements still standing. */
+  elements(): readonly ElementState[];
   /** Hash of the whole state: equal for equal seeds and inputs. */
   hash(): number;
 }
@@ -123,12 +127,14 @@ export interface Simulation {
 export function createSimulation(options: SimulationOptions): Simulation {
   const root = createRng(options.seed);
   const streams = new Map<string, Rng>();
+  const grid = buildCollisionGrid(options.map);
   const world: WorldState = {
     tick: 0,
     nextEntity: 1,
     frozen: false,
     map: options.map,
-    grid: buildCollisionGrid(options.map),
+    grid,
+    elements: new MapElements(options.map, grid),
     catalog: options.catalog,
     rules: { ...DEFAULT_RULES, ...options.rules },
     random: (stream) => {
@@ -138,6 +144,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
     },
     events: [],
     damage: [],
+    elementDamage: [],
     explosions: [],
     actorIndex: createActorIndex(),
     maxActorRadius: 0,
@@ -234,6 +241,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
     replaceMap(map) {
       world.map = map;
       world.grid = buildCollisionGrid(map);
+      world.elements = new MapElements(map, world.grid);
       for (const [id, actor] of world.actor.entries()) {
         const position = world.position.get(id);
         const body = world.body.get(id);
@@ -251,6 +259,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
       for (const id of [...world.actor.ids()]) this.removeActor(id);
       for (const id of [...world.projectile.ids()]) removeEntity(world, id);
       world.explosions.length = 0;
+      world.elementDamage.length = 0;
+      if (world.elements.reset()) world.events.push({ type: 'mapReset' });
     },
 
     freeSpawnSpots(team, radius) {
@@ -294,6 +304,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
           angle: Math.atan2(projectile.dirY, projectile.dirX),
         };
       }),
+    elements: () => world.elements.snapshot(),
 
     hash() {
       const hasher = new StateHasher().number(world.tick).number(world.nextEntity);
@@ -302,6 +313,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
         hasher.string(name).number(store.size);
         for (const [id, component] of store.entries()) hasher.number(id).value(component);
       }
+      hasher.value(world.elements.snapshot());
       return hasher.result;
     },
   };

@@ -61,6 +61,18 @@ describe('navigation', () => {
     expect(findPath(closed, tile(0, 0), tile(2, 0))).toBeUndefined();
   });
 
+  it('follows the map elements destroyed, then the map coming back', () => {
+    const grid = buildCollisionGrid(asciiMap('...w...'));
+    const changing = new NavGrid(grid);
+    expect(findPath(changing, tile(0, 0), tile(6, 0))).toBeUndefined();
+    grid.setFlags(3, 0, 0);
+    changing.refreshArea({ x: 144, y: 0, width: 48, height: 48 });
+    expect(findPath(changing, tile(0, 0), tile(6, 0))).toBeDefined();
+    grid.reset();
+    changing.rebuild();
+    expect(findPath(changing, tile(0, 0), tile(6, 0))).toBeUndefined();
+  });
+
   it('smooths a path into straight runs that are clear to walk', () => {
     const open = nav(`
       ..........

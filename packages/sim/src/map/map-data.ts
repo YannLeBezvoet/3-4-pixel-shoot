@@ -26,6 +26,34 @@ export const BLOCKS_PROJECTILES = TileFlag.solid;
 /** Flags that stop line of sight. */
 export const BLOCKS_SIGHT = TileFlag.solid;
 
+/** What can hurt a map element (Q33), combined as bits. */
+export const DamageFilter = {
+  bullet: 1,
+  explosion: 2,
+  fire: 4,
+} as const;
+
+/** Every kind of damage. */
+export const ANY_DAMAGE = DamageFilter.bullet | DamageFilter.explosion | DamageFilter.fire;
+
+/** The blast of an element that explodes when destroyed. */
+export interface ElementBlast {
+  /** World units. */
+  readonly radius: number;
+  /** Damage at the center. */
+  readonly damage: number;
+}
+
+/** How a tile or an object behaves as a map element (Q33). */
+export interface ElementProperties {
+  /** Hit points; missing means damage cannot destroy it. */
+  readonly hp?: number;
+  /** `DamageFilter` bits of what hurts it; missing means everything. */
+  readonly damageFilter?: number;
+  /** Blast when destroyed. */
+  readonly explosive?: ElementBlast;
+}
+
 /** A picture cut from an image: the image's path in the theme folder and a rectangle in it. */
 export interface TileVisual {
   /** Image path relative to the theme folder, e.g. "tilesets/jungle-ground.png". */
@@ -40,6 +68,10 @@ export interface TileVisual {
 export interface TileType {
   readonly flags: number;
   readonly visual?: TileVisual;
+  /** Makes tiles of this kind map elements. */
+  readonly element?: ElementProperties;
+  /** Tile kind left once destroyed (an index into `MapData.tileTypes`); 0 is no tile. */
+  readonly destroyedTile?: number;
 }
 
 export interface TileLayer {
@@ -87,6 +119,10 @@ export interface MapObject {
   readonly low?: boolean;
   /** Collision boxes in world coordinates. */
   readonly footprints: readonly Footprint[];
+  /** Makes this object a map element. */
+  readonly element?: ElementProperties;
+  /** Picture left once destroyed; without it, the object disappears. */
+  readonly destroyedVisual?: TileVisual;
 }
 
 /** An area where the members of a team appear at the start of a round (Q52). */

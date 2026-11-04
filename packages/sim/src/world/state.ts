@@ -5,11 +5,12 @@ import type { EntityId } from '../core/entities';
 import { ComponentStore } from '../core/entities';
 import type { DamageSource, SimEvent } from '../core/events';
 import type { InputCommand } from '../core/input';
-import type { CollisionGrid } from '../map/collision-grid';
+import type { MutableCollisionGrid } from '../map/collision-grid';
 import type { MapData } from '../map/map-data';
 import { TILE_SIZE } from '../map/map-data';
 import { SpatialHash } from '../physics/spatial-hash';
 import type { Catalog } from './catalog';
+import type { MapElements } from './elements';
 
 /** Ground point, in world units. */
 export interface Position {
@@ -46,6 +47,17 @@ export interface Actor {
 export interface DamageRequest {
   readonly target: EntityId;
   readonly attacker: EntityId;
+  readonly weapon: string;
+  readonly amount: number;
+  readonly source: DamageSource;
+}
+
+/** Damage waiting for the map element system (8) of the current tick. */
+export interface ElementDamage {
+  /** The element's key. */
+  readonly element: number;
+  readonly attacker: EntityId;
+  readonly team: number;
   readonly weapon: string;
   readonly amount: number;
   readonly source: DamageSource;
@@ -147,7 +159,9 @@ export interface WorldState {
   frozen: boolean;
   /** Replaced in place by hot reload (development). */
   map: MapData;
-  grid: CollisionGrid;
+  grid: MutableCollisionGrid;
+  /** Destructible tiles and objects, and what happened to them. */
+  elements: MapElements;
   readonly catalog: Catalog;
   readonly rules: Rules;
   /** A named random stream, independent of the others (decision 0011). */
@@ -155,6 +169,7 @@ export interface WorldState {
   /** Events waiting to be returned by the next step. */
   readonly events: SimEvent[];
   readonly damage: DamageRequest[];
+  readonly elementDamage: ElementDamage[];
   readonly explosions: ExplosionRequest[];
   /** Actors by position; current after the movement system. */
   readonly actorIndex: SpatialHash;

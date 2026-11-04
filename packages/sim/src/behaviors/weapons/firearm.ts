@@ -81,8 +81,10 @@ function shoot(world: WorldState, id: EntityId, actor: Actor, stats: FirearmStat
   const shot = {
     kind: projectile.id,
     owner: id,
+    team: actor.team,
     weapon: stats.id,
     damage: stats.params.damage,
+    source: 'bullet' as const,
     z,
     angle,
   };

@@ -141,6 +141,7 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
     },
     clearWorld() {
       sim.clear();
+      navGrid?.rebuild();
       byEntity.clear();
       for (const participant of participants.values()) participant.entity = undefined;
     },
@@ -242,6 +243,7 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
       const events = sim.step(inputs);
       lastEvents = events;
       for (const event of events) {
+        if (event.type === 'elementDestroyed') navGrid?.refreshArea(event.box);
         if (event.type !== 'killed') continue;
         const victim = byEntity.get(event.victim);
         const killer = byEntity.get(event.killer);

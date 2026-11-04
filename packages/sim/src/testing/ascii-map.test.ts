@@ -45,7 +45,7 @@ describe('asciiMap', () => {
 
   it('rejects ragged rows, unknown characters and empty maps', () => {
     expect(() => asciiMap(['...', '..'])).toThrow('Row 1 has 2 characters, expected 3.');
-    expect(() => asciiMap('.x.')).toThrow('Unknown map character "x" at column 1, row 0.');
+    expect(() => asciiMap('.?.')).toThrow('Unknown map character "?" at column 1, row 0.');
     expect(() => asciiMap('  \n ')).toThrow('at least one row');
   });
 });
