@@ -1,5 +1,6 @@
 // A character drawn from its sprite sheet: the body faces one of 8 directions (5 drawn, 3
-// mirrored) and plays an action; the weapon is a separate sprite rotated to the exact aim.
+// mirrored) and plays an action; the weapon is a separate sprite rotated to the exact aim. A
+// burning character carries a looping flame.
 import type { SpriteAnimation } from '@pixel-shoot/content';
 import {
   animationFrameAt,
@@ -24,8 +25,10 @@ export class CharacterView {
   readonly root = new Container();
   readonly #body = new Sprite();
   readonly #weapon = new Sprite();
+  readonly #flame = new Sprite();
   readonly #textures: SheetTextures;
   #look: CharacterLook | undefined;
+  #burning: { readonly key: string; readonly sheet: LoadedSheet } | undefined;
   #action = 'idle';
   #aim = Math.PI / 2;
   #elapsedMs = 0;
@@ -35,7 +38,30 @@ export class CharacterView {
 
   constructor(textures: SheetTextures) {
     this.#textures = textures;
-    this.root.addChild(this.#body, this.#weapon);
+    this.root.addChild(this.#body, this.#weapon, this.#flame);
+    this.#flame.visible = false;
+  }
+
+  /** The flame drawn over the character, or undefined when it does not burn. */
+  setBurning(look: { readonly key: string; readonly sheet: LoadedSheet } | undefined): void {
+    this.#burning = look;
+  }
+
+  #drawFlame(): void {
+    const burning = this.#burning;
+    this.#flame.visible = burning !== undefined;
+    if (!burning) return;
+    const { sheet } = burning.sheet;
+    const animation = sheet.animations.get('play');
+    if (!animation) return;
+    const cycle = sheet.frames
+      .slice(animation.from, animation.to + 1)
+      .reduce((sum, f) => sum + f.durationMs, 0);
+    const elapsedMs = cycle > 0 ? this.#elapsedMs % cycle : 0;
+    const { frame } = animationFrameAt(sheet, animation, elapsedMs);
+    const anchor = anchorOf(sheet, originOf(sheet, frame));
+    this.#flame.texture = this.#textures.frame(burning.key, burning.sheet, frame);
+    this.#flame.anchor.set(anchor.x, anchor.y);
   }
 
   setLook(look: CharacterLook): void {
@@ -54,6 +80,7 @@ export class CharacterView {
 
   update(deltaMs: number): void {
     this.#elapsedMs += deltaMs;
+    this.#drawFlame();
     const look = this.#look;
     if (!look) return;
     const view = viewForOctant(octantOf(this.#aim));

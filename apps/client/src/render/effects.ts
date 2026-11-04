@@ -1,28 +1,45 @@
 // Visual effects driven by simulation events (ARCHITECTURE §11): a muzzle flash for each shot,
 // an impact where a projectile stops against an obstacle, the character's hit effect (blood)
-// where a projectile strikes. Presentation only: effects never change the game.
+// where a projectile strikes, blasts, flames looping on what burns and smoke rising from what
+// is gone. Presentation only: effects never change the game.
 import { animationFrameAt, originOf } from '@pixel-shoot/content';
 import type { WorldView } from '@pixel-shoot/match';
 import type { SimEvent } from '@pixel-shoot/sim';
 import type { Container } from 'pixi.js';
 import { Sprite } from 'pixi.js';
+import type { LoadedSheet } from '../content/content-store';
 import { depthOf } from './depth';
 import type { SheetTextures } from './sheet-textures';
 import type { SheetLook, ThemeLooks } from './theme-looks';
 import { anchorOf } from './weapon-pose';
 
 const EFFECT_TAG = 'play';
+/** From the center of a burning tile to where its flames stand. */
+const FLAME_BASE = 20;
 
 interface Effect {
   readonly sprite: Sprite;
   readonly look: SheetLook;
   elapsedMs: number;
+  /** Plays until stopped instead of once. */
+  readonly loop: boolean;
+}
+
+/** Duration of one play of an effect. */
+function cycleOf({ sheet }: LoadedSheet): number {
+  const animation = sheet.animations.get(EFFECT_TAG);
+  if (!animation) return 0;
+  return sheet.frames
+    .slice(animation.from, animation.to + 1)
+    .reduce((sum, f) => sum + f.durationMs, 0);
 }
 
 export class Effects {
   readonly #layer: Container;
   readonly #textures: SheetTextures;
   readonly #effects: Effect[] = [];
+  /** Flames on map elements, by element key. */
+  readonly #fires = new Map<number, Effect>();
 
   constructor(layer: Container, textures: SheetTextures) {
     this.#layer = layer;
@@ -38,21 +55,53 @@ export class Effects {
         this.#add(looks.impactEffect(event.kind), event.x, event.y, event.z, 0);
       else if (event.type === 'hit') {
         const target = view.actors.find((a) => a.id === event.target);
-        if (target) this.#add(looks.hitEffect(target.character), event.x, event.y, event.z, 0);
-      }
+        // Flames do not bleed: the character catches fire instead.
+        if (target && event.source !== 'fire')
+          this.#add(looks.hitEffect(target.character), event.x, event.y, event.z, 0);
+      } else if (event.type === 'exploded') {
+        const look =
+          (event.kind === undefined ? undefined : looks.impactEffect(event.kind)) ??
+          looks.worldEffect('explosion');
+        this.#add(look, event.x, event.y, 0, 0);
+      } else if (event.type === 'fireStarted') {
+        const look = looks.worldEffect('fire');
+        const fire = this.#add(look, event.x, event.y + FLAME_BASE, 0, 0, true);
+        if (fire) this.#fires.set(event.element, fire);
+      } else if (event.type === 'fireEnded') this.#stopFire(event.element);
+      else if (event.type === 'elementDestroyed') {
+        const { x, y, width, height } = event.box;
+        this.#add(looks.worldEffect('smoke'), x + width / 2, y + height / 2, 0, 0);
+      } else if (event.type === 'mapReset')
+        for (const element of [...this.#fires.keys()]) this.#stopFire(element);
     }
   }
 
-  #add(look: SheetLook | undefined, x: number, y: number, z: number, rotation: number): void {
-    if (!look?.sheet.sheet.animations.has(EFFECT_TAG)) return;
+  #stopFire(element: number): void {
+    const fire = this.#fires.get(element);
+    if (!fire) return;
+    this.#fires.delete(element);
+    fire.sprite.destroy();
+    this.#effects.splice(this.#effects.indexOf(fire), 1);
+  }
+
+  #add(
+    look: SheetLook | undefined,
+    x: number,
+    y: number,
+    z: number,
+    rotation: number,
+    loop = false,
+  ): Effect | undefined {
+    if (!look?.sheet.sheet.animations.has(EFFECT_TAG)) return undefined;
     const sprite = new Sprite();
     sprite.position.set(Math.round(x), Math.round(y - z));
     sprite.rotation = rotation;
     sprite.zIndex = depthOf(y, 1023);
     this.#layer.addChild(sprite);
-    const effect = { sprite, look, elapsedMs: 0 };
+    const effect = { sprite, look, elapsedMs: 0, loop };
     this.#effects.push(effect);
     this.#draw(effect);
+    return effect;
   }
 
   /** Returns false once the effect has played to its end. */
@@ -60,12 +109,11 @@ export class Effects {
     const { sheet } = effect.look.sheet;
     const animation = sheet.animations.get(EFFECT_TAG);
     if (!animation) return false;
-    const { frame, finished } = animationFrameAt(sheet, animation, effect.elapsedMs);
+    const cycle = cycleOf(effect.look.sheet);
+    const elapsedMs = effect.loop && cycle > 0 ? effect.elapsedMs % cycle : effect.elapsedMs;
+    const { frame, finished } = animationFrameAt(sheet, animation, elapsedMs);
     // An animation that loops forever plays one cycle as an effect.
-    const cycle = sheet.frames
-      .slice(animation.from, animation.to + 1)
-      .reduce((sum, f) => sum + f.durationMs, 0);
-    if (finished || (animation.repeat === 0 && effect.elapsedMs >= cycle)) return false;
+    if (!effect.loop && (finished || (animation.repeat === 0 && elapsedMs >= cycle))) return false;
     const anchor = anchorOf(sheet, originOf(sheet, frame));
     effect.sprite.texture = this.#textures.frame(effect.look.key, effect.look.sheet, frame);
     effect.sprite.anchor.set(anchor.x, anchor.y);

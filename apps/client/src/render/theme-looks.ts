@@ -1,5 +1,6 @@
 // What each gameplay id of a theme looks like: characters (body and weapon sheets),
 // projectiles and effects. The simulation only knows ids (ARCHITECTURE §5).
+import type { Theme } from '@pixel-shoot/content';
 import type { LoadedSheet, ThemeAssets } from '../content/content-store';
 import type { CharacterLook } from './character-view';
 
@@ -19,6 +20,8 @@ export interface ThemeLooks {
   hitEffect(character: string): SheetLook | undefined;
   /** Effect shown where a projectile stops against an obstacle. */
   impactEffect(projectile: string): SheetLook | undefined;
+  /** Effect of the world itself (theme.json). */
+  worldEffect(name: keyof Theme['worldEffects']): SheetLook | undefined;
 }
 
 export function themeLooks(assets: ThemeAssets): ThemeLooks {
@@ -41,5 +44,6 @@ export function themeLooks(assets: ThemeAssets): ThemeLooks {
     fireEffect: (weapon) => effect(theme.weapons.get(weapon)?.effects.fire),
     hitEffect: (character) => effect(theme.characters.get(character)?.effects.hit),
     impactEffect: (projectile) => effect(theme.projectiles.get(projectile)?.effects.impact),
+    worldEffect: (name) => effect(theme.worldEffects[name]),
   };
 }

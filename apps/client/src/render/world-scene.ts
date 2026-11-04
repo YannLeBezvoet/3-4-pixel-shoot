@@ -124,6 +124,7 @@ export class WorldScene {
       view.setAction(
         !actor.alive ? 'death' : Math.hypot(actor.vx, actor.vy) > WALKING_SPEED ? 'walk' : 'idle',
       );
+      view.setBurning(actor.burning ? looks.worldEffect('fire') : undefined);
       const layer = actor.alive ? this.#world : this.#corpses;
       if (view.root.parent !== layer) layer.addChild(view.root);
       view.root.zIndex = depthOf(y, actor.id);
