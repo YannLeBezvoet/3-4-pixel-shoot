@@ -10,8 +10,8 @@ Browser twin-stick shooter in pixel art (Resurrect 64 palette, 48×48 grid, 960�
 
 - **Milestone 0 (Foundations) done**: version 0.0.0. Criteria results: [docs/ROADMAP.md](docs/ROADMAP.md#m0--foundations); C0.10 (Aseprite) awaits the owner's check.
 - **Milestone 1 (playable solo) done**: version 0.1.0, merged into `main` and pushed on 2026-11-03. Criteria results: [ROADMAP](docs/ROADMAP.md#m1--playable-solo).
-- **Milestone 2 (combat) done**: version 0.2.0, on branch `milestone/2-combat`, not merged. Criteria results: [ROADMAP](docs/ROADMAP.md#m2--combat). The owner decides about merging into `main` and pushing.
-- **Awaiting the owner:** Q71–Q76 ([OPEN_QUESTIONS](docs/OPEN_QUESTIONS.md#open)), decision [0016](docs/decisions/0016-map-elements.md), then the plan of milestone 3.
+- **Milestone 2 (combat) done**: version 0.2.0, merged into `main` on 2026-11-04 (`main` not pushed). Criteria results: [ROADMAP](docs/ROADMAP.md#m2--combat).
+- **Awaiting the owner:** pushing `main`, Q71–Q76 ([OPEN_QUESTIONS](docs/OPEN_QUESTIONS.md#open)), decision [0016](docs/decisions/0016-map-elements.md), then the plan of milestone 3.
 - What exists today: [ARCHITECTURE §0](docs/ARCHITECTURE.md#0-what-exists-end-of-milestone-2).
 
 ## Where to find what

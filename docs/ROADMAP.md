@@ -10,7 +10,7 @@
 |---|---|---|
 | M0 | Foundations | **Done** — version 0.0.0, merged into `main` and pushed on 2026-11-03 (C0.10 to be checked by the owner) |
 | M1 | Playable solo | **Done** — version 0.1.0, merged into `main` and pushed on 2026-11-03 |
-| M2 | Combat | **Done** — version 0.2.0 on branch `milestone/2-combat`, awaiting the owner's decision to merge; Q71–Q76 and decision 0016 await confirmation |
+| M2 | Combat | **Done** — version 0.2.0, merged into `main` on 2026-11-04 (`main` not pushed); Q71–Q76 and decision 0016 await confirmation |
 | M3 | Multiplayer | Not started |
 | M4 | Civilians, 64 participants, match settings | Not started |
 | M5 | Further modes, procedural maps, vehicles, audio | Not started |

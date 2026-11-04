@@ -7,7 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 
 ## [0.2.0] — 2026-11-04
 
-Milestone 2 (combat), on branch `milestone/2-combat`.
+Milestone 2 (combat), merged into `main`.
 
 ### Added
 
