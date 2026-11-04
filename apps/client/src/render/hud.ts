@@ -1,5 +1,6 @@
 // The in-match HUD (decision 0004, Q58), drawn at internal resolution with the HUD bitmap font:
-// health bottom left, ammunition bottom right, score, round, timer and survivors top center,
+// health bottom left, ammunition, weapon and throwables bottom right, score, round, timer and
+// survivors top center,
 // the kill feed top right, banners in the middle, names and health bars above teammates (Q26),
 // and the crosshair. Every text comes from translation keys.
 import type { WorldView } from '@pixel-shoot/match';
@@ -66,6 +67,8 @@ export class Hud {
   readonly #bars = new Graphics();
   readonly #health: PixelText;
   readonly #ammo: PixelText;
+  readonly #weapon: PixelText;
+  readonly #throwables: PixelText;
   readonly #score: PixelText;
   readonly #round: PixelText;
   readonly #survivors: PixelText;
@@ -82,6 +85,8 @@ export class Hud {
       new PixelText(font, { anchorX, color });
     this.#health = text();
     this.#ammo = text(1);
+    this.#weapon = text(1, HUD_COLORS.muted);
+    this.#throwables = text(1, HUD_COLORS.muted);
     this.#score = text(0.5);
     this.#round = text(0.5, HUD_COLORS.muted);
     this.#survivors = text(0.5, HUD_COLORS.muted);
@@ -91,6 +96,8 @@ export class Hud {
 
     this.#health.position.set(MARGIN, INTERNAL_HEIGHT - MARGIN - 8);
     this.#ammo.position.set(INTERNAL_WIDTH - MARGIN, INTERNAL_HEIGHT - MARGIN - 8);
+    this.#weapon.position.set(INTERNAL_WIDTH - MARGIN, INTERNAL_HEIGHT - MARGIN - 20);
+    this.#throwables.position.set(INTERNAL_WIDTH - MARGIN, INTERNAL_HEIGHT - MARGIN - 32);
     this.#score.position.set(INTERNAL_WIDTH / 2, MARGIN);
     this.#round.position.set(INTERNAL_WIDTH / 2, MARGIN + 12);
     this.#survivors.position.set(INTERNAL_WIDTH / 2, MARGIN + 24);
@@ -116,6 +123,8 @@ export class Hud {
       this.#bars,
       this.#health,
       this.#ammo,
+      this.#weapon,
+      this.#throwables,
       this.#score,
       this.#round,
       this.#survivors,
@@ -135,6 +144,8 @@ export class Hud {
     const alive = mine?.alive === true;
     this.#health.visible = alive;
     this.#ammo.visible = alive;
+    this.#weapon.visible = alive;
+    this.#throwables.visible = alive && mine?.throwable !== undefined;
     if (mine && alive) {
       this.#health.text = String(mine.hp);
       bar(
@@ -149,9 +160,19 @@ export class Hud {
       this.#ammo.text =
         mine.reloadLeft > 0
           ? texts.t('hud.reloading')
-          : mine.spareMagazines === null
-            ? String(mine.rounds)
-            : texts.t('hud.ammoReserve', { rounds: mine.rounds, spare: mine.spareMagazines });
+          : mine.fuel !== undefined
+            ? texts.t('hud.fuel', { percent: Math.ceil(mine.fuel * 100) })
+            : mine.spareMagazines === null
+              ? String(mine.rounds)
+              : texts.t('hud.ammoReserve', { rounds: mine.rounds, spare: mine.spareMagazines });
+      this.#weapon.text = texts.weaponName(mine.weapon);
+      if (mine.throwable !== undefined) {
+        this.#throwables.text = texts.t('hud.throwables', {
+          name: texts.weaponName(mine.throwable),
+          count: mine.throwables,
+        });
+        this.#throwables.color = mine.throwables > 0 ? HUD_COLORS.muted : HUD_COLORS.danger;
+      }
       this.#ammo.color =
         mine.reloadLeft > 0 || mine.rounds === 0 ? HUD_COLORS.accent : HUD_COLORS.text;
     }

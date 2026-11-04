@@ -1,6 +1,7 @@
 // npm run bench:sim [-- --rounds N]
 // Plays N bot-only team-elimination rounds (8 vs 8) on the Vietnam map and prints how they
-// ended and the simulation tick time (C1.6, C1.10). Default: 100 rounds.
+// ended, what the combat toolbox did and the simulation tick time (C1.6, C1.10). Default: 100
+// rounds.
 import { loadArena, playRound, summarize } from './bot-rounds';
 
 const index = process.argv.indexOf('--rounds');

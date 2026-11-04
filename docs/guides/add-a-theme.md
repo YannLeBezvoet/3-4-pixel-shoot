@@ -55,6 +55,8 @@ File names are fixed. Each JSON file starts with a `$schema` line: VS Code then 
 | `nameKey` | Translation key of the theme name (see §5). |
 | `defaultLanguage` | The language whose translation file must contain every text. |
 | `factions` | The sides. Team 1 plays the first faction, team 2 the second. Each faction needs at least one character. |
+| `fire` (optional) | How fire behaves: `burnMs` (how long a tile or object burns, 5000), `spreadPercent` (chance each second of catching each adjacent flammable element, 30), `burningMs` (how long a character burns, 3000), `burningDamagePerSecond` (8). |
+| `effects` (optional) | Effects of the world, by id from `effects.json`: `explosion` (a blast, unless the projectile has its own `effects.impact`), `fire` (loops on what burns), `smoke` (rises from what burnt out or was destroyed), `bloodDecal` and `bloodPool` (their frames are painted on the ground, for blood falling and under corpses). |
 
 ## 3. `characters.json`
 
@@ -75,7 +77,8 @@ File names are fixed. Each JSON file starts with a `$schema` line: VS Code then 
 ```
 
 - `sprite` is a path inside the theme folder **without extension**: the game reads `<path>.png` and `<path>.json`, exported from Aseprite. A character sprite needs the animations `idle`, `walk` and `death` in the 5 drawn directions and a `hand` slice ([create a sprite](create-a-sprite.md)).
-- `weapon` is the id of the character's default weapon in `weapons.json`.
+- `weapon` is the id of the character's primary weapon in `weapons.json`: a `firearm` or a `flamethrower`.
+- `throwable` (optional) is the id of a thrown weapon in `weapons.json`, carried along with the primary one.
 - Optional gameplay values (Q54), with their defaults:
 
   | Field | Type | Default | Meaning |
@@ -130,6 +133,24 @@ File names are fixed. Each JSON file starts with a `$schema` line: VS Code then 
 
   Reloading starts with the reload key, or by itself when the magazine is empty.
 
+  **`flamethrower`**: a jet of flames for as long as the tank lasts. Its projectile must have the behavior `flame`.
+
+  | Parameter | Type | Default | Meaning |
+  |---|---|---|---|
+  | `flamesPerSecond` | number > 0, ≤ 60 | — | Flames thrown while firing |
+  | `damage` | whole number > 0 | — | Hit points removed by one flame |
+  | `spreadDeg` | 0 to 45 | `0` | Random deviation of each flame |
+  | `tankMs` | whole number > 0 | — | How long a full tank fires, in milliseconds |
+  | `refillMs` | whole number ≥ 0 | — | Refill time in milliseconds. It starts with the reload key, or by itself when the tank is empty |
+
+  **`thrown`**: something the character throws to the cursor, carried as its `throwable` in `characters.json`, never as its `weapon`. Its projectile must have the behavior `grenade`. The right mouse button or G throws, one per press.
+
+  | Parameter | Type | Default | Meaning |
+  |---|---|---|---|
+  | `count` | whole number from 1 to 20 | `2` | How many a character carries per life |
+  | `maxRange` | number > 0, ≤ 2000 | — | Farthest throw in pixels; a nearer cursor is reached exactly |
+  | `cooldownMs` | whole number ≥ 0 | `600` | Shortest time between two throws |
+
 - `sprite`: the weapon drawn **pointing right**, with `grip` and `muzzle` slices. Shots start at the hand plus the distance from `grip` to `muzzle`.
 - `projectile`: the id of what the weapon fires, in `projectiles.json`.
 - `effects.fire` (optional): the effect shown at the muzzle at each shot.
@@ -160,6 +181,25 @@ File names are fixed. Each JSON file starts with a `$schema` line: VS Code then 
   |---|---|---|---|
   | `speed` | number > 0, ≤ 6000 | — | Speed in pixels per second |
   | `range` | number > 0, ≤ 5000 | — | Distance from the muzzle, in pixels, after which the bullet disappears |
+
+  **`flame`**: a short-lived particle of a flamethrower's jet. It hurts and ignites the character it hits, ignites what burns on its way, and stops at obstacles, cover included unless the flamethrower reaches over it.
+
+  | Parameter | Type | Default | Meaning |
+  |---|---|---|---|
+  | `speed` | number > 0, ≤ 1200 | — | Speed in pixels per second |
+  | `range` | number > 0, ≤ 1000 | — | Distance from the muzzle, in pixels, after which the flame disappears |
+
+  **`grenade`**: lands on the cursor in an arc, bounces off solid obstacles, flies over cover, rolls to a stop and explodes when its fuse ends. The damage falls linearly from the center to the radius, and walls and cover stop the blast. It hurts its thrower, and teammates only with friendly fire on. Its `effects.impact` is shown as the explosion.
+
+  | Parameter | Type | Default | Meaning |
+  |---|---|---|---|
+  | `speed` | number > 0, ≤ 1500 | — | Speed over the ground in pixels per second |
+  | `gravity` | number > 0 | `900` | Pixels per second squared: a higher value gives a flatter arc |
+  | `restitution` | 0 to 1 | `0.4` | Share of its speed a bounce keeps |
+  | `friction` | number ≥ 0 | `400` | Slowdown while rolling, in pixels per second squared |
+  | `fuseMs` | whole number > 0 | `2500` | Time from the throw to the explosion |
+  | `blastRadius` | number > 0, ≤ 1000 | — | Pixels; nothing is hurt at this distance or beyond |
+  | `blastDamage` | whole number > 0 | — | Damage at the center |
 
 - `sprite`: drawn **pointing right**, with a `fly` animation and an `origin` slice at the projectile's position ([create a sprite](create-a-sprite.md)).
 - `effects.impact` (optional): the effect shown where the projectile stops against an obstacle.

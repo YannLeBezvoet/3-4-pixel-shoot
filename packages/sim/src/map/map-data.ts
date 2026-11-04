@@ -11,14 +11,50 @@ export const TileFlag = {
   solid: 1,
   /** Blocks movement only; projectiles and sight pass: deep water, chasms (Q50). */
   impassable: 2,
+  /**
+   * Low obstacle such as sandbags (Q29), on map objects only: blocks movement, not sight.
+   * Projectiles pass it when fired from a weapon reaching over it, otherwise with the
+   * footprint's `bulletPassPercent` chance.
+   */
+  cover: 4,
 } as const;
 
 /** Flags that stop a character. */
-export const BLOCKS_MOVEMENT = TileFlag.solid | TileFlag.impassable;
-/** Flags that stop a projectile. */
+export const BLOCKS_MOVEMENT = TileFlag.solid | TileFlag.impassable | TileFlag.cover;
+/** Flags that always stop a projectile; `cover` stops it only on a failed pass. */
 export const BLOCKS_PROJECTILES = TileFlag.solid;
 /** Flags that stop line of sight. */
 export const BLOCKS_SIGHT = TileFlag.solid;
+
+/** What can hurt a map element (Q33), combined as bits. */
+export const DamageFilter = {
+  bullet: 1,
+  explosion: 2,
+  fire: 4,
+} as const;
+
+/** Every kind of damage. */
+export const ANY_DAMAGE = DamageFilter.bullet | DamageFilter.explosion | DamageFilter.fire;
+
+/** The blast of an element that explodes when destroyed. */
+export interface ElementBlast {
+  /** World units. */
+  readonly radius: number;
+  /** Damage at the center. */
+  readonly damage: number;
+}
+
+/** How a tile or an object behaves as a map element (Q33). */
+export interface ElementProperties {
+  /** Hit points; missing means damage cannot destroy it. */
+  readonly hp?: number;
+  /** `DamageFilter` bits of what hurts it; missing means everything. */
+  readonly damageFilter?: number;
+  /** Blast when destroyed. */
+  readonly explosive?: ElementBlast;
+  /** Catches fire and burns out (Q31). On a tile, also true of overhead layers (thatch roofs). */
+  readonly flammable?: boolean;
+}
 
 /** A picture cut from an image: the image's path in the theme folder and a rectangle in it. */
 export interface TileVisual {
@@ -34,6 +70,12 @@ export interface TileVisual {
 export interface TileType {
   readonly flags: number;
   readonly visual?: TileVisual;
+  /** Makes tiles of this kind map elements. */
+  readonly element?: ElementProperties;
+  /** Tile kind left once destroyed (an index into `MapData.tileTypes`); 0 is no tile. */
+  readonly destroyedTile?: number;
+  /** Tile kind left once burnt out; without it, the destroyed one, or no tile. */
+  readonly burntTile?: number;
 }
 
 export interface TileLayer {
@@ -57,6 +99,13 @@ export interface Box {
 
 export interface Footprint extends Box {
   readonly flags: number;
+  /** Id of the map object it belongs to; cover is passed or not per object. */
+  readonly object?: number;
+  /**
+   * Cover only: chance in percent (0 to 100) that a projectile passes it when the shooter's
+   * weapon does not reach over it. Missing means 0.
+   */
+  readonly bulletPassPercent?: number;
 }
 
 /** A placed object made of one picture, possibly larger than a tile (a tree, a hut). */
@@ -67,8 +116,19 @@ export interface MapObject {
   readonly x: number;
   readonly y: number;
   readonly visual?: TileVisual;
+  /**
+   * Drawn just above the ground, below characters and projectiles, instead of being
+   * depth-sorted: a low object such as sandbags. No gameplay effect.
+   */
+  readonly low?: boolean;
   /** Collision boxes in world coordinates. */
   readonly footprints: readonly Footprint[];
+  /** Makes this object a map element. */
+  readonly element?: ElementProperties;
+  /** Picture left once destroyed; without it, the object disappears. */
+  readonly destroyedVisual?: TileVisual;
+  /** Picture left once burnt out; without it, the destroyed one. */
+  readonly burntVisual?: TileVisual;
 }
 
 /** An area where the members of a team appear at the start of a round (Q52). */

@@ -5,7 +5,7 @@
 
 ## Context
 
-Adding a theme must require no code: a folder of resources and configuration files, checked at load with clear error messages. Behaviors (weapon, projectile and map-element types) are engine code; a theme picks among them and sets their parameters. Any theme combines with any mode. The owner edits these files by hand.
+Adding a theme must require no code: a folder of resources and configuration files, checked at load with clear error messages. Behaviors (weapon and projectile types) are engine code; a theme picks among them and sets their parameters. Map elements are not behaviors: their properties are set in Tiled (M2). Any theme combines with any mode. The owner edits these files by hand.
 
 ## Options considered
 

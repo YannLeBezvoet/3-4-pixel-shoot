@@ -10,132 +10,332 @@
       "minItems": 1,
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-            "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
-          },
-          "nameKey": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*$",
-            "description": "Key of a text in the theme translation files (locales/<language>.json)."
-          },
-          "sprite": {
-            "type": "string",
-            "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
-            "description": "Weapon sprite, drawn pointing right, with \"grip\" and \"muzzle\" slices."
-          },
-          "projectile": {
-            "type": "string",
-            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-            "description": "Projectile this weapon fires (projectiles.json)."
-          },
-          "effects": {
-            "default": {},
-            "description": "Visual effects of this weapon.",
+        "oneOf": [
+          {
             "type": "object",
             "properties": {
-              "fire": {
-                "description": "Effect shown at the muzzle at each shot.",
+              "id": {
                 "type": "string",
-                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
-              }
-            },
-            "additionalProperties": false
-          },
-          "sounds": {
-            "description": "Reserved for the audio milestone: sound cue name → sound id.",
-            "type": "object",
-            "propertyNames": {
-              "type": "string"
-            },
-            "additionalProperties": {
-              "type": "string"
-            }
-          },
-          "behavior": {
-            "type": "string",
-            "const": "firearm",
-            "description": "A gun firing projectiles from a magazine, with a rate of fire, spread and reload time."
-          },
-          "params": {
-            "type": "object",
-            "properties": {
-              "fireMode": {
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
+              },
+              "nameKey": {
                 "type": "string",
-                "enum": [
-                  "auto",
-                  "semi"
-                ],
-                "description": "\"auto\" fires while the button is held; \"semi\" fires once per click."
+                "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*$",
+                "description": "Key of a text in the theme translation files (locales/<language>.json)."
               },
-              "roundsPerMinute": {
-                "type": "number",
-                "exclusiveMinimum": 0,
-                "maximum": 3000,
-                "description": "Maximum rate of fire."
+              "sprite": {
+                "type": "string",
+                "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
+                "description": "Weapon sprite, drawn pointing right, with \"grip\" and \"muzzle\" slices."
               },
-              "damage": {
-                "type": "integer",
-                "exclusiveMinimum": 0,
-                "maximum": 9007199254740991,
-                "description": "Hit points removed by one projectile."
+              "projectile": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "description": "Projectile this weapon fires (projectiles.json)."
               },
-              "spreadDeg": {
-                "default": 0,
-                "description": "Random deviation of each shot, in degrees on each side of the aim.",
-                "type": "number",
-                "minimum": 0,
-                "maximum": 45
+              "effects": {
+                "default": {},
+                "description": "Visual effects of this weapon.",
+                "type": "object",
+                "properties": {
+                  "fire": {
+                    "description": "Effect shown at the muzzle at each shot.",
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                  }
+                },
+                "additionalProperties": false
               },
-              "magazine": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 9007199254740991,
-                "description": "Rounds per magazine."
+              "sounds": {
+                "description": "Reserved for the audio milestone: sound cue name → sound id.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
               },
-              "reloadMs": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991,
-                "description": "Reload duration in milliseconds."
+              "behavior": {
+                "type": "string",
+                "const": "firearm",
+                "description": "A gun firing projectiles from a magazine, with a rate of fire, spread and reload time."
               },
-              "reserveMagazines": {
-                "default": null,
-                "description": "Spare magazines per life; null means unlimited. A reload uses one, and the rounds left in the old magazine are lost.",
-                "anyOf": [
-                  {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "fireMode": {
+                    "type": "string",
+                    "enum": [
+                      "auto",
+                      "semi"
+                    ],
+                    "description": "\"auto\" fires while the button is held; \"semi\" fires once per click."
+                  },
+                  "roundsPerMinute": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 3000,
+                    "description": "Maximum rate of fire."
+                  },
+                  "damage": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Hit points removed by one projectile."
+                  },
+                  "spreadDeg": {
+                    "default": 0,
+                    "description": "Random deviation of each shot, in degrees on each side of the aim.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 45
+                  },
+                  "magazine": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991,
+                    "description": "Rounds per magazine."
+                  },
+                  "reloadMs": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 9007199254740991
+                    "maximum": 9007199254740991,
+                    "description": "Reload duration in milliseconds."
                   },
-                  {
-                    "type": "null"
+                  "reserveMagazines": {
+                    "default": null,
+                    "description": "Spare magazines per life; null means unlimited. A reload uses one, and the rounds left in the old magazine are lost.",
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
-                ]
+                },
+                "required": [
+                  "fireMode",
+                  "roundsPerMinute",
+                  "damage",
+                  "magazine",
+                  "reloadMs"
+                ],
+                "additionalProperties": false
               }
             },
             "required": [
-              "fireMode",
-              "roundsPerMinute",
-              "damage",
-              "magazine",
-              "reloadMs"
+              "id",
+              "nameKey",
+              "sprite",
+              "projectile",
+              "behavior",
+              "params"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
+              },
+              "nameKey": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*$",
+                "description": "Key of a text in the theme translation files (locales/<language>.json)."
+              },
+              "sprite": {
+                "type": "string",
+                "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
+                "description": "Weapon sprite, drawn pointing right, with \"grip\" and \"muzzle\" slices."
+              },
+              "projectile": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "description": "Projectile this weapon fires (projectiles.json)."
+              },
+              "effects": {
+                "default": {},
+                "description": "Visual effects of this weapon.",
+                "type": "object",
+                "properties": {
+                  "fire": {
+                    "description": "Effect shown at the muzzle at each shot.",
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "sounds": {
+                "description": "Reserved for the audio milestone: sound cue name → sound id.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "behavior": {
+                "type": "string",
+                "const": "flamethrower",
+                "description": "A jet of flames while the fire button is held, for as long as the tank lasts; it refills on the reload button or by itself when empty."
+              },
+              "params": {
+                "type": "object",
+                "properties": {
+                  "flamesPerSecond": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 60,
+                    "description": "Flames thrown while firing."
+                  },
+                  "damage": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Hit points removed by one flame."
+                  },
+                  "spreadDeg": {
+                    "default": 0,
+                    "description": "Random deviation of each flame, in degrees on each side of the aim.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 45
+                  },
+                  "tankMs": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "How long a full tank fires, in milliseconds."
+                  },
+                  "refillMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "How long a refill takes, in milliseconds."
+                  }
+                },
+                "required": [
+                  "flamesPerSecond",
+                  "damage",
+                  "tankMs",
+                  "refillMs"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "nameKey",
+              "sprite",
+              "projectile",
+              "behavior",
+              "params"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "description": "Identifier, unique within its file: lowercase letters, digits and hyphens."
+              },
+              "nameKey": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*$",
+                "description": "Key of a text in the theme translation files (locales/<language>.json)."
+              },
+              "sprite": {
+                "type": "string",
+                "pattern": "^[a-z0-9_-]+(\\/[a-z0-9_-]+)*$",
+                "description": "Weapon sprite, drawn pointing right, with \"grip\" and \"muzzle\" slices."
+              },
+              "projectile": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "description": "Projectile this weapon fires (projectiles.json)."
+              },
+              "effects": {
+                "default": {},
+                "description": "Visual effects of this weapon.",
+                "type": "object",
+                "properties": {
+                  "fire": {
+                    "description": "Effect shown at the muzzle at each shot.",
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "sounds": {
+                "description": "Reserved for the audio milestone: sound cue name → sound id.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "behavior": {
+                "type": "string",
+                "const": "thrown",
+                "description": "A throwable carried beside the primary weapon: thrown to the cursor up to a maximum range, one per press."
+              },
+              "params": {
+                "type": "object",
+                "properties": {
+                  "count": {
+                    "default": 2,
+                    "description": "How many a character carries per life.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20
+                  },
+                  "maxRange": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 2000,
+                    "description": "Farthest throw in pixels (one tile is 48 pixels); nearer targets are reached."
+                  },
+                  "cooldownMs": {
+                    "default": 600,
+                    "description": "Shortest time between two throws.",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "maxRange"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "nameKey",
+              "sprite",
+              "projectile",
+              "behavior",
+              "params"
             ],
             "additionalProperties": false
           }
-        },
-        "required": [
-          "id",
-          "nameKey",
-          "sprite",
-          "projectile",
-          "behavior",
-          "params"
-        ],
-        "additionalProperties": false
+        ]
       }
     }
   },

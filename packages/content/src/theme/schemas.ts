@@ -53,6 +53,48 @@ export const themeManifestSchema = z.strictObject({
     .describe(
       'Sides that teams play. Team 1 plays the first faction, team 2 the second, and so on.',
     ),
+  fire: z
+    .strictObject({
+      burnMs: z
+        .int()
+        .positive()
+        .default(5000)
+        .describe('How long a flammable tile or object burns, in milliseconds.'),
+      spreadPercent: z
+        .number()
+        .min(0)
+        .max(100)
+        .default(30)
+        .describe('Chance, each second, of catching each adjacent flammable element.'),
+      burningMs: z
+        .int()
+        .positive()
+        .default(3000)
+        .describe('How long a character burns after leaving the fire, in milliseconds.'),
+      burningDamagePerSecond: z
+        .number()
+        .min(0)
+        .default(8)
+        .describe('Hit points a burning character loses per second.'),
+    })
+    .default({ burnMs: 5000, spreadPercent: 30, burningMs: 3000, burningDamagePerSecond: 8 })
+    .describe('How fire behaves in this theme.'),
+  effects: z
+    .strictObject({
+      explosion: id
+        .optional()
+        .describe('Effect of a blast, unless the projectile has its own impact effect.'),
+      fire: id.optional().describe('Effect looping on a burning tile, object or character.'),
+      smoke: id.optional().describe('Effect rising from what burnt out or was destroyed.'),
+      bloodDecal: id
+        .optional()
+        .describe('Effect whose frames are painted on the ground where blood falls.'),
+      bloodPool: id
+        .optional()
+        .describe('Effect whose frames are painted on the ground under a corpse.'),
+    })
+    .default({})
+    .describe('Effects of the world itself (effects.json), not tied to a weapon or character.'),
 });
 
 const effectRef = id.describe('Effect id (effects.json).');
@@ -64,7 +106,10 @@ export const characterSchema = z.strictObject({
   sprite: assetRef.describe(
     'Character sprite: tags idle, walk, death in the 5 drawn directions and a "hand" slice.',
   ),
-  weapon: id.describe('Default weapon (weapons.json).'),
+  weapon: id.describe('Primary weapon (weapons.json); not a thrown weapon.'),
+  throwable: id
+    .optional()
+    .describe('Thrown weapon carried along with the primary one (weapons.json).'),
   speed: z
     .number()
     .positive()

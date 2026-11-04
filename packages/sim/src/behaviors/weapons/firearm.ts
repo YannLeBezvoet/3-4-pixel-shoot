@@ -1,14 +1,13 @@
 // Firearm: a gun that fires projectiles from a magazine, with a rate of fire, spread and a
 // reload. Reloading starts on the reload button or by itself when the magazine is empty (Q53).
-import { degToRad } from '@pixel-shoot/shared';
 import { z } from 'zod';
 import type { EntityId } from '../../core/entities';
 import { Button, hasButton } from '../../core/input';
 import { TICK_RATE, msToTicks } from '../../core/time';
-import type { WeaponStats } from '../../world/catalog';
+import type { FirearmStats } from '../../world/catalog';
 import type { Actor, WeaponState, WorldState } from '../../world/state';
-import { resolveTrace, traceProjectile } from '../../world/trace';
 import type { BehaviorDefinition } from '../registry';
+import { fireProjectile } from './muzzle';
 
 export const firearmParams = z.strictObject({
   fireMode: z
@@ -45,7 +44,7 @@ export const firearm: BehaviorDefinition<FirearmParams> = {
 };
 
 /** A full weapon at the start of a life. */
-export function createFirearmState(stats: WeaponStats): WeaponState {
+export function createFirearmState(stats: FirearmStats): WeaponState {
   return {
     weapon: stats.id,
     rounds: stats.params.magazine,
@@ -56,67 +55,12 @@ export function createFirearmState(stats: WeaponStats): WeaponState {
   };
 }
 
-function startReload(world: WorldState, id: EntityId, state: WeaponState, stats: WeaponStats) {
+function startReload(world: WorldState, id: EntityId, state: WeaponState, stats: FirearmStats) {
   const { magazine, reloadMs } = stats.params;
   if (state.reloadLeft > 0 || state.rounds >= magazine || state.spareMagazines === 0) return;
   const ticks = Math.max(1, msToTicks(reloadMs));
   state.reloadLeft = ticks;
   world.events.push({ type: 'reloadStarted', entity: id, weapon: stats.id, ticks });
-}
-
-function shoot(world: WorldState, id: EntityId, actor: Actor, stats: WeaponStats): void {
-  const position = world.position.get(id);
-  const character = world.catalog.characters.get(actor.character);
-  const projectile = world.catalog.projectiles.get(stats.projectile);
-  if (!position || !character || !projectile) return;
-
-  const spread = degToRad(stats.params.spreadDeg);
-  const angle = actor.aim + (spread > 0 ? world.random('weapons').range(-spread, spread) : 0);
-  const dirX = Math.cos(angle);
-  const dirY = Math.sin(angle);
-  const muzzleDistance = character.handReach + stats.barrelLength;
-  const muzzleX = position.x + dirX * muzzleDistance;
-  const muzzleY = position.y + dirY * muzzleDistance;
-  const z = character.gunHeight;
-  const shot = {
-    kind: projectile.id,
-    owner: id,
-    weapon: stats.id,
-    damage: stats.params.damage,
-    z,
-    angle,
-  };
-
-  // Between the body and the muzzle: nobody fires through a wall they stand against.
-  const blocked = traceProjectile(world, id, actor.team, position.x, position.y, muzzleX, muzzleY);
-  let entity: EntityId | undefined;
-  if (!blocked) {
-    entity = world.nextEntity++;
-    world.position.set(entity, { x: muzzleX, y: muzzleY });
-    world.projectile.set(entity, {
-      kind: projectile.id,
-      owner: id,
-      team: actor.team,
-      weapon: stats.id,
-      dirX,
-      dirY,
-      speed: projectile.params.speed / TICK_RATE,
-      damage: stats.params.damage,
-      z,
-      remaining: projectile.params.range,
-    });
-  }
-  world.events.push({
-    type: 'shotFired',
-    shooter: id,
-    weapon: stats.id,
-    x: muzzleX,
-    y: muzzleY,
-    z,
-    angle,
-    projectile: entity,
-  });
-  if (blocked) resolveTrace(world, blocked, { ...shot, projectile: undefined });
 }
 
 /** Runs one tick of a firearm held by an actor. */
@@ -125,7 +69,7 @@ export function updateFirearm(
   id: EntityId,
   actor: Actor,
   state: WeaponState,
-  stats: WeaponStats,
+  stats: FirearmStats,
 ): void {
   const { fireMode, magazine, roundsPerMinute } = stats.params;
 
@@ -144,7 +88,16 @@ export function updateFirearm(
     state.rounds--;
     // Fractional cooldown: the average interval is exact for any rate of fire.
     state.cooldown += (60 * TICK_RATE) / roundsPerMinute;
-    shoot(world, id, actor, stats);
+    const projectile = world.catalog.projectiles.get(stats.projectile);
+    if (projectile?.behavior === 'bullet')
+      fireProjectile(world, id, actor, stats, {
+        projectile: projectile.id,
+        spreadDeg: stats.params.spreadDeg,
+        damage: stats.params.damage,
+        speed: projectile.params.speed,
+        range: projectile.params.range,
+        source: 'bullet',
+      });
   }
   state.cooldown -= 1;
   // Firing cannot be saved up: the carry-over only applies while shooting continues.

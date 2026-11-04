@@ -50,6 +50,79 @@
         "additionalProperties": false
       },
       "description": "Sides that teams play. Team 1 plays the first faction, team 2 the second, and so on."
+    },
+    "fire": {
+      "default": {
+        "burnMs": 5000,
+        "spreadPercent": 30,
+        "burningMs": 3000,
+        "burningDamagePerSecond": 8
+      },
+      "description": "How fire behaves in this theme.",
+      "type": "object",
+      "properties": {
+        "burnMs": {
+          "default": 5000,
+          "description": "How long a flammable tile or object burns, in milliseconds.",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "spreadPercent": {
+          "default": 30,
+          "description": "Chance, each second, of catching each adjacent flammable element.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "burningMs": {
+          "default": 3000,
+          "description": "How long a character burns after leaving the fire, in milliseconds.",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "burningDamagePerSecond": {
+          "default": 8,
+          "description": "Hit points a burning character loses per second.",
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "effects": {
+      "default": {},
+      "description": "Effects of the world itself (effects.json), not tied to a weapon or character.",
+      "type": "object",
+      "properties": {
+        "explosion": {
+          "description": "Effect of a blast, unless the projectile has its own impact effect.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "fire": {
+          "description": "Effect looping on a burning tile, object or character.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "smoke": {
+          "description": "Effect rising from what burnt out or was destroyed.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "bloodDecal": {
+          "description": "Effect whose frames are painted on the ground where blood falls.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "bloodPool": {
+          "description": "Effect whose frames are painted on the ground under a corpse.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": [

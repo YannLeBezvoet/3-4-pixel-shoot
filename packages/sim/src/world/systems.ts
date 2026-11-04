@@ -3,9 +3,12 @@
 import { vec2 } from '@pixel-shoot/shared';
 import type { EntityId } from '../core/entities';
 import type { InputCommand } from '../core/input';
-import { sanitizeInput } from '../core/input';
+import { NEUTRAL_INPUT, sanitizeInput } from '../core/input';
 import { projectiles, weapons } from '../systems/combat';
 import { damage } from '../systems/damage';
+import { explosions } from '../systems/explosions';
+import { fire } from '../systems/fire';
+import { mapElements } from '../systems/map-elements';
 import { movement } from '../systems/movement';
 import type { WorldState } from './state';
 
@@ -22,7 +25,7 @@ export function applyInputs(world: WorldState, inputs: ReadonlyMap<EntityId, Inp
     actor.input =
       clean && !world.frozen
         ? clean
-        : { move: vec2.ZERO, aim: clean?.aim ?? actor.aim, buttons: 0 };
+        : { ...NEUTRAL_INPUT, move: vec2.ZERO, aim: clean?.aim ?? actor.aim };
     actor.aim = actor.input.aim;
   }
 }
@@ -31,4 +34,12 @@ export function applyInputs(world: WorldState, inputs: ReadonlyMap<EntityId, Inp
  * Systems 3 to 8, in order. Steps 2 and 9 (mode pre-tick and post-tick) are run by the match
  * host around `step`, and step 10 (cleanup) by the systems themselves as they remove entities.
  */
-export const SYSTEMS: readonly System[] = [movement, weapons, projectiles, damage];
+export const SYSTEMS: readonly System[] = [
+  movement,
+  weapons,
+  projectiles,
+  explosions,
+  fire,
+  damage,
+  mapElements,
+];

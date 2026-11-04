@@ -1,4 +1,4 @@
-import { TileFlag } from '@pixel-shoot/sim';
+import { DamageFilter, TileFlag } from '@pixel-shoot/sim';
 import { describe, expect, it } from 'vitest';
 import { memoryFileProvider } from '../files/file-provider';
 import type { ContentIssue } from '../issues/issues';
@@ -184,7 +184,7 @@ describe('loadMap', () => {
         x: 144,
         y: 144,
         visual: { image: 'tilesets/tree.png', x: 0, y: 0, width: 96, height: 144 },
-        footprints: [{ x: 136, y: 120, width: 16, height: 16, flags: TileFlag.solid }],
+        footprints: [{ x: 136, y: 120, width: 16, height: 16, flags: TileFlag.solid, object: 5 }],
       },
     ]);
     expect(map?.spawns).toEqual([
@@ -198,6 +198,60 @@ describe('loadMap', () => {
       broken((f) => (f[MAP].layers[2].objects[0].properties = [prop('solid', 'bool', false)])),
     );
     expect(map?.objects[0]?.footprints).toEqual([]);
+  });
+
+  it('marks low objects from their tile, overridable on the object', async () => {
+    const lowTile = (f: Files) => f[TREE].tiles[0].properties.push(prop('low', 'bool', true));
+    const low = await load(broken(lowTile));
+    expect(low.issues).toEqual([]);
+    expect(low.map?.objects[0]).toMatchObject({ id: 5, low: true });
+    const raised = await load(
+      broken((f) => {
+        lowTile(f);
+        f[MAP].layers[2].objects[0].properties = [prop('low', 'bool', false)];
+      }),
+    );
+    expect(raised.map?.objects[0]?.low).toBeUndefined();
+  });
+
+  it('reads cover and its bullet pass chance on tile objects, overridable on the object', async () => {
+    const coverTile = (f: Files) =>
+      (f[TREE].tiles[0].properties = [
+        prop('cover', 'bool', true),
+        prop('bulletPassPercent', 'int', 40),
+      ]);
+    const footprint = { x: 136, y: 120, width: 16, height: 16, object: 5 };
+    const cover = await load(broken(coverTile));
+    expect(cover.issues).toEqual([]);
+    expect(cover.map?.objects[0]?.footprints).toEqual([
+      { ...footprint, flags: TileFlag.cover, bulletPassPercent: 40 },
+    ]);
+    const tougher = await load(
+      broken((f) => {
+        coverTile(f);
+        f[MAP].layers[2].objects[0].properties = [prop('bulletPassPercent', 'int', 10)];
+      }),
+    );
+    expect(tougher.map?.objects[0]?.footprints[0]?.bulletPassPercent).toBe(10);
+  });
+
+  it('refuses a bullet pass chance outside 0–100 and cover in a ground layer', async () => {
+    const outOfRange = await load(
+      broken((f) => f[TREE].tiles[0].properties.push(prop('bulletPassPercent', 'int', 140))),
+    );
+    expect(outOfRange.issues).toEqual([
+      error(TREE, 'tile 0', 'Property "bulletPassPercent" must be between 0 and 100, got 140.'),
+    ]);
+    const groundCover = await load(
+      broken((f) => f[GROUND].tiles.push({ id: 0, properties: [prop('cover', 'bool', true)] })),
+    );
+    expect(groundCover.issues).toEqual([
+      error(
+        MAP,
+        'layer "ground"',
+        `tile (0, 0): tile 0 of ${GROUND} is cover, which works on tile objects only: place it in an "objects" layer. (and 8 more tiles)`,
+      ),
+    ]);
   });
 
   it('refuses maps that are not orthogonal, infinite or not on a 48 px grid', async () => {
@@ -438,8 +492,178 @@ describe('loadMap', () => {
       warning(
         GROUND,
         'tile 1',
-        'Unknown property "soild" (ignored). Known properties here: "solid", "impassable".',
+        'Unknown property "soild" (ignored). Known properties here: "solid", "impassable", "cover", "bulletPassPercent", "low", "hp", "damageFilter", "destroyedTile", "flammable", "burntTile", "explosive", "blastRadius", "blastDamage".',
       ),
     ]);
+  });
+
+  describe('map elements (Q33)', () => {
+    /** Tile 1 of the ground tileset (solid, placed by the map) gets these properties. */
+    const element = (...properties: ReturnType<typeof prop>[]) =>
+      broken((f) => f[GROUND].tiles[0].properties.push(...properties));
+    /** The tree object of the map, with these properties on the tile of its tileset. */
+    const elementTree = (...properties: ReturnType<typeof prop>[]) =>
+      broken((f) => f[TREE].tiles[0].properties.push(...properties));
+
+    it('reads the properties of a tile and adds its variants to the tile types', async () => {
+      const { map, issues } = await load(
+        element(
+          prop('hp', 'int', 60),
+          prop('damageFilter', 'string', 'explosion, fire'),
+          prop('flammable', 'bool', true),
+          prop('destroyedTile', 'int', 6),
+          prop('burntTile', 'int', 7),
+          prop('explosive', 'bool', true),
+          prop('blastRadius', 'int', 96),
+          prop('blastDamage', 'int', 50),
+        ),
+      );
+      expect(issues).toEqual([]);
+      const wall = map?.tileTypes.find((t) => t.element);
+      expect(wall?.element).toEqual({
+        hp: 60,
+        damageFilter: DamageFilter.explosion | DamageFilter.fire,
+        flammable: true,
+        explosive: { radius: 96, damage: 50 },
+      });
+      const image = 'tilesets/ground.png';
+      expect(map?.tileTypes[wall?.destroyedTile ?? 0]?.visual).toEqual({
+        image,
+        x: 96,
+        y: 48,
+        width: 48,
+        height: 48,
+      });
+      expect(map?.tileTypes[wall?.burntTile ?? 0]?.visual?.x).toBe(144);
+    });
+
+    it('needs the tile left behind on the ground', async () => {
+      const hp = await load(element(prop('hp', 'int', 60)));
+      expect(hp.issues).toEqual([
+        error(
+          MAP,
+          'layer "ground"',
+          `tile (2, 0): tile 1 of ${GROUND} has "hp" but no "destroyedTile": say which tile is left once destroyed.`,
+        ),
+      ]);
+      const burns = await load(element(prop('flammable', 'bool', true)));
+      expect(burns.issues).toEqual([
+        error(
+          MAP,
+          'layer "ground"',
+          `tile (2, 0): tile 1 of ${GROUND} is flammable but has no "burntTile": say which tile is left once burnt out.`,
+        ),
+      ]);
+    });
+
+    it('lets overhead tiles burn away, without hit points', async () => {
+      const roof = (properties: ReturnType<typeof prop>[]) =>
+        broken((f) => f[GROUND].tiles.push({ id: 3, properties }));
+      const { map, issues } = await load(roof([prop('flammable', 'bool', true)]));
+      expect(issues).toEqual([]);
+      expect(map?.tileTypes.find((t) => t.element)?.element).toEqual({ flammable: true });
+
+      const solid = await load(roof([prop('hp', 'int', 10), prop('destroyedTile', 'int', 0)]));
+      expect(solid.issues).toEqual([
+        error(
+          MAP,
+          'layer "roofs"',
+          `tile (3, 1): tile 3 of ${GROUND} has "hp", but overhead tiles can only be flammable.`,
+        ),
+      ]);
+    });
+
+    it('refuses unknown damage filters and tiles outside the tileset', async () => {
+      const { issues } = await load(
+        element(
+          prop('damageFilter', 'string', 'bullet,water'),
+          prop('hp', 'int', -1),
+          prop('destroyedTile', 'int', 8),
+        ),
+      );
+      expect(issues).toEqual([
+        error(GROUND, 'tile 1', 'Property "destroyedTile" is 8; this tileset has tiles 0 to 7.'),
+        error(GROUND, 'tile 1', 'Property "hp" must be 0 or more, got -1.'),
+        error(
+          GROUND,
+          'tile 1',
+          'Property "damageFilter" names "water". What can hurt an element: "bullet", "explosion", "fire".',
+        ),
+      ]);
+    });
+
+    it('refuses blasts without size or damage', async () => {
+      const { issues } = await load(
+        element(
+          prop('hp', 'int', 10),
+          prop('destroyedTile', 'int', 0),
+          prop('explosive', 'bool', true),
+          prop('blastRadius', 'int', 0),
+        ),
+      );
+      expect(issues).toEqual([
+        error(GROUND, 'tile 1', 'Properties "blastRadius" and "blastDamage" must be above 0.'),
+      ]);
+    });
+
+    it('warns about an explosive element nothing can destroy', async () => {
+      const { issues } = await load(elementTree(prop('explosive', 'bool', true)));
+      expect(issues).toEqual([
+        warning(
+          TREE,
+          'tile 0',
+          'It is explosive but nothing can destroy it: give it "hp" or make it "flammable".',
+        ),
+        warning(
+          MAP,
+          'layer "trees" › object 5 at (96, 144)',
+          'It is explosive but nothing can destroy it: give it "hp" or make it "flammable".',
+        ),
+      ]);
+    });
+
+    it('reads objects, whose own properties override their tile', async () => {
+      const files = elementTree(prop('hp', 'int', 80), prop('flammable', 'bool', true));
+      files[MAP].layers[2].objects[0].properties = [prop('hp', 'int', 30)];
+      const { map, issues } = await load(files);
+      expect(issues).toEqual([]);
+      expect(map?.objects[0]?.element).toEqual({ hp: 30, flammable: true });
+    });
+
+    it('gives objects their variant pictures', async () => {
+      const files = broken((f) => {
+        f[TREE].tilecount = 3;
+        f[TREE].columns = 3;
+        f[TREE].tiles[0].properties.push(
+          prop('hp', 'int', 80),
+          prop('destroyedTile', 'int', 1),
+          prop('burntTile', 'int', 2),
+        );
+      });
+      const { map, issues } = await load(files);
+      expect(issues).toEqual([]);
+      const image = 'tilesets/tree.png';
+      expect(map?.objects[0]?.destroyedVisual).toEqual({
+        image,
+        x: 96,
+        y: 0,
+        width: 96,
+        height: 144,
+      });
+      expect(map?.objects[0]?.burntVisual?.x).toBe(192);
+    });
+
+    it('refuses an object variant outside the tileset', async () => {
+      const files = validFiles();
+      files[MAP].layers[2].objects[0].properties = [prop('burntTile', 'int', 4)];
+      const { issues } = await load(files);
+      expect(issues).toEqual([
+        error(
+          MAP,
+          'layer "trees" › object 5 at (96, 144)',
+          'Property "burntTile" is 4; this tileset has tiles 0 to 0.',
+        ),
+      ]);
+    });
   });
 });

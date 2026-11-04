@@ -2,7 +2,7 @@
 
 A top-down twin-stick shooter in pixel art, played in the browser. Arcade gameplay in a serious setting; first theme: the Vietnam War. Solo against bots now, online matches up to 64 participants later.
 
-> Working title. **Status: milestone 1 (playable solo) in progress**: a solo team elimination match against bots plays from the main menu. See the [roadmap](docs/ROADMAP.md).
+> Working title. **Status: milestone 2 (combat) done**: solo team elimination against bots, with cover, grenades, flamethrowers, destructible map elements and blood. See the [roadmap](docs/ROADMAP.md).
 
 ## Quick start
 

@@ -3,7 +3,13 @@
 // About 80×60 tiles. Spawn areas: team 1 in a western clearing, team 2 on the eastern edge.
 import { createRng } from '@pixel-shoot/shared';
 import type { GroundTile } from './tiles';
-import { GROUND_COLUMNS, GROUND_TILES, TREE_TRUNK } from './tiles';
+import {
+  BARREL_FOOTPRINT,
+  GROUND_COLUMNS,
+  GROUND_TILES,
+  SANDBAGS_FOOTPRINT,
+  TREE_TRUNK,
+} from './tiles';
 
 const T = 48;
 export const MAP_WIDTH = 80;
@@ -15,7 +21,6 @@ export const TILED = { version: '1.10', tiledversion: '1.11.2' };
 const SOLID: readonly GroundTile[] = [
   'stone-wall-top',
   'stone-wall-front',
-  'sandbags',
   'bamboo-wall',
   'crate',
   'fence',
@@ -48,10 +53,43 @@ export function stringify(value: unknown, width: number): string {
   return `${text.replace(/"@@data(\d+)@@"/g, (_, i: string) => `[\n${rows[Number(i)]}\n]`)}\n`;
 }
 
-/** The ground tileset (.tsj) over an image of GROUND_TILES; `name` is also the image's name. */
-export function groundTileset(name = 'jungle-ground'): string {
+const tileId = (tile: GroundTile) => GROUND_TILES.indexOf(tile);
+
+/** What burns and what breaks in the Vietnam theme, with the values of Q33, Q63 and Q70. */
+function elementProperties(tile: GroundTile) {
+  const burnt = property('burntTile', 'int', tileId('burnt-ground'));
+  const flammable = property('flammable', 'bool', true);
+  const destructible = (hp: number, destroyed: GroundTile) => [
+    burnt,
+    property('destroyedTile', 'int', tileId(destroyed)),
+    flammable,
+    property('hp', 'int', hp),
+  ];
+  switch (tile) {
+    case 'bamboo-wall':
+      return destructible(60, 'bamboo-wall-destroyed');
+    case 'crate':
+      return destructible(80, 'rubble');
+    case 'fence':
+      return destructible(40, 'rubble');
+    case 'tall-grass':
+      return [burnt, flammable];
+    case 'thatch-roof':
+    case 'thatch-roof-edge':
+      return [flammable];
+    default:
+      return [];
+  }
+}
+
+/**
+ * The ground tileset (.tsj) over an image of GROUND_TILES; `name` is also the image's name.
+ * `elements` adds what burns and what breaks.
+ */
+export function groundTileset(name = 'jungle-ground', elements = true): string {
   const tiles = GROUND_TILES.map((name, id) => {
     const properties = [
+      ...(elements ? elementProperties(name) : []),
       ...(SOLID.includes(name) ? [property('solid', 'bool', true)] : []),
       ...(IMPASSABLE.includes(name) ? [property('impassable', 'bool', true)] : []),
     ];
@@ -78,26 +116,37 @@ export function groundTileset(name = 'jungle-ground'): string {
   );
 }
 
-export function treeTileset(): string {
+/**
+ * A tileset of one tile object (`name.png`, solid by default) whose collision is `footprint`,
+ * followed by the plain tiles of its variants: `tilecount` in all, side by side.
+ */
+function objectTileset(
+  name: string,
+  width: number,
+  height: number,
+  footprint: { x: number; y: number; width: number; height: number },
+  properties = [property('solid', 'bool', true)],
+  tilecount = 1,
+): string {
   return stringify(
     {
       type: 'tileset',
       ...TILED,
-      name: 'jungle-tree',
-      tilewidth: 2 * T,
-      tileheight: 3 * T,
-      tilecount: 1,
-      columns: 1,
-      image: 'jungle-tree.png',
-      imagewidth: 2 * T,
-      imageheight: 3 * T,
+      name,
+      tilewidth: width,
+      tileheight: height,
+      tilecount,
+      columns: tilecount,
+      image: `${name}.png`,
+      imagewidth: width * tilecount,
+      imageheight: height,
       margin: 0,
       spacing: 0,
       tiles: [
         {
           id: 0,
           type: 'tile',
-          properties: [property('solid', 'bool', true)],
+          properties,
           objectgroup: {
             draworder: 'index',
             id: 2,
@@ -107,7 +156,7 @@ export function treeTileset(): string {
             visible: true,
             x: 0,
             y: 0,
-            objects: [{ id: 1, name: '', type: '', rotation: 0, visible: true, ...TREE_TRUNK }],
+            objects: [{ id: 1, name: '', type: '', rotation: 0, visible: true, ...footprint }],
           },
         },
       ],
@@ -116,12 +165,60 @@ export function treeTileset(): string {
   );
 }
 
+export const treeTileset = () => objectTileset('jungle-tree', 2 * T, 3 * T, TREE_TRUNK);
+
+/**
+ * Sandbags are cover (Q29): bullets from a weapon reaching over them pass, 40 % of the others
+ * too. They are low: drawn below characters, so a soldier's weapon is never hidden behind them.
+ */
+export const sandbagsTileset = () =>
+  objectTileset(
+    'sandbags',
+    T,
+    T,
+    SANDBAGS_FOOTPRINT,
+    [
+      property('bulletPassPercent', 'int', 40),
+      property('cover', 'bool', true),
+      property('damageFilter', 'string', 'explosion'),
+      property('destroyedTile', 'int', 1),
+      property('hp', 'int', 200),
+      property('low', 'bool', true),
+    ],
+    2,
+  );
+
+/** Fuel barrels blow up when destroyed (Q33, Q70), leaving a scorch mark. */
+export const fuelBarrelTileset = () =>
+  objectTileset(
+    'fuel-barrel',
+    T,
+    T,
+    BARREL_FOOTPRINT,
+    [
+      property('destroyedTile', 'int', 1),
+      property('explosive', 'bool', true),
+      property('hp', 'int', 30),
+      property('solid', 'bool', true),
+    ],
+    2,
+  );
+
 interface Rect {
   x: number;
   y: number;
   w: number;
   h: number;
 }
+
+/** Tiles of the fuel barrels, around the village. */
+export const BARRELS: readonly { x: number; y: number }[] = [
+  { x: 58, y: 24 },
+  { x: 50, y: 25 },
+  { x: 70, y: 24 },
+  { x: 58, y: 32 },
+  { x: 62, y: 39 },
+];
 
 export const SPAWNS: readonly (Rect & { team: number })[] = [
   { team: 1, x: 2, y: 26, w: 6, h: 8 },
@@ -246,7 +343,12 @@ export function vietnamMap(): string {
   fill({ x: 22, y: 37, w: 5, h: 1 }, 'stone-wall-front');
   set(24, 37, 'rubble');
   set(27, 37, 'rubble');
-  fill({ x: 45, y: 26, w: 3, h: 1 }, 'sandbags');
+  // Sandbags (tile objects) on dug earth, either side of a ruined bamboo wall.
+  const sandbags = [
+    { x: 45, y: 26 },
+    { x: 47, y: 26 },
+  ];
+  fill({ x: 45, y: 26, w: 3, h: 1 }, 'dirt');
   set(46, 26, 'bamboo-wall-destroyed');
 
   // Spawn areas stay clear.
@@ -291,6 +393,8 @@ export function vietnamMap(): string {
 
   const groundGid = (tile: GroundTile) => GROUND_TILES.indexOf(tile) + 1;
   const treeGid = GROUND_TILES.length + 1;
+  const sandbagsGid = treeGid + 1;
+  const barrelGid = sandbagsGid + 2;
   let nextObjectId = 1;
   const treeObjects = trees.map(({ x, y }) => ({
     id: nextObjectId++,
@@ -304,6 +408,30 @@ export function vietnamMap(): string {
     y: y * T + T - 4,
     width: 2 * T,
     height: 3 * T,
+  }));
+  const sandbagObjects = sandbags.map(({ x, y }) => ({
+    id: nextObjectId++,
+    gid: sandbagsGid,
+    name: '',
+    type: '',
+    rotation: 0,
+    visible: true,
+    x: x * T,
+    y: (y + 1) * T,
+    width: T,
+    height: T,
+  }));
+  const barrelObjects = BARRELS.map(({ x, y }) => ({
+    id: nextObjectId++,
+    gid: barrelGid,
+    name: '',
+    type: '',
+    rotation: 0,
+    visible: true,
+    x: x * T,
+    y: (y + 1) * T,
+    width: T,
+    height: T,
   }));
   const spawnObjects = SPAWNS.map((spawn) => ({
     id: nextObjectId++,
@@ -356,16 +484,20 @@ export function vietnamMap(): string {
       height: H,
       tilewidth: T,
       tileheight: T,
-      nextlayerid: 5,
+      nextlayerid: 7,
       nextobjectid: nextObjectId,
       properties: [property('nameKey', 'string', 'map.river-village')],
       tilesets: [
         { firstgid: 1, source: '../tilesets/jungle-ground.tsj' },
         { firstgid: treeGid, source: '../tilesets/jungle-tree.tsj' },
+        { firstgid: sandbagsGid, source: '../tilesets/sandbags.tsj' },
+        { firstgid: barrelGid, source: '../tilesets/fuel-barrel.tsj' },
       ],
       layers: [
         tileLayer(1, 'ground', 'ground', ground.map(groundGid)),
         objectLayer(2, 'trees', 'objects', treeObjects),
+        objectLayer(5, 'sandbags', 'objects', sandbagObjects),
+        objectLayer(6, 'barrels', 'objects', barrelObjects),
         tileLayer(
           3,
           'roofs',

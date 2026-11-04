@@ -148,5 +148,11 @@ describe('buildCatalog', () => {
       behavior: 'bullet',
       params: { speed: 1200, range: 600 },
     });
+    expect(catalog.fire).toEqual({
+      burnTicks: 300,
+      spreadChance: 0.3,
+      characterBurnTicks: 180,
+      characterDamagePerSecond: 8,
+    });
   });
 });

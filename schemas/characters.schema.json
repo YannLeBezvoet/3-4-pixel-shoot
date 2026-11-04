@@ -35,7 +35,12 @@
           "weapon": {
             "type": "string",
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-            "description": "Default weapon (weapons.json)."
+            "description": "Primary weapon (weapons.json); not a thrown weapon."
+          },
+          "throwable": {
+            "description": "Thrown weapon carried along with the primary one (weapons.json).",
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
           },
           "speed": {
             "default": 180,

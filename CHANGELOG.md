@@ -5,6 +5,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-11-04
+
+Milestone 2 (combat), merged into `main`.
+
+### Added
+
+- Cover (Q29, changed by the owner, and Q72), ahead of the milestone 2 plan: the tile-object property `cover` blocks movement, not sight; every bullet from a weapon reaching over it passes, the others with the object's `bulletPassPercent` chance, drawn once per bullet and object. Vietnam sandbags are cover with a 40 % chance. Test maps gain `s` (sandbags).
+- Tile property `low` for tile objects (drawing only): the object is drawn just above the ground, below corpses, characters, their weapons and bullets, instead of being depth-sorted. Sandbags are `low`, so a soldier's weapon is never hidden behind them.
+- `sim`: loadouts with a throwable and a throw button; the distance to the cursor in inputs; `thrown` and `flamethrower` weapon behaviors, `grenade` and `flame` projectile behaviors; explosions with falloff, stopped by obstacles; fire that spreads, burns out and sets characters ablaze; map elements that take damage within a filter, change into their variants and restore at each round; damage tagged with its source.
+- `content`: map element properties in Tiled (`hp`, `damageFilter`, `destroyedTile`, `flammable`, `burntTile`, `explosive`, `blastRadius`, `blastDamage`) with validation messages; fire values and world effects in `theme.json`; characters' `throwable`; checks of loadouts and of which projectile a weapon fires.
+- `bots`: *take cover*; flamethrower troopers close in and fire within reach; grenades at enemies behind cover or in groups; bots hear explosions.
+- Client: tiles that change on the map, destroyed objects, explosions, flames looping on what burns, smoke, blood decals and pools with the blood setting (full, reduced, off), see-through circle under roofs and trees, the throw on the right button or G, throwables, weapon and fuel on the HUD, the choice of character in the solo setup. `/dev/scene` takes `participants`, `character`, `at` and `stress`.
+- Content: the Vietnam theme's flamethrower troopers, flamethrowers, grenades, fuel barrels, sandbag rubble, smoke and blood art, all placeholders; what burns and breaks on `river-village`.
+- Tools: `bench:sim` counts grenades, explosions, fires and map elements destroyed, with one bot in four a flamethrower trooper; the behavior reference lists the map element properties.
+- Tests: a browser test burning a hut through the see-through; the smoke test throws a grenade.
+- Docs: create-a-map guide (map elements), add-a-theme guide (loadouts, flamethrowers, grenades, fire, world effects), create-a-sprite guide (decals), decision record 0016 (proposed).
+
+### Changed
+
+- Vietnam theme: sandbags are tile objects (tileset `sandbags.tsj`) placed over any ground, instead of ground tiles with dirt drawn in; the `river-village` map places them in a `sandbags` objects layer. The ground tileset keeps an empty slot in their place so later tile ids do not move.
+- Vietnam theme: the sandbags' collision shape covers exactly their redrawn picture, a column 32 px wide.
+- Open questions Q61–Q70 settled with the milestone 2 plan.
+- Map elements are Tiled properties rather than registered behaviors: the `map-element` kind leaves the behavior registry (decision 0016).
+
 ## [0.1.0] — 2026-11-03
 
 Milestone 1 (playable solo), merged into `main`.

@@ -3,13 +3,14 @@
 import type { Rng } from '@pixel-shoot/shared';
 import type { EntityId } from '../core/entities';
 import { ComponentStore } from '../core/entities';
-import type { SimEvent } from '../core/events';
+import type { DamageSource, SimEvent } from '../core/events';
 import type { InputCommand } from '../core/input';
-import type { CollisionGrid } from '../map/collision-grid';
+import type { MutableCollisionGrid } from '../map/collision-grid';
 import type { MapData } from '../map/map-data';
 import { TILE_SIZE } from '../map/map-data';
 import { SpatialHash } from '../physics/spatial-hash';
 import type { Catalog } from './catalog';
+import type { MapElements } from './elements';
 
 /** Ground point, in world units. */
 export interface Position {
@@ -48,6 +49,34 @@ export interface DamageRequest {
   readonly attacker: EntityId;
   readonly weapon: string;
   readonly amount: number;
+  readonly source: DamageSource;
+}
+
+/** Damage waiting for the map element system (8) of the current tick. */
+export interface ElementDamage {
+  /** The element's key. */
+  readonly element: number;
+  readonly attacker: EntityId;
+  readonly team: number;
+  readonly weapon: string;
+  readonly amount: number;
+  readonly source: DamageSource;
+}
+
+/** An explosion waiting for the explosion system (6). */
+export interface ExplosionRequest {
+  readonly x: number;
+  readonly y: number;
+  /** World units; nothing is hurt at this distance or beyond. */
+  readonly radius: number;
+  /** Damage at the center, falling linearly to 0 at the radius. */
+  readonly damage: number;
+  /** Who is responsible for it; hurt by it even with friendly fire off (Q64). */
+  readonly owner: EntityId;
+  readonly team: number;
+  readonly weapon: string;
+  /** Projectile id in the catalog, when a projectile exploded. */
+  readonly kind: string | undefined;
 }
 
 export interface Health {
@@ -71,6 +100,42 @@ export interface WeaponState {
   triggerWasHeld: boolean;
 }
 
+/** The throwable an actor carries and how many are left (Q61). */
+export interface ThrowableState {
+  /** Weapon id in the catalog. */
+  readonly weapon: string;
+  count: number;
+  /** Ticks before the next throw. */
+  cooldown: number;
+  /** Whether the button was held during the previous tick: one throw per press. */
+  buttonWasHeld: boolean;
+}
+
+/** The flight of a thrown projectile, on top of its `Projectile` component (Q30). */
+export interface Grenade {
+  /** Ground velocity and vertical velocity, world units per second. */
+  vx: number;
+  vy: number;
+  vz: number;
+  /** Ticks before it goes off. */
+  fuse: number;
+}
+
+/** Who is responsible for a fire: its damage counts for them (Q64). */
+export interface FireOrigin {
+  readonly owner: EntityId;
+  readonly team: number;
+  readonly weapon: string;
+}
+
+/** A character on fire (Q31). */
+export interface Burning extends FireOrigin {
+  /** Ticks before it goes out. */
+  ticks: number;
+  /** Fraction of a hit point not taken yet, so that any rate of damage is exact. */
+  carry: number;
+}
+
 /** A projectile in flight. Its position is in the position store. */
 export interface Projectile {
   /** Projectile id in the catalog. */
@@ -80,15 +145,17 @@ export interface Projectile {
   /** Weapon that fired it. */
   readonly weapon: string;
   /** Unit direction. */
-  readonly dirX: number;
-  readonly dirY: number;
+  dirX: number;
+  dirY: number;
   /** World units per tick. */
   readonly speed: number;
   readonly damage: number;
   /** Height above the ground, for drawing; collision happens on the ground plane. */
-  readonly z: number;
+  z: number;
   /** Distance it may still travel. */
   remaining: number;
+  /** Ids of the cover objects it was fired over or has passed: it flies on through them. */
+  readonly passed: number[];
 }
 
 /** Match rules the simulation applies. */
@@ -107,7 +174,9 @@ export interface WorldState {
   frozen: boolean;
   /** Replaced in place by hot reload (development). */
   map: MapData;
-  grid: CollisionGrid;
+  grid: MutableCollisionGrid;
+  /** Destructible tiles and objects, and what happened to them. */
+  elements: MapElements;
   readonly catalog: Catalog;
   readonly rules: Rules;
   /** A named random stream, independent of the others (decision 0011). */
@@ -115,6 +184,10 @@ export interface WorldState {
   /** Events waiting to be returned by the next step. */
   readonly events: SimEvent[];
   readonly damage: DamageRequest[];
+  readonly elementDamage: ElementDamage[];
+  /** Keys of the elements that finished burning, for the map element system (8). */
+  readonly burntOut: number[];
+  readonly explosions: ExplosionRequest[];
   /** Actors by position; current after the movement system. */
   readonly actorIndex: SpatialHash;
   /** Largest collider radius among actors, to size neighbor queries. */
@@ -124,8 +197,11 @@ export interface WorldState {
   readonly body: ComponentStore<Body>;
   readonly actor: ComponentStore<Actor>;
   readonly health: ComponentStore<Health>;
+  readonly burning: ComponentStore<Burning>;
   readonly weapon: ComponentStore<WeaponState>;
+  readonly throwable: ComponentStore<ThrowableState>;
   readonly projectile: ComponentStore<Projectile>;
+  readonly grenade: ComponentStore<Grenade>;
 }
 
 /** Every component store, in the fixed order used for hashing and removal. */
@@ -135,8 +211,11 @@ export const STORES = [
   'body',
   'actor',
   'health',
+  'burning',
   'weapon',
+  'throwable',
   'projectile',
+  'grenade',
 ] as const;
 
 export function createStores() {
@@ -146,8 +225,11 @@ export function createStores() {
     body: new ComponentStore<Body>(),
     actor: new ComponentStore<Actor>(),
     health: new ComponentStore<Health>(),
+    burning: new ComponentStore<Burning>(),
     weapon: new ComponentStore<WeaponState>(),
+    throwable: new ComponentStore<ThrowableState>(),
     projectile: new ComponentStore<Projectile>(),
+    grenade: new ComponentStore<Grenade>(),
   } satisfies Record<(typeof STORES)[number], ComponentStore<unknown>>;
 }
 

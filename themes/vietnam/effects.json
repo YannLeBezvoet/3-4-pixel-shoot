@@ -5,6 +5,9 @@
     { "id": "bullet-impact", "sprite": "sprites/effects/bullet-impact" },
     { "id": "blood-splat", "sprite": "sprites/effects/blood-splat" },
     { "id": "explosion", "sprite": "sprites/effects/explosion" },
-    { "id": "flame", "sprite": "sprites/effects/flame" }
+    { "id": "flame", "sprite": "sprites/effects/flame" },
+    { "id": "smoke", "sprite": "sprites/effects/smoke" },
+    { "id": "blood-decal", "sprite": "sprites/effects/blood-decal" },
+    { "id": "blood-pool", "sprite": "sprites/effects/blood-pool" }
   ]
 }

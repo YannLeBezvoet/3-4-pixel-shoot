@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { EntityId } from '../../core/entities';
 import type { Projectile, WorldState } from '../../world/state';
 import { removeEntity } from '../../world/state';
-import { resolveTrace, traceProjectile } from '../../world/trace';
+import { passesCover, resolveTrace, traceProjectile } from '../../world/trace';
 import type { BehaviorDefinition } from '../registry';
 
 /** Fastest bullet allowed: 100 world units per tick, about two tiles. */
@@ -29,7 +29,7 @@ export const bullet: BehaviorDefinition<BulletParams> = {
   kind: 'projectile',
   id: 'bullet',
   description:
-    'A projectile flying straight at gun height until it hits a character, a solid obstacle or reaches its range.',
+    'A projectile flying straight at gun height until it hits a character, a solid obstacle or cover it fails to pass, or reaches its range.',
   params: bulletParams,
 };
 
@@ -48,14 +48,17 @@ export function updateBullet(world: WorldState, id: EntityId, bullet: Projectile
     position.y,
     toX,
     toY,
+    (footprint) => passesCover(world, bullet, footprint),
   );
   if (result) {
     resolveTrace(world, result, {
       projectile: id,
       kind: bullet.kind,
       owner: bullet.owner,
+      team: bullet.team,
       weapon: bullet.weapon,
       damage: bullet.damage,
+      source: 'bullet',
       z: bullet.z,
       angle: Math.atan2(bullet.dirY, bullet.dirX),
     });

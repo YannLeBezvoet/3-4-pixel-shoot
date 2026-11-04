@@ -48,6 +48,10 @@ describe('createSimulation', () => {
       rounds: 20,
       spareMagazines: null,
       reloadLeft: 0,
+      fuel: undefined,
+      throwable: 'frag',
+      throwables: 2,
+      burning: false,
     });
     expect(sim.step()).toEqual([
       { type: 'actorSpawned', entity: id, team: 1, character: 'rifleman' },
@@ -82,7 +86,11 @@ describe('createSimulation', () => {
     const sim = create();
     const a = sim.spawnActor({ team: 1, character: 'rifleman', x: 72, y: 72 });
     const b = sim.spawnActor({ team: 2, character: 'rifleman', x: 168, y: 72, aim: 2 });
-    sim.step(new Map([[a, { move: { x: 0, y: 0 }, aim: 3 * Math.PI, buttons: Button.fire }]]));
+    sim.step(
+      new Map([
+        [a, { move: { x: 0, y: 0 }, aim: 3 * Math.PI, aimDistance: 0, buttons: Button.fire }],
+      ]),
+    );
     expect(sim.actor(a)?.aim).toBeCloseTo(Math.PI, 12);
     expect(sim.actor(b)?.aim).toBe(2);
     sim.step();
@@ -104,6 +112,7 @@ describe('createSimulation', () => {
             {
               move: { x: rng.range(-1, 1), y: rng.range(-1, 1) },
               aim: rng.range(-Math.PI, Math.PI),
+              aimDistance: 0,
               buttons: rng.int(0, 3),
             },
           ]),
@@ -120,18 +129,22 @@ describe('createSimulation', () => {
     const sim = create();
     const a = sim.spawnActor({ team: 1, character: 'rifleman', x: 72, y: 72 });
     sim.frozen = true;
-    const events = sim.step(new Map([[a, { move: { x: 1, y: 0 }, aim: 2, buttons: Button.fire }]]));
+    const events = sim.step(
+      new Map([[a, { move: { x: 1, y: 0 }, aim: 2, aimDistance: 0, buttons: Button.fire }]]),
+    );
     expect(events.filter((e) => e.type === 'shotFired')).toEqual([]);
     expect(sim.actor(a)).toMatchObject({ x: 72, aim: 2 });
     sim.frozen = false;
-    sim.step(new Map([[a, { move: { x: 1, y: 0 }, aim: 2, buttons: 0 }]]));
+    sim.step(new Map([[a, { move: { x: 1, y: 0 }, aim: 2, aimDistance: 0, buttons: 0 }]]));
     expect(sim.actor(a)!.x).toBeGreaterThan(72);
   });
 
   it('clears every actor and projectile', () => {
     const sim = create();
     const a = sim.spawnActor({ team: 1, character: 'rifleman', x: 72, y: 72 });
-    sim.step(new Map([[a, { move: { x: 0, y: 0 }, aim: 0, buttons: Button.fire }]]));
+    sim.step(
+      new Map([[a, { move: { x: 0, y: 0 }, aim: 0, aimDistance: 0, buttons: Button.fire }]]),
+    );
     expect(sim.projectiles()).toHaveLength(1);
     sim.clear();
     expect(sim.actors()).toEqual([]);

@@ -1,15 +1,8 @@
 // Turns a loaded theme into the simulation's catalog: gameplay values in engine units, plus
 // the few values measured on sprites (ARCHITECTURE §8.3): how high and how far ahead the
 // hands hold the weapon, and the weapon's length from grip to muzzle.
-import type {
-  BulletParams,
-  Catalog,
-  CharacterStats,
-  FirearmParams,
-  ProjectileStats,
-  WeaponStats,
-} from '@pixel-shoot/sim';
-import { createCatalog } from '@pixel-shoot/sim';
+import type { Catalog, CharacterStats, ProjectileStats, WeaponStats } from '@pixel-shoot/sim';
+import { createCatalog, msToTicks } from '@pixel-shoot/sim';
 import { tagName } from '../sprites/conventions';
 import type { SpriteSheet } from '../sprites/sprite-sheet';
 import { originOf, slicePoint } from '../sprites/sprite-sheet';
@@ -50,20 +43,33 @@ export function buildCatalog(theme: Theme): Catalog {
     radius: c.radius,
     hitPoints: c.hitPoints,
     weapon: c.weapon,
+    ...(c.throwable !== undefined && { throwable: c.throwable }),
     ...handPosition(sheetOf(theme, c.sprite)),
   }));
   // Behaviors and parameters were validated by loadTheme against the engine's registry.
-  const weapons: WeaponStats[] = [...theme.weapons.values()].map((w) => ({
-    id: w.id,
-    behavior: w.behavior as WeaponStats['behavior'],
-    params: w.params as FirearmParams,
-    projectile: w.projectile,
-    barrelLength: barrelLength(sheetOf(theme, w.sprite)),
-  }));
-  const projectiles: ProjectileStats[] = [...theme.projectiles.values()].map((p) => ({
-    id: p.id,
-    behavior: p.behavior as ProjectileStats['behavior'],
-    params: p.params as BulletParams,
-  }));
-  return createCatalog({ characters, weapons, projectiles });
+  const weapons = [...theme.weapons.values()].map(
+    (w) =>
+      ({
+        id: w.id,
+        behavior: w.behavior,
+        params: w.params,
+        projectile: w.projectile,
+        barrelLength: barrelLength(sheetOf(theme, w.sprite)),
+      }) as WeaponStats,
+  );
+  const projectiles = [...theme.projectiles.values()].map(
+    (p) => ({ id: p.id, behavior: p.behavior, params: p.params }) as ProjectileStats,
+  );
+  const { burnMs, spreadPercent, burningMs, burningDamagePerSecond } = theme.fire;
+  return createCatalog({
+    characters,
+    weapons,
+    projectiles,
+    fire: {
+      burnTicks: msToTicks(burnMs),
+      spreadChance: spreadPercent / 100,
+      characterBurnTicks: msToTicks(burningMs),
+      characterDamagePerSecond: burningDamagePerSecond,
+    },
+  });
 }

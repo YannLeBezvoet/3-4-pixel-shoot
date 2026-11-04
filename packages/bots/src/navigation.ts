@@ -1,6 +1,6 @@
 // Bot navigation (decision 0011): A* on the tile grid, then the path is smoothed into a few
 // straight runs a character can actually walk.
-import type { CollisionGrid } from '@pixel-shoot/sim';
+import type { Box, CollisionGrid } from '@pixel-shoot/sim';
 import { BLOCKS_MOVEMENT, TILE_SIZE, circleBlocked, tileOf } from '@pixel-shoot/sim';
 
 export interface Point {
@@ -20,12 +20,30 @@ export class NavGrid {
     this.width = grid.width;
     this.height = grid.height;
     this.#walkable = new Uint8Array(grid.width * grid.height);
-    for (let y = 0; y < grid.height; y++)
-      for (let x = 0; x < grid.width; x++) {
+    this.rebuild();
+  }
+
+  /** Reads every tile again: the map changed as a whole (a new round). */
+  rebuild(): void {
+    this.refreshArea({
+      x: 0,
+      y: 0,
+      width: this.width * TILE_SIZE,
+      height: this.height * TILE_SIZE,
+    });
+  }
+
+  /** Reads again the tiles a box touches: a map element was destroyed there. */
+  refreshArea(box: Box): void {
+    const grid = this.#grid;
+    const right = Math.min(this.width - 1, tileOf(box.x + box.width - 1e-9));
+    const bottom = Math.min(this.height - 1, tileOf(box.y + box.height - 1e-9));
+    for (let y = Math.max(0, tileOf(box.y)); y <= bottom; y++)
+      for (let x = Math.max(0, tileOf(box.x)); x <= right; x++) {
         const blocked =
           (grid.flagsAt(x, y) & BLOCKS_MOVEMENT) !== 0 ||
           grid.footprintsAt(x, y).some((f) => (f.flags & BLOCKS_MOVEMENT) !== 0);
-        this.#walkable[y * grid.width + x] = blocked ? 0 : 1;
+        this.#walkable[y * this.width + x] = blocked ? 0 : 1;
       }
   }
 

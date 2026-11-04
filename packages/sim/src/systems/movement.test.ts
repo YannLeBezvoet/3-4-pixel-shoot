@@ -72,9 +72,9 @@ describe('movement', () => {
       #..o....#....#
       #.##..~~~..o.#
       #..#..~1~....#
-      #.....~~~.#..#
+      #.ss..~~~.#s.#
       #.o..2....#..#
-      #....#.o.....#
+      #....#.o..ss.#
       ##############
     `);
     const sim = createSimulation({ map, catalog, seed: 'walls' });

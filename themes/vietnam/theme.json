@@ -7,5 +7,12 @@
   "factions": [
     { "id": "us-army", "nameKey": "faction.us-army" },
     { "id": "pavn", "nameKey": "faction.pavn" }
-  ]
+  ],
+  "effects": {
+    "explosion": "explosion",
+    "fire": "flame",
+    "smoke": "smoke",
+    "bloodDecal": "blood-decal",
+    "bloodPool": "blood-pool"
+  }
 }

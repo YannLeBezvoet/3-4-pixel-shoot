@@ -1,5 +1,5 @@
-// Placeholder jungle tileset (48×48 tiles, 8 columns) and a 2×3-tile tree.
-// Tilesets are used from milestone 1 (Tiled maps); they exist now so the palette check covers them.
+// Placeholder jungle tileset (48×48 tiles, 8 columns), a 2×3-tile tree and sandbags. The tree and
+// the sandbags are tile objects: drawn on a transparent background, placed over any ground.
 import { createRng } from '@pixel-shoot/shared';
 import { Canvas } from '../canvas';
 import type { Color, ColorPicker } from '../canvas';
@@ -33,7 +33,8 @@ export const GROUND_TILES = [
   'burnt-ground',
   'stone-wall-top',
   'stone-wall-front',
-  'sandbags',
+  // Formerly sandbags, now a tile object (drawSandbags); left empty so later tile ids keep their place.
+  'free',
   'bamboo-wall',
   'bamboo-wall-destroyed',
   'crate',
@@ -104,19 +105,6 @@ export function drawGroundTileset(p: ColorPicker): Canvas {
       c.rect(x, y + row * 12 + 11, T, 1, p.hex('625565'));
       for (let col = 0; col < 3; col++)
         c.rect(x + ((col * 16 + (row % 2) * 8) % T), y + row * 12, 1, 11, p.hex('625565'));
-    }
-  }
-  {
-    const [x, y] = at('sandbags');
-    noise(c, x, y, dirt, [p.hex('7a3045')], 'sandbag-ground');
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 3; col++) {
-        const bx = x + 2 + col * 15 + (row % 2) * 7;
-        const by = y + 8 + row * 12;
-        c.ellipse(bx + 7, by + 5, 7, 5, p.hex('ab947a'));
-        c.ellipse(bx + 7, by + 7, 7, 3, p.hex('966c6c'), (_x, yy) => yy >= by + 8);
-        c.rect(bx + 1, by + 10, 13, 1, outline);
-      }
     }
   }
   {
@@ -248,5 +236,81 @@ export function drawJungleTree(p: ColorPicker): Canvas {
   for (let i = 0; i < 12; i++)
     c.ellipse(30 + rng.int(0, 36), 30 + rng.int(0, 30), 3, 2, leaves[3] as Color);
   c.outline(p.hex('2e222f'));
+  return c;
+}
+
+/** Collision of the sandbags: the whole tile, so a line of them leaves no gap. */
+export const SANDBAGS_FOOTPRINT = { x: 0, y: 0, width: T, height: T } as const;
+
+/**
+ * Sandbags filling one tile on a transparent background. Rows of three bags alternate with rows
+ * shifted by half a bag, so tiles placed side by side or one above the other join seamlessly.
+ */
+export function drawSandbags(p: ColorPicker): Canvas {
+  const c = new Canvas(T, T);
+  const top = p.hex('ab947a');
+  const side = p.hex('966c6c');
+  const outline = p.hex('2e222f');
+  for (let row = 0; row < 4; row++) {
+    const by = 1 + row * 12;
+    // Bags cut by the tile's edges are finished by the neighboring tile.
+    for (let bx = (row % 2) * -8; bx < T; bx += 16) {
+      c.ellipse(bx + 7, by + 5, 7, 5, top);
+      c.ellipse(bx + 7, by + 7, 7, 3, side, (_x, yy) => yy >= by + 8);
+      c.rect(bx + 1, by + 10, 13, 1, outline);
+    }
+  }
+  c.outline(outline);
+  return c;
+}
+
+/** Sandbags and what is left of them: burst bags lying flat, with no collision. */
+export function drawSandbagTiles(p: ColorPicker): Canvas {
+  const c = new Canvas(2 * T, T);
+  c.blit(drawSandbags(p), 0, 0);
+  c.blit(drawSandbagRubble(p), T, 0);
+  return c;
+}
+
+/** Burst sandbags spilling sand, on a transparent background. */
+export function drawSandbagRubble(p: ColorPicker): Canvas {
+  const c = new Canvas(T, T);
+  const rng = createRng('sandbag-rubble');
+  const sand = [p.hex('ab947a'), p.hex('966c6c')];
+  for (let i = 0; i < 7; i++)
+    c.ellipse(rng.int(10, 38), rng.int(6, 42), rng.int(4, 7), rng.int(2, 4), rng.pick(sand));
+  for (let i = 0; i < 40; i++) c.set(rng.int(6, 42), rng.int(3, 45), sand[0] as (typeof sand)[0]);
+  return c;
+}
+
+/** Collision of a fuel barrel: its base. */
+export const BARREL_FOOTPRINT = { x: 12, y: 24, width: 24, height: 22 } as const;
+
+/** A fuel barrel and the scorched ring it leaves, on a transparent background. */
+export function drawFuelBarrel(p: ColorPicker): Canvas {
+  const c = new Canvas(2 * T, T);
+  const body = p.hex('374e4a');
+  const light = p.hex('547e64');
+  const band = p.hex('e83b3b');
+  const outline = p.hex('2e222f');
+  c.ellipse(24, 40, 11, 6, body);
+  c.rect(13, 16, 22, 24, body);
+  c.rect(13, 16, 4, 24, light);
+  c.rect(13, 26, 22, 3, band);
+  c.ellipse(24, 16, 11, 5, light);
+  c.ellipse(24, 16, 7, 3, body);
+  c.outline(outline);
+
+  const ash = [p.hex('2e222f'), p.hex('3e3546'), p.hex('625565')];
+  const rng = createRng('barrel-scorch');
+  for (let i = 0; i < 90; i++) {
+    const angle = rng.range(0, Math.PI * 2);
+    const distance = rng.range(4, 20);
+    c.set(
+      Math.round(T + 24 + Math.cos(angle) * distance),
+      Math.round(32 + Math.sin(angle) * distance * 0.7),
+      rng.pick(ash),
+    );
+  }
   return c;
 }

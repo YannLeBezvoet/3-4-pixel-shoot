@@ -16,6 +16,7 @@ export function damage(world: WorldState): void {
       target: request.target,
       attacker: request.attacker,
       weapon: request.weapon,
+      source: request.source,
       amount: request.amount,
       hp: health.hp,
     });
@@ -36,6 +37,7 @@ export function damage(world: WorldState): void {
       victim: request.target,
       killer: request.attacker,
       weapon: request.weapon,
+      source: request.source,
       x: position?.x ?? 0,
       y: position?.y ?? 0,
     });

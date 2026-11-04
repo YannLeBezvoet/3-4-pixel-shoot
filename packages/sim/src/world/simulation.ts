@@ -7,13 +7,16 @@ import type { SimEvent } from '../core/events';
 import { StateHasher } from '../core/hash';
 import type { InputCommand } from '../core/input';
 import { NEUTRAL_INPUT } from '../core/input';
+import { msToTicks } from '../core/time';
 import { createFirearmState } from '../behaviors/weapons/firearm';
+import { createFlamethrowerState } from '../behaviors/weapons/flamethrower';
+import { createThrowable } from '../behaviors/weapons/thrown';
 import type { CollisionGrid } from '../map/collision-grid';
 import { buildCollisionGrid } from '../map/collision-grid';
 import type { MapData } from '../map/map-data';
 import { nearestFreeSpot, spawnSpots } from '../map/spawn';
 import type { Catalog } from './catalog';
-import type { Rules, WorldState } from './state';
+import type { ExplosionRequest, Rules, WorldState } from './state';
 import {
   DEFAULT_RULES,
   STORES,
@@ -22,6 +25,8 @@ import {
   indexActors,
   removeEntity,
 } from './state';
+import type { ElementState } from './elements';
+import { MapElements } from './elements';
 import { SYSTEMS, applyInputs } from './systems';
 
 export interface SimulationOptions {
@@ -65,6 +70,14 @@ export interface ActorState {
   readonly spareMagazines: number | null;
   /** Ticks left in the current reload; 0 when not reloading. */
   readonly reloadLeft: number;
+  /** Share of a flamethrower's tank left, from 0 to 1; undefined for other weapons. */
+  readonly fuel: number | undefined;
+  /** Thrown weapon carried (weapon id in the catalog), if any. */
+  readonly throwable: string | undefined;
+  /** How many are left in this life. */
+  readonly throwables: number;
+  /** Whether the character is on fire. */
+  readonly burning: boolean;
 }
 
 /** A read-only copy of a projectile's state. */
@@ -87,9 +100,9 @@ export interface Simulation {
   readonly grid: CollisionGrid;
   readonly rules: Rules;
   /**
-   * Swaps the map in place (development hot reload): new tiles and collision; living actors
-   * left inside an obstacle move to the nearest free spot. Spawn areas apply from the next
-   * spawn.
+   * Swaps the map in place (development hot reload): new tiles, collision and map elements,
+   * reported by `mapReset`; living actors left inside an obstacle move to the nearest free spot.
+   * Spawn areas apply from the next spawn.
    */
   replaceMap(map: MapData): void;
   /** While frozen (a countdown), actors may aim but neither move nor fire. */
@@ -100,15 +113,21 @@ export interface Simulation {
    */
   spawnActor(spec: ActorSpec): EntityId;
   removeActor(id: EntityId): void;
-  /** Removes every actor (reported) and projectile (silently). */
+  /** Removes every actor (reported) and projectile (silently), and restores the map elements. */
   clear(): void;
   /** Free spots of a team's spawn areas for a character of `radius`, avoiding living actors. */
   freeSpawnSpots(team: number, radius: number): { x: number; y: number }[];
+  /** Sets off an explosion during the next step (development scenes, tests). */
+  explode(explosion: ExplosionRequest): void;
+  /** Moves an actor at once (development scenes). */
+  teleport(id: EntityId, x: number, y: number): void;
   /** Advances one tick. Actors missing from `inputs` stand still and keep their aim. */
   step(inputs?: ReadonlyMap<EntityId, InputCommand>): readonly SimEvent[];
   actor(id: EntityId): ActorState | undefined;
   actors(): readonly ActorState[];
   projectiles(): readonly ProjectileState[];
+  /** Map elements still standing. */
+  elements(): readonly ElementState[];
   /** Hash of the whole state: equal for equal seeds and inputs. */
   hash(): number;
 }
@@ -116,12 +135,14 @@ export interface Simulation {
 export function createSimulation(options: SimulationOptions): Simulation {
   const root = createRng(options.seed);
   const streams = new Map<string, Rng>();
+  const grid = buildCollisionGrid(options.map);
   const world: WorldState = {
     tick: 0,
     nextEntity: 1,
     frozen: false,
     map: options.map,
-    grid: buildCollisionGrid(options.map),
+    grid,
+    elements: new MapElements(options.map, grid),
     catalog: options.catalog,
     rules: { ...DEFAULT_RULES, ...options.rules },
     random: (stream) => {
@@ -131,6 +152,9 @@ export function createSimulation(options: SimulationOptions): Simulation {
     },
     events: [],
     damage: [],
+    elementDamage: [],
+    burntOut: [],
+    explosions: [],
     actorIndex: createActorIndex(),
     maxActorRadius: 0,
     ...createStores(),
@@ -145,6 +169,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
     const weapon = world.weapon.get(id);
     if (!actor || !position || !velocity || !body || !health || !weapon) return undefined;
     const { team, character, aim } = actor;
+    const throwable = world.throwable.get(id);
+    const stats = world.catalog.weapons.get(weapon.weapon);
     return {
       id,
       team,
@@ -162,6 +188,13 @@ export function createSimulation(options: SimulationOptions): Simulation {
       rounds: weapon.rounds,
       spareMagazines: weapon.spareMagazines,
       reloadLeft: weapon.reloadLeft,
+      fuel:
+        stats?.behavior === 'flamethrower'
+          ? weapon.rounds / msToTicks(stats.params.tankMs)
+          : undefined,
+      throwable: throwable?.weapon,
+      throwables: throwable?.count ?? 0,
+      burning: world.burning.has(id),
     };
   };
 
@@ -187,7 +220,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
       const stats = world.catalog.characters.get(spec.character);
       if (!stats) throw new Error(`Unknown character "${spec.character}".`);
       const weapon = world.catalog.weapons.get(stats.weapon);
-      if (!weapon) throw new Error(`Unknown weapon "${stats.weapon}".`);
+      if (!weapon || weapon.behavior === 'thrown')
+        throw new Error(`Unknown weapon "${stats.weapon}".`);
       if (!Number.isInteger(spec.team) || spec.team < 1)
         throw new Error(`Teams are numbered from 1; got ${spec.team}.`);
       const id = world.nextEntity++;
@@ -204,7 +238,14 @@ export function createSimulation(options: SimulationOptions): Simulation {
         alive: true,
       });
       world.health.set(id, { hp: stats.hitPoints, max: stats.hitPoints });
-      world.weapon.set(id, createFirearmState(weapon));
+      world.weapon.set(
+        id,
+        weapon.behavior === 'firearm'
+          ? createFirearmState(weapon)
+          : createFlamethrowerState(weapon),
+      );
+      const thrown = stats.throwable && world.catalog.weapons.get(stats.throwable);
+      if (thrown && thrown.behavior === 'thrown') world.throwable.set(id, createThrowable(thrown));
       world.maxActorRadius = Math.max(world.maxActorRadius, stats.radius);
       indexActors(world);
       world.events.push({ type: 'actorSpawned', entity: id, team: spec.team, character: stats.id });
@@ -221,6 +262,8 @@ export function createSimulation(options: SimulationOptions): Simulation {
     replaceMap(map) {
       world.map = map;
       world.grid = buildCollisionGrid(map);
+      world.elements = new MapElements(map, world.grid);
+      world.events.push({ type: 'mapReset' });
       for (const [id, actor] of world.actor.entries()) {
         const position = world.position.get(id);
         const body = world.body.get(id);
@@ -237,6 +280,10 @@ export function createSimulation(options: SimulationOptions): Simulation {
     clear() {
       for (const id of [...world.actor.ids()]) this.removeActor(id);
       for (const id of [...world.projectile.ids()]) removeEntity(world, id);
+      world.explosions.length = 0;
+      world.elementDamage.length = 0;
+      world.burntOut.length = 0;
+      if (world.elements.reset()) world.events.push({ type: 'mapReset' });
     },
 
     freeSpawnSpots(team, radius) {
@@ -252,6 +299,18 @@ export function createSimulation(options: SimulationOptions): Simulation {
           );
         }),
       );
+    },
+
+    explode(explosion) {
+      world.explosions.push(explosion);
+    },
+
+    teleport(id, x, y) {
+      const position = world.position.get(id);
+      if (!position) return;
+      position.x = x;
+      position.y = y;
+      indexActors(world);
     },
 
     step(inputs = new Map()) {
@@ -276,6 +335,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
           angle: Math.atan2(projectile.dirY, projectile.dirX),
         };
       }),
+    elements: () => world.elements.snapshot(),
 
     hash() {
       const hasher = new StateHasher().number(world.tick).number(world.nextEntity);
@@ -284,6 +344,7 @@ export function createSimulation(options: SimulationOptions): Simulation {
         hasher.string(name).number(store.size);
         for (const [id, component] of store.entries()) hasher.number(id).value(component);
       }
+      hasher.value(world.elements.snapshot());
       return hasher.result;
     },
   };

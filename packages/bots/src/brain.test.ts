@@ -19,6 +19,7 @@ function duel(
   const brain = new BotBrain({
     difficulty: DIFFICULTIES.normal,
     random: createRng('bot'),
+    catalog: testCatalog(),
     map,
     grid: sim.grid,
     nav: new NavGrid(sim.grid),
@@ -92,6 +93,7 @@ describe('BotBrain', () => {
     const brain = new BotBrain({
       difficulty: DIFFICULTIES.normal,
       random: createRng('hear'),
+      catalog: testCatalog(),
       map,
       grid: sim.grid,
       nav: new NavGrid(sim.grid),
@@ -110,7 +112,7 @@ describe('BotBrain', () => {
       events = sim.step(
         new Map([
           [bot, input],
-          [enemy, { move: { x: 0, y: 0 }, aim: 0, buttons: 1 }],
+          [enemy, { move: { x: 0, y: 0 }, aim: 0, aimDistance: 0, buttons: 1 }],
         ]),
       );
       actions.add(brain.action);
@@ -125,6 +127,7 @@ describe('BotBrain', () => {
     const brain = new BotBrain({
       difficulty: DIFFICULTIES.easy,
       random: createRng('dead'),
+      catalog: testCatalog(),
       map,
       grid: sim.grid,
       nav: new NavGrid(sim.grid),
@@ -134,7 +137,127 @@ describe('BotBrain', () => {
     expect(brain.update({ self, actors: [self], events: [], tick: 0 })).toEqual({
       move: { x: 0, y: 0 },
       aim: 0,
+      aimDistance: 0,
       buttons: 0,
+    });
+  });
+
+  describe('with a flamethrower (Q67)', () => {
+    function flamer(enemyX: number) {
+      const map = asciiMap(`
+        ####################
+        #..................#
+        #..................#
+        #..................#
+        ####################
+      `);
+      const catalog = testCatalog({ character: { hitPoints: 100000 } });
+      const sim = createSimulation({ map, catalog, seed: 'flamer' });
+      const bot = sim.spawnActor({ team: 1, character: 'trooper', x: 72, y: 120 });
+      const enemy = sim.spawnActor({ team: 2, character: 'rifleman', x: enemyX, y: 120 });
+      const brain = new BotBrain({
+        difficulty: DIFFICULTIES.normal,
+        random: createRng('flamer'),
+        catalog,
+        map,
+        grid: sim.grid,
+        nav: new NavGrid(sim.grid),
+        thinkOffset: 0,
+      });
+      const distances: number[] = [];
+      let events: readonly SimEvent[] = [];
+      for (let i = 0; i < 6 * TICK_RATE; i++) {
+        const actors = sim.actors();
+        const self = actors.find((a) => a.id === bot)!;
+        const input = brain.update({ self, actors, events, tick: sim.tick });
+        events = sim.step(new Map([[bot, input]]));
+        if (events.some((e) => e.type === 'shotFired'))
+          distances.push(Math.abs(sim.actor(enemy)!.x - sim.actor(bot)!.x));
+      }
+      return { distances, sim, enemy };
+    }
+
+    it('closes in and fires only within reach', () => {
+      const { distances, sim, enemy } = flamer(420);
+      expect(distances.length).toBeGreaterThan(0);
+      // The test flamethrower reaches 192 pixels from a 24-pixel barrel.
+      expect(Math.max(...distances)).toBeLessThanOrEqual(216);
+      expect(sim.actor(enemy)?.hp).toBeLessThan(100000);
+    });
+  });
+
+  describe('with grenades (Q67)', () => {
+    const BEHIND_SANDBAGS = asciiMap(`
+      ####################
+      #..................#
+      #.........s........#
+      #.........s........#
+      #.........s........#
+      #..................#
+      ####################
+    `);
+
+    function throwing(map: MapData, friendAt?: { x: number; y: number }, enemyX = 576) {
+      const catalog = testCatalog({ character: { hitPoints: 100000 } });
+      const sim = createSimulation({ map, catalog, seed: 'throw' });
+      const bot = sim.spawnActor({ team: 1, character: 'rifleman', x: 300, y: 168 });
+      sim.spawnActor({ team: 2, character: 'rifleman', x: enemyX, y: 168 });
+      if (friendAt) sim.spawnActor({ team: 1, character: 'rifleman', ...friendAt });
+      const brain = new BotBrain({
+        difficulty: DIFFICULTIES.normal,
+        random: createRng('throw'),
+        catalog,
+        map,
+        grid: sim.grid,
+        nav: new NavGrid(sim.grid),
+        thinkOffset: 0,
+      });
+      const throws: number[] = [];
+      let events: readonly SimEvent[] = [];
+      for (let i = 0; i < 10 * TICK_RATE; i++) {
+        const actors = sim.actors();
+        const self = actors.find((a) => a.id === bot)!;
+        const input = brain.update({ self, actors, events, tick: sim.tick });
+        events = sim.step(new Map([[bot, input]]));
+        if (events.some((e) => e.type === 'thrown')) throws.push(sim.tick);
+      }
+      return throws;
+    }
+
+    it('throws at an enemy behind cover, a few seconds apart', () => {
+      const throws = throwing(BEHIND_SANDBAGS);
+      expect(throws).toHaveLength(2);
+      expect(throws[1]! - throws[0]!).toBeGreaterThanOrEqual(6 * TICK_RATE);
+    });
+
+    it('keeps its grenades for an enemy in the open', () => {
+      const open = asciiMap(`
+        ####################
+        #..................#
+        #..................#
+        #..................#
+        #..................#
+        #..................#
+        ####################
+      `);
+      expect(throwing(open)).toEqual([]);
+    });
+
+    it('never throws where a teammate stands', () => {
+      expect(throwing(BEHIND_SANDBAGS, { x: 520, y: 168 })).toEqual([]);
+    });
+
+    it('never throws close enough to be caught in the blast', () => {
+      const close = asciiMap(`
+        ####################
+        #..................#
+        #..................#
+        #......s...........#
+        #..................#
+        #..................#
+        ####################
+      `);
+      expect(throwing(close, undefined, 400)).toEqual([]);
     });
   });
 });

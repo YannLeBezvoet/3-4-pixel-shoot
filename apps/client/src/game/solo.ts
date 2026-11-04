@@ -1,6 +1,6 @@
 // A solo team elimination match from the choices of the solo setup (Q59): theme, map, side,
-// bots on each side (16 participants at most, Q24), bot difficulty and friendly fire (Q49).
-// Pure: no DOM, so it is tested directly.
+// character (Q61), bots on each side (16 participants at most, Q24), bot difficulty and friendly
+// fire (Q49). Pure: no DOM, so it is tested directly.
 import type { DifficultyLevel } from '@pixel-shoot/bots';
 import type { Theme } from '@pixel-shoot/content';
 import { buildCatalog } from '@pixel-shoot/content';
@@ -17,6 +17,8 @@ export interface SoloChoices {
   readonly mapRef: string;
   /** The player's team: 1 plays the theme's first faction, 2 the second. */
   readonly side: 1 | 2;
+  /** Which character of the side the player plays, in the order of the theme (Q61). */
+  readonly character: number;
   /** Bots in the player's team, 0 to 7. */
   readonly allies: number;
   /** Bots in the other team, 1 to 8. */
@@ -46,12 +48,19 @@ export function clampBots(allies: number, enemies: number): { allies: number; en
   return { allies: a, enemies: Math.min(e, SOLO_LIMITS.participants - 1 - a) };
 }
 
-/** The first character of the faction a team plays. */
-function characterOf(theme: Theme, team: number): string {
+/** The characters of the faction a team plays, in the order of the theme. */
+export function charactersOf(theme: Theme, team: number): string[] {
   const faction = theme.factions[(team - 1) % theme.factions.length]?.id;
-  const character = [...theme.characters.values()].find((c) => c.faction === faction);
-  if (!character) throw new Error(`Theme "${theme.id}" has no character for team ${team}.`);
-  return character.id;
+  const characters = [...theme.characters.values()].filter((c) => c.faction === faction);
+  if (characters.length === 0)
+    throw new Error(`Theme "${theme.id}" has no character for team ${team}.`);
+  return characters.map((c) => c.id);
+}
+
+/** One bot in four plays the side's second character, a flamethrower trooper in Vietnam (Q61). */
+export function botCharacter(characters: readonly string[], index: number): string {
+  const [first, second] = characters as [string, string?];
+  return index % 4 === 3 && second !== undefined ? second : first;
 }
 
 export function createSoloMatch(
@@ -70,10 +79,11 @@ export function createSoloMatch(
   });
   const enemySide = choices.side === 1 ? 2 : 1;
   const { allies, enemies } = clampBots(choices.allies, choices.enemies);
+  const own = charactersOf(theme, choices.side);
   const local = host.addParticipant({
     name: { key: 'participant.you' },
     team: choices.side,
-    character: characterOf(theme, choices.side),
+    character: own[choices.character] ?? (own[0] as string),
     kind: 'human',
   });
   let n = 0;
@@ -85,7 +95,7 @@ export function createSoloMatch(
       host.addParticipant({
         name: { key: 'participant.bot', params: { n: ++n } },
         team,
-        character: characterOf(theme, team),
+        character: botCharacter(charactersOf(theme, team), i),
         kind: 'bot',
         difficulty: choices.difficulty,
       });

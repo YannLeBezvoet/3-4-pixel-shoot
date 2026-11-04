@@ -6,7 +6,22 @@
 
 ## Open
 
-*(none)*
+### Raised by an owner request (2026-11-03)
+
+- **Q71. Characters next to sandbags.** The owner asked that a character's weapon be drawn in front of sandbags. *Proposal (implemented, awaiting confirmation):* tile objects with the `low` property, sandbags included, are drawn just above the ground, below corpses, characters, their weapons, bullets and effects. The sandbag picture is flat and its collision covers it, so no character ever stands on it and nothing needs to be hidden behind it. Alternative: keep sandbags depth-sorted with characters and lift only the weapon above them, which only matters if sandbags are later drawn with height (a front face that hides a soldier's legs).
+- **Q72. Details of the cover rule** (owner request, Q29). *Proposal (implemented, awaiting confirmation):*
+  - The weapon "reaches over" cover when the line from the shooter's center to the muzzle crosses the cover's collision box, on the ground (the gun's drawn height does not count). In the Vietnam theme the muzzle is 29 px from a soldier's center and the soldier's radius is 10 px, so the soldier must stand within about 19 px of the sandbags.
+  - The pass chance is drawn once per bullet and per cover object, from a seeded random stream: two sandbags in a row let about 16 % through (0.4 × 0.4). A bullet that hits a character in front of the sandbags draws nothing.
+  - The 40 % is data: the property `bulletPassPercent` of the sandbag tile in its tileset, so other cover (a low wall) can have its own value; without it, cover stops every bullet that does not come from over it.
+  - Cover works on tile objects only; a ground tile marked `cover` is refused by the validator.
+  - As settled in Q29, cover does not block sight: bots see enemies behind sandbags and shoot at them.
+
+### Raised while building M2 (2026-11-04)
+
+- **Q73. Grenade details.** *Proposal (implemented, awaiting confirmation):* the throw has a 0.6 s pause between two throws and needs a new press. A grenade flies at 420 px/s over the ground and first touches the ground on the cursor, then bounces (each bounce keeps 40 % of its speed) and rolls to a stop, about 1.5 tiles farther. It passes through characters, flies over cover from 16 px of height and hits cover below that, and crosses deep water like any ground. All of this except the 16 px is theme data.
+- **Q74. Fire details.** *Proposal (implemented, awaiting confirmation):* a flame stops at the first character it hits; cover stops flames unless the flamethrower reaches over it, with no chance of passing, since `bulletPassPercent` is about bullets. Fire spreads to the 4 adjacent tiles with a 30 % chance each second. An element burning out is consumed whatever its hit points, and an explosive one then goes off. Explosions do not ignite anything. A fire damages by igniting: a character standing in it burns for the full 3 s from the moment it leaves.
+- **Q75. Solo setup and HUD.** *Proposal (implemented, awaiting confirmation):* the character is chosen among those of the player's side, in the order of `characters.json`, and the choice is only shown when there are several. The second character of a side is the one bots play one time in four. The HUD shows, bottom right, the throwables left, the current weapon and the ammunition, with `Fuel 62%` for a flamethrower. A flamethrower is not refilled by itself before it is empty, like a magazine.
+- **Q76. Bots and fire.** *Proposal (implemented, awaiting confirmation):* bots do not avoid fire: they walk through burning ground and burn. Teaching them to go around it is left for later (it would need fire in their navigation). Under Q67, a bot throws at most every 6 s. Bots do not throw at an enemy merely because it stands behind a wall, only behind `cover`, or in a group. Not in the plan: bots hear explosions within 1,800 px, twice as far as gunfire, and go there. Without it, the last survivors of a round wandered without finding each other, and only 94 of 100 bot rounds ended by elimination (C1.6 asks for 95); with it, 99.
 
 ## Settled
 
@@ -67,12 +82,25 @@ On 2026-11-03 the owner also accepted Q48–Q60, raised with the detailed plan o
 
 ### Needed before M2
 
-- **Q29. Cover rules.** *Settled:* two kinds of obstacle. `solid` (walls, rocks, huts): blocks movement, bullets and line of sight. `cover` (sandbags, low walls): blocks movement and bullets but not line of sight, so you see over it. No shooting over cover, even when adjacent (simple arcade rule).
+- **Q29. Cover rules.** *Settled:* two kinds of obstacle. `solid` (walls, rocks, huts): blocks movement, bullets and line of sight. `cover` (sandbags, low walls): blocks movement but not line of sight, so you see over it. *Changed by the owner on 2026-11-03* (it first said: cover blocks bullets, no shooting over it even when adjacent): every bullet from a weapon reaching over cover passes it; bullets fired from farther away pass sandbags 40 % of the time. Details in Q72.
 - **Q30. Grenades.** *Settled:* thrown to the cursor, clamped to a maximum range; bounce off walls; 2.5 s fuse from the throw, no cooking; 2 per life; explosion blocked by walls; friendly fire follows the match setting.
 - **Q31. Fire.** *Settled:* the flamethrower ignites flammable tiles, objects and characters; fire spreads between adjacent flammable tiles and burns out, leaving a burnt variant; burning characters take damage for about 3 seconds; no way to extinguish.
 - **Q32. Blood and gore.** *Settled:* impact sprays, decals and pools under corpses that last for the round; no dismemberment. A blood setting (full / reduced / off), full by default.
 - **Q33. Destructible elements.** *Settled* for the Vietnam theme: bamboo and thatch hut walls, crates, fences, sandbags, fuel barrels (explosive). Each has hit points and an optional damage filter (e.g. sandbags only damaged by explosions). Destroyed elements leave rubble with no collision.
 - **Q34. Canopies and roofs.** *Settled:* when the local player is under an overhead element, a dithered circle around them makes it see-through.
+
+### Needed before M2 (raised with its detailed plan)
+
+- **Q61. Loadouts and the flamethrower.** Q17 gives each faction one fixed loadout; M2 adds grenades and a flamethrower. *Settled on 2026-11-04 (the owner approved the M2 plan and its proposals as written):* a character carries one primary weapon and one throwable with a count per life (Q30: 2 grenades). Riflemen carry a rifle and grenades. The flamethrower is the primary weapon of a second character per faction, the flamethrower trooper. In solo, the player chooses rifleman or flamethrower trooper in the setup; one bot in four is a flamethrower trooper. No weapon switching in M2. Alternative: every character carries both a rifle and a flamethrower and switches with keys.
+- **Q62. Throwing control.** *Settled on 2026-11-04 (the owner approved the M2 plan and its proposals as written):* the right mouse button throws a grenade toward the cursor (G as an alternative key). While dead, right click keeps switching the spectated teammate (Q53).
+- **Q63. What burns.** If grass burned, one flamethrower could set the whole map on fire. *Settled on 2026-11-04 (the owner approved the M2 plan and its proposals as written):* in the Vietnam theme, tall grass, thatch roofs, bamboo walls, fences and crates are flammable; grass, jungle floor, paddies, mud, paths and trees are not. Fire on a tile burns about 5 s, has a chance each second to spread to each adjacent flammable tile, then leaves burnt ground or the burnt variant. Fire blocks nothing but damages characters standing in it.
+- **Q64. Explosions and friendly fire.** *Settled on 2026-11-04 (the owner approved the M2 plan and its proposals as written):* a grenade hurts its thrower, even with friendly fire off; it hurts teammates only with friendly fire on (Q30). The same rule applies to fire: a character is hurt by fire it started.
+- **Q65. What stops a blast.** Q30 says explosions are blocked by walls. *Settled on 2026-11-04 (the owner approved the M2 plan and its proposals as written):* the blast is stopped by `solid` and by `cover`, since sandbags exist to protect from it. A grenade flies over cover in its arc and bounces off solid obstacles.
+- **Q66. Blood setting.** *Settled on 2026-11-04 (the owner approved the M2 plan and its proposals as written):* *full*: sprays, decals and pools (default); *reduced*: smaller sprays, no decals or pools; *off*: no blood, hits show the impact effect. The setting is in the settings screen.
+- **Q67. Bots and the new weapons.** *Settled on 2026-11-04 (the owner approved the M2 plan and its proposals as written):* bots carrying a flamethrower close in and use it within its range; bots throw a grenade when an enemy they know of is behind cover or when several enemies stand close together, at most once every few seconds and never when a teammate is within the blast radius. Alternative: no grenades for bots in M2.
+- **Q68. C2.5 wording.** Cover does not block sight (Q29), so a bot cannot be "hidden by cover". *Settled on 2026-11-04 (the owner approved the M2 plan and its proposals as written):* C2.5 counts a position where cover or a solid obstacle stops the attacker's bullets.
+- **Q69. 32 participants for C2.7.** Solo is capped at 16 (Q24). *Settled on 2026-11-04 (the owner approved the M2 plan and its proposals as written):* the solo cap stays at 16 in M2; the 32-participant measurement uses a development page (`/dev/scene` with a participant count in the URL).
+- **Q70. Initial values.** All are theme data, tunable at any time. *Settled on 2026-11-04 (the owner approved the M2 plan and its proposals as written):* M26 and Type 67: blast radius 3 tiles (144 px), 120 damage at the center falling linearly to 0 at the edge, maximum throw 8 tiles; flamethrowers: range 4 tiles, 10 damage per flame hit, 3 s of fire per tank then a 3 s refill; burning characters lose 8 hit points per second for 3 s; destructibles: bamboo wall 60, fence 40, crate 80 hit points, sandbags 200 and only damaged by explosions (Q33), fuel barrel 30 and explosive.
 
 ### Needed before M3
 

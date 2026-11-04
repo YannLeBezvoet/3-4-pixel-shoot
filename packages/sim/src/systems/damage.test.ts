@@ -40,7 +40,15 @@ describe('damage and death', () => {
     const { sim, shooter, target } = duel({ weapon: { fireMode: 'semi' } });
     const events = run(sim, new Map([[shooter, fireAt(0)]]), 30);
     expect(events.filter((e) => e.type === 'damaged')).toEqual([
-      { type: 'damaged', target, attacker: shooter, weapon: 'rifle', amount: 28, hp: 72 },
+      {
+        type: 'damaged',
+        target,
+        attacker: shooter,
+        weapon: 'rifle',
+        source: 'bullet',
+        amount: 28,
+        hp: 72,
+      },
     ]);
     expect(sim.actor(target)?.hp).toBe(72);
   });
@@ -52,7 +60,15 @@ describe('damage and death', () => {
     expect(damaged).toEqual([72, 44, 16, 0]);
     const killed = events.filter((e) => e.type === 'killed');
     expect(killed).toEqual([
-      { type: 'killed', victim: target, killer: shooter, weapon: 'rifle', x: 400, y: 120 },
+      {
+        type: 'killed',
+        victim: target,
+        killer: shooter,
+        weapon: 'rifle',
+        source: 'bullet',
+        x: 400,
+        y: 120,
+      },
     ]);
     expect(sim.actor(target)).toMatchObject({ alive: false, hp: 0 });
   });
@@ -64,7 +80,9 @@ describe('damage and death', () => {
     // The corpse neither moves nor fires.
     const events = run(
       sim,
-      new Map([[target, { move: { x: -1, y: 0 }, aim: Math.PI, buttons: Button.fire }]]),
+      new Map([
+        [target, { move: { x: -1, y: 0 }, aim: Math.PI, aimDistance: 0, buttons: Button.fire }],
+      ]),
       30,
     );
     expect(events.filter((e) => e.type === 'shotFired' && e.shooter === target)).toEqual([]);
@@ -139,6 +157,7 @@ describe('determinism (C1.5)', () => {
           current.set(id, {
             move: { x: rng.range(-1, 1), y: rng.range(-1, 1) },
             aim: rng.range(-Math.PI, Math.PI),
+            aimDistance: 0,
             buttons: rng.chance(0.6) ? Button.fire : rng.chance(0.1) ? Button.reload : 0,
           });
       for (const event of sim.step(current)) {

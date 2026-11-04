@@ -27,7 +27,7 @@ Each layer has a **class** (Layer Properties › Class) that says what it is for
 |---|---|---|
 | `ground` | tile layer | Drawn below everything. Its tiles carry the gameplay flags (`solid`, `impassable`). Several ground layers may be stacked; their flags add up. |
 | `overhead` | tile layer | Drawn above everything: canopy, roofs. No gameplay effect. |
-| `objects` | object layer | Tile objects (Insert Tile) such as trees and huts, larger than a tile if needed, drawn in depth order by their base. |
+| `objects` | object layer | Tile objects (Insert Tile) such as trees, huts and sandbags, larger than a tile if needed, drawn in depth order by their base (low objects excepted, see `low` below). Their pictures have a transparent background, so the ground shows around them. |
 | `gameplay` | object layer | Spawn areas. Not drawn. |
 
 Group layers and image layers are not supported. Hidden layers still count.
@@ -40,12 +40,35 @@ Set on tiles in the tileset editor: give the tile the class **`tile`** (Tile Pro
 |---|---|
 | `solid` | Blocks movement, bullets and line of sight: walls, rocks, huts, trunks. |
 | `impassable` | Blocks movement only; bullets and sight pass over it: deep water (Q50). |
+| `cover` | Tile objects only: a low obstacle such as sandbags. Blocks movement, not line of sight. A soldier whose weapon reaches over it (standing against it) fires every bullet through it; bullets from farther away pass with the `bulletPassPercent` chance, drawn once per bullet and object (Q29, Q72). Refused on ground tiles. |
+| `bulletPassPercent` | Whole number from 0 to 100, for `cover`: the chance in percent that a bullet from farther away passes. 0 when not set. Sandbags: 40. |
+| `low` | Tile objects only, drawing only: the object is drawn just above the ground, below corpses, characters, their weapons, bullets and effects, instead of in depth order. For low objects that nothing stands on, such as sandbags: a soldier beside them always shows with the weapon aimed over them. |
 
 - In a **ground** layer, the flags apply to the whole 48 × 48 tile.
 - For a **tile object** (an `objects` layer), the flags apply to the object's **collision shapes**, drawn on the tile in Tiled's collision editor (Tileset › Tile Collision Editor). Shapes are **rectangles** without rotation (Q55); other shapes are refused. A solid tile without shapes blocks nothing (the validator warns).
-- A tile object can override its tile's flags with its own `solid` or `impassable` property, e.g. a decorative tree that blocks nothing.
+- A tile object can override its tile's properties with its own property of the same name, e.g. a decorative tree that blocks nothing, or one sandbag pile tougher than the others.
 
 Unknown property names are reported as warnings: they are usually typos.
+
+## 3b. Map elements: what breaks and what burns
+
+The same properties, in the same places, make a tile or a tile object a **map element** (Q33):
+
+| Property | Effect |
+|---|---|
+| `hp` | Whole number. Destructible: it takes damage until this many hit points are gone. 0 (not set): damage cannot destroy it. |
+| `damageFilter` | Text: what hurts it, separated by commas, among `bullet`, `explosion`, `fire`. Empty: everything. Sandbags: `explosion`. |
+| `destroyedTile` | Whole number: the id, in the same tileset, of the tile left once destroyed (rubble). Needed by a destructible ground tile. On a tile object, without it the object simply disappears. |
+| `flammable` | Catches fire from flamethrowers and from neighbors, burns about 5 s, then leaves its burnt variant. A fire also ignites the characters standing in it. Also works on tiles of an `overhead` layer: a thatch roof burns away. |
+| `burntTile` | Whole number: the id, in the same tileset, of the tile left once burnt out. Needed by a flammable ground tile, unless it has `destroyedTile`. On an `overhead` tile, without it the tile disappears. |
+| `explosive` | Blows up when destroyed or burnt out, for whoever destroyed it. Needs `hp` or `flammable`. |
+| `blastRadius` | Whole number, for `explosive`: radius in pixels. 144 (3 tiles) when not set. |
+| `blastDamage` | Whole number, for `explosive`: damage at the center, falling linearly to 0 at the radius. 120 when not set. |
+
+- A destroyed or burnt element stops blocking, unless the tile left behind is itself `solid`. Give rubble and burnt ground no flags.
+- Fire only travels between flammable elements that touch: on the 4 sides of a tile, or around an object's collision shapes. Keep a firebreak of plain ground to stop it; this is how to keep one flamethrower from burning a whole map.
+- Everything comes back at the start of a round.
+- A tile object may set any of these for itself, such as one crate with more hit points, or a barrel that does not explode.
 
 ## 4. Spawn areas
 
@@ -57,6 +80,7 @@ In a `gameplay` layer, draw a **rectangle** (not a point) with the class `spawn`
 - Flipped or rotated tiles and tile objects; resized tile objects.
 - Tile data that is not CSV (Map Properties › Tile Layer Format).
 - Maps larger than 512 × 512 tiles.
+- A destructible ground tile without `destroyedTile`, a flammable ground tile without `burntTile` or `destroyedTile`, an `overhead` tile with `hp`, a `destroyedTile` or `burntTile` outside the tileset, an unknown name in `damageFilter`.
 
 ## 6. Check it
 
@@ -73,6 +97,6 @@ error: themes/vietnam/maps/village.tmj › layer "trees" › object 14 at (480, 
 
 ## 7. The placeholder map
 
-`themes/vietnam/maps/river-village.tmj` and its tilesets (`tilesets/jungle-ground.tsj`, `tilesets/jungle-tree.tsj`) were generated by `npm run assets:placeholders` (Q27): a jungle edge in the west, rice paddies, a river crossed by two bridges and a ford, a village of four huts in the east, one spawn area per team. Edit them freely in Tiled: once a file no longer matches what the generator wrote, the generator leaves it alone (`npm run assets:report` lists the files still untouched).
+`themes/vietnam/maps/river-village.tmj` and its tilesets (`tilesets/jungle-ground.tsj`, `tilesets/jungle-tree.tsj`, `tilesets/sandbags.tsj`) were generated by `npm run assets:placeholders` (Q27): a jungle edge in the west, rice paddies, a river crossed by two bridges and a ford, a village of four huts in the east, one spawn area per team. Edit them freely in Tiled: once a file no longer matches what the generator wrote, the generator leaves it alone (`npm run assets:report` lists the files still untouched).
 
-Until cover arrives (milestone 2), the sandbag tiles are `solid`.
+Sandbags are not ground tiles: they are tile objects (`tilesets/sandbags.tsj`), placed in the `sandbags` objects layer over any ground. The picture is a column of bags 32 px wide in the middle of the tile, and its collision shape covers exactly the drawn bags (x 8 to 40, full height): two sandbags placed side by side leave a 16 px gap, too narrow for a character but not for a bullet. They are `cover` with `bulletPassPercent` 40, and `low`, so characters and their weapons are drawn over them. The ground tileset keeps an empty slot where its sandbag tile used to be, so the tiles after it keep their ids.

@@ -46,3 +46,29 @@ export function drawAk47(p: ColorPicker): WeaponArt {
   c.outline(p.hex('2e222f'));
   return { canvas: c, grip: { x: 18, y: 27 }, muzzle: { x: 42, y: 24 } };
 }
+
+/** A grenade in the hand. It is thrown from the grip, so both slices sit on it. */
+export function drawHandGrenade(p: ColorPicker, body: string, band: string): WeaponArt {
+  const c = new Canvas(48, 48);
+  c.ellipse(24, 25, 4, 5, p.hex(body));
+  c.rect(21, 25, 7, 1, p.hex(band));
+  c.rect(23, 19, 3, 2, p.hex('625565'));
+  c.outline(p.hex('2e222f'));
+  return { canvas: c, grip: { x: 22, y: 27 }, muzzle: { x: 26, y: 25 } };
+}
+
+/** A flamethrower wand, its pilot light at the muzzle. */
+export function drawFlamethrower(p: ColorPicker, body: string, hose: string): WeaponArt {
+  const c = new Canvas(48, 48);
+  const metal = p.hex(body);
+  const light = p.hex('625565');
+  c.rect(10, 23, 8, 3, p.hex(hose)); // hose
+  c.rect(16, 22, 13, 4, metal); // valve body
+  c.rect(16, 22, 13, 1, light);
+  c.rect(19, 26, 3, 4, metal); // grip
+  c.rect(29, 23, 11, 2, metal); // wand
+  c.rect(40, 22, 3, 4, light); // nozzle
+  c.set(42, 21, p.hex('f9c22b')); // pilot light
+  c.outline(p.hex('2e222f'));
+  return { canvas: c, grip: { x: 20, y: 27 }, muzzle: { x: 43, y: 24 } };
+}

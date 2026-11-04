@@ -61,6 +61,8 @@ export interface WorldView {
 
 export interface MatchHost {
   readonly map: MapData;
+  /** The simulation itself, for development pages and tests. A match never needs it. */
+  readonly simulation: Simulation;
   /** Swaps the map in place (development hot reload): collision, bot navigation, stuck characters. */
   replaceMap(map: MapData): void;
   readonly tick: number;
@@ -141,6 +143,7 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
     },
     clearWorld() {
       sim.clear();
+      navGrid?.rebuild();
       byEntity.clear();
       for (const participant of participants.values()) participant.entity = undefined;
     },
@@ -156,6 +159,7 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
   }
 
   return {
+    simulation: sim,
     get map() {
       return sim.map;
     },
@@ -183,6 +187,7 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
           ? new BotBrain({
               difficulty: DIFFICULTIES[difficulty],
               random: root.fork(`bot:${id}`),
+              catalog: setup.catalog,
               map: sim.map,
               grid: sim.grid,
               nav: navGrid,
@@ -242,6 +247,7 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
       const events = sim.step(inputs);
       lastEvents = events;
       for (const event of events) {
+        if (event.type === 'elementDestroyed') navGrid?.refreshArea(event.box);
         if (event.type !== 'killed') continue;
         const victim = byEntity.get(event.victim);
         const killer = byEntity.get(event.killer);

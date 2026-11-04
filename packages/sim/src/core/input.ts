@@ -7,21 +7,27 @@ import { normalizeAngle, vec2 } from '@pixel-shoot/shared';
 export const Button = {
   fire: 1,
   reload: 2,
+  throw: 4,
 } as const;
 
-const ALL_BUTTONS = Button.fire | Button.reload;
+const ALL_BUTTONS = Button.fire | Button.reload | Button.throw;
 
 export interface InputCommand {
   /** Desired movement direction; length 0 (stand still) to 1 (full speed). */
   readonly move: Vec2;
   /** Aim angle in radians, screen convention: 0 = east, π/2 = south. */
   readonly aim: number;
+  /**
+   * Distance to the point aimed at, in world units, from the hands: where a thrown weapon goes.
+   * Aim and distance together are the cursor (Q30).
+   */
+  readonly aimDistance: number;
   /** `Button` bits. */
   readonly buttons: number;
 }
 
 /** No movement, no button, aiming east. */
-export const NEUTRAL_INPUT: InputCommand = { move: vec2.ZERO, aim: 0, buttons: 0 };
+export const NEUTRAL_INPUT: InputCommand = { move: vec2.ZERO, aim: 0, aimDistance: 0, buttons: 0 };
 
 export function hasButton(input: InputCommand, button: number): boolean {
   return (input.buttons & button) !== 0;
@@ -39,6 +45,7 @@ export function sanitizeInput(input: InputCommand): InputCommand {
   return {
     move,
     aim: normalizeAngle(finite(input.aim)),
+    aimDistance: Math.max(0, finite(input.aimDistance)),
     buttons: (Number.isInteger(input.buttons) ? input.buttons : 0) & ALL_BUTTONS,
   };
 }

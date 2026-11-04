@@ -1,6 +1,7 @@
 // Loads a theme folder and validates it completely: schemas, behavior parameters,
 // cross-references, sprites and translations. Every problem is collected.
 import type { BehaviorKind, BehaviorRegistry } from '@pixel-shoot/sim';
+import { PROJECTILE_OF_WEAPON } from '@pixel-shoot/sim';
 import type { FileProvider } from '../files/file-provider';
 import { joinPath } from '../files/file-provider';
 import { readJson } from '../files/read-json';
@@ -60,6 +61,9 @@ export interface Theme {
   readonly nameKey: string;
   readonly defaultLanguage: string;
   readonly factions: ThemeManifest['factions'];
+  readonly fire: ThemeManifest['fire'];
+  /** Effects of the world itself. */
+  readonly worldEffects: ThemeManifest['effects'];
   readonly characters: ReadonlyMap<string, ThemeCharacter>;
   readonly weapons: ReadonlyMap<string, ThemeWeapon>;
   readonly projectiles: ReadonlyMap<string, ThemeProjectile>;
@@ -314,16 +318,49 @@ export async function loadTheme(
         `${where}.weapon`,
         `Unknown weapon "${character.weapon}". Known weapons (weapons.json): ${listOf(weaponEntries.keys())}.`,
       );
+    } else if (weapons.get(character.weapon)?.behavior === 'thrown') {
+      issues.error(
+        charactersFile,
+        `${where}.weapon`,
+        `"${character.weapon}" is a thrown weapon: use it as "throwable", with a primary weapon as "weapon".`,
+      );
+    }
+    if (character.throwable === undefined) return;
+    if (!weaponEntries.has(character.throwable)) {
+      issues.error(
+        charactersFile,
+        `${where}.throwable`,
+        `Unknown weapon "${character.throwable}". Known weapons (weapons.json): ${listOf(weaponEntries.keys())}.`,
+      );
+    } else if (
+      weapons.has(character.throwable) &&
+      weapons.get(character.throwable)?.behavior !== 'thrown'
+    ) {
+      issues.error(
+        charactersFile,
+        `${where}.throwable`,
+        `"${character.throwable}" is not a thrown weapon: its behavior must be "thrown".`,
+      );
     }
   });
   weaponsData.weapons.forEach((weapon, index) => {
+    const where = describeJsonPath(rawWeapons, ['weapons', index]);
     if (!projectileEntries.has(weapon.projectile)) {
       issues.error(
         weaponsFile,
-        `${describeJsonPath(rawWeapons, ['weapons', index])}.projectile`,
+        `${where}.projectile`,
         `Unknown projectile "${weapon.projectile}". Known projectiles (projectiles.json): ${listOf(projectileEntries.keys())}.`,
       );
+      return;
     }
+    const expected = PROJECTILE_OF_WEAPON[weapon.behavior as keyof typeof PROJECTILE_OF_WEAPON];
+    const behavior = projectiles.get(weapon.projectile)?.behavior;
+    if (expected && behavior && behavior !== expected)
+      issues.error(
+        weaponsFile,
+        `${where}.projectile`,
+        `A weapon of behavior "${weapon.behavior}" fires a projectile of behavior "${expected}"; "${weapon.projectile}" is "${behavior}".`,
+      );
   });
   const checkEffect = (effect: string | undefined, file: string, location: string) => {
     if (effect === undefined || effects.has(effect)) return;
@@ -333,6 +370,8 @@ export async function loadTheme(
       `Unknown effect "${effect}". Known effects (effects.json): ${listOf(effects.keys())}.`,
     );
   };
+  for (const [name, effect] of Object.entries(manifest.effects))
+    checkEffect(effect, manifestFile, `effects.${name}`);
   charactersData.characters.forEach((c, i) =>
     checkEffect(
       c.effects.hit,
@@ -502,6 +541,8 @@ export async function loadTheme(
     nameKey: manifest.nameKey,
     defaultLanguage: manifest.defaultLanguage,
     factions: manifest.factions,
+    fire: manifest.fire,
+    worldEffects: manifest.effects,
     characters,
     weapons,
     projectiles,

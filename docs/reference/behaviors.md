@@ -22,21 +22,80 @@ A gun firing projectiles from a magazine, with a rate of fire, spread and reload
 | `reloadMs` | whole number ≥ 0 | required | Reload duration in milliseconds. |
 | `reserveMagazines` | whole number ≥ 0 or `null` | `null` | Spare magazines per life; null means unlimited. A reload uses one, and the rounds left in the old magazine are lost. |
 
+### `flamethrower`
+
+A jet of flames while the fire button is held, for as long as the tank lasts; it refills on the reload button or by itself when empty.
+
+| Parameter | Type | Default | Meaning |
+|---|---|---|---|
+| `flamesPerSecond` | number > 0, ≤ 60 | required | Flames thrown while firing. |
+| `damage` | whole number > 0 | required | Hit points removed by one flame. |
+| `spreadDeg` | number ≥ 0, ≤ 45 | `0` | Random deviation of each flame, in degrees on each side of the aim. |
+| `tankMs` | whole number > 0 | required | How long a full tank fires, in milliseconds. |
+| `refillMs` | whole number ≥ 0 | required | How long a refill takes, in milliseconds. |
+
+### `thrown`
+
+A throwable carried beside the primary weapon: thrown to the cursor up to a maximum range, one per press.
+
+| Parameter | Type | Default | Meaning |
+|---|---|---|---|
+| `count` | whole number ≥ 1, ≤ 20 | `2` | How many a character carries per life. |
+| `maxRange` | number > 0, ≤ 2000 | required | Farthest throw in pixels (one tile is 48 pixels); nearer targets are reached. |
+| `cooldownMs` | whole number ≥ 0 | `600` | Shortest time between two throws. |
+
 ## Projectile behaviors
 
 Used in projectiles.json.
 
 ### `bullet`
 
-A projectile flying straight at gun height until it hits a character, a solid obstacle or reaches its range.
+A projectile flying straight at gun height until it hits a character, a solid obstacle or cover it fails to pass, or reaches its range.
 
 | Parameter | Type | Default | Meaning |
 |---|---|---|---|
 | `speed` | number > 0, ≤ 6000 | required | Speed in pixels per second (one tile is 48 pixels). |
 | `range` | number > 0, ≤ 5000 | required | Distance in pixels from the muzzle after which the bullet disappears. |
 
-## Map-element behaviors
+### `grenade`
 
-Used in maps (Tiled).
+A thrown explosive: an arc that lands on its target, bounces off solid obstacles, flies over cover, rolls to a stop and explodes at the end of its fuse.
 
-*None yet.*
+| Parameter | Type | Default | Meaning |
+|---|---|---|---|
+| `speed` | number > 0, ≤ 1500 | required | Speed over the ground in pixels per second (one tile is 48 pixels). |
+| `gravity` | number > 0 | `900` | Pixels per second squared. |
+| `restitution` | number ≥ 0, ≤ 1 | `0.4` | Share of its speed a bounce keeps: 0 stops dead, 1 loses nothing. |
+| `friction` | number ≥ 0 | `400` | Slowdown while rolling, in pixels per second squared. |
+| `fuseMs` | whole number > 0 | `2500` | Time from the throw to the explosion. |
+| `blastRadius` | number > 0, ≤ 1000 | required | Pixels; nothing is hurt at this distance or beyond. |
+| `blastDamage` | whole number > 0 | required | Damage at the center, falling linearly to 0. |
+
+### `flame`
+
+A short-lived particle of fire: it hurts and ignites the character it hits, ignites flammable tiles and objects it touches, and stops at obstacles.
+
+| Parameter | Type | Default | Meaning |
+|---|---|---|---|
+| `speed` | number > 0, ≤ 1200 | required | Speed in pixels per second (one tile is 48 pixels). |
+| `range` | number > 0, ≤ 1000 | required | Distance in pixels from the muzzle after which the flame disappears. |
+
+## Map elements
+
+Properties of tiles in Tiled tilesets, which tile objects may override ([create a map](../guides/create-a-map.md)).
+
+| Property | Type | Default | Meaning |
+|---|---|---|---|
+| `solid` | bool | `false` | Blocks movement, bullets and sight (walls, rocks, huts, tree trunks). |
+| `impassable` | bool | `false` | Blocks movement only; bullets and sight pass (deep water). |
+| `cover` | bool | `false` | Tile objects only: a low obstacle (sandbags) that blocks movement but not sight. Every bullet passes it when the weapon firing it reaches over it; otherwise with the bulletPassPercent chance (Q29). |
+| `bulletPassPercent` | int | `0` | Cover only: chance in percent (0 to 100) that a bullet fired from a weapon not over the object passes it, drawn once per bullet and object. |
+| `low` | bool | `false` | Tile objects only: drawn just above the ground, below characters, their weapons and bullets, instead of being depth-sorted (sandbags). No gameplay effect. |
+| `hp` | int | `0` | Hit points of a destructible element; 0 means damage cannot destroy it. A destructible ground tile needs destroyedTile. |
+| `damageFilter` | string | `""` | What hurts a destructible element, separated by commas: bullet, explosion, fire. Empty means everything. |
+| `destroyedTile` | int | `-1` | Id, in the same tileset, of the tile left once destroyed (rubble). -1 means none: an object then disappears. |
+| `flammable` | bool | `false` | Catches fire, spreads it to adjacent flammable elements and burns out (Q31). Also works on overhead tiles (thatch roofs). A flammable ground tile needs burntTile or destroyedTile. |
+| `burntTile` | int | `-1` | Id, in the same tileset, of the tile left once burnt out. -1 means the destroyed tile, or none. |
+| `explosive` | bool | `false` | Explodes when destroyed (fuel barrels): it needs hp, or flammable to go off when it burns out. |
+| `blastRadius` | int | `144` | Explosive only: radius of the blast in pixels (one tile is 48 pixels). |
+| `blastDamage` | int | `120` | Explosive only: damage at the center of the blast, falling linearly to 0. |

@@ -17,7 +17,7 @@ The game needs: characters sliding along walls; fast bullets that must never tun
 
 **Custom collision** in `packages/sim`:
 
-- static grid of tile flags (`solid`, `cover`, …) rebuilt locally when a tile changes;
+- grid of tile flags (`solid`, `cover`, …) changed locally when a map element is destroyed;
 - characters: circles, resolved against the grid and boxes with sliding;
 - projectiles: swept segments each tick (grid traversal + segment/circle and segment/box tests), so no tunneling at any speed;
 - grenades: swept circles with reflection on the grid;

@@ -45,6 +45,61 @@
                     "name": "impassable",
                     "type": "bool",
                     "value": false
+                },
+                {
+                    "name": "cover",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "bulletPassPercent",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "low",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "hp",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "damageFilter",
+                    "type": "string",
+                    "value": ""
+                },
+                {
+                    "name": "destroyedTile",
+                    "type": "int",
+                    "value": -1
+                },
+                {
+                    "name": "flammable",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "burntTile",
+                    "type": "int",
+                    "value": -1
+                },
+                {
+                    "name": "explosive",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "blastRadius",
+                    "type": "int",
+                    "value": 144
+                },
+                {
+                    "name": "blastDamage",
+                    "type": "int",
+                    "value": 120
                 }
             ]
         },
