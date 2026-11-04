@@ -1,7 +1,14 @@
 import type { ActorState, SimEvent } from '@pixel-shoot/sim';
 import { asciiMap, buildCollisionGrid } from '@pixel-shoot/sim';
 import { describe, expect, it } from 'vitest';
-import { HEARING_RADIUS, MEMORY_TICKS, Memory, canSee, visibleEnemies } from './perception';
+import {
+  BLAST_HEARING_RADIUS,
+  HEARING_RADIUS,
+  MEMORY_TICKS,
+  Memory,
+  canSee,
+  visibleEnemies,
+} from './perception';
 
 const grid = buildCollisionGrid(
   asciiMap(`
@@ -56,6 +63,25 @@ describe('perception', () => {
     expect(canSee(self, 72, 120 + 271, grid)).toBe(false);
     const seen = visibleEnemies(self, [actor(5, 1, 150, 120), actor(6, 2, 160, 120, false)], grid);
     expect(seen).toEqual([]);
+  });
+
+  it('hears explosions from far away, but not its own', () => {
+    const blast = (owner: number, x: number): SimEvent => ({
+      type: 'exploded',
+      x,
+      y: 120,
+      radius: 144,
+      owner,
+      weapon: 'frag',
+      kind: undefined,
+    });
+    const memory = new Memory();
+    memory.update(self, [], [blast(self.id, 1000)], [self], 10);
+    expect(memory.clue).toBeUndefined();
+    memory.update(self, [], [blast(2, 72 + BLAST_HEARING_RADIUS + 1)], [self], 11);
+    expect(memory.clue).toBeUndefined();
+    memory.update(self, [], [blast(2, 1000)], [self], 12);
+    expect(memory.clue).toEqual({ x: 1000, y: 120, tick: 12 });
   });
 
   it('remembers the last enemy seen or heard, and forgets it after a while', () => {

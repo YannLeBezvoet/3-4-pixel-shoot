@@ -187,6 +187,7 @@ export function createMatchHost<Settings>(setup: MatchSetup<Settings>): MatchHos
           ? new BotBrain({
               difficulty: DIFFICULTIES[difficulty],
               random: root.fork(`bot:${id}`),
+              catalog: setup.catalog,
               map: sim.map,
               grid: sim.grid,
               nav: navGrid,

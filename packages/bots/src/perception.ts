@@ -1,6 +1,6 @@
 // What a bot knows (decision 0011): what it could see, limited to a screen-sized rectangle
-// around it (what a player sees, ARCHITECTURE §11) and to line of sight, plus gunfire it
-// heard, remembered for a while. This module is the only bot code that reads every actor;
+// around it (what a player sees, ARCHITECTURE §11) and to line of sight, plus gunfire and
+// explosions it heard, remembered for a while. This module is the only bot code that reads every actor;
 // the decisions only receive what it lets through.
 import type { ActorState, CollisionGrid, EntityId, SimEvent } from '@pixel-shoot/sim';
 import { TICK_RATE, lineOfSight } from '@pixel-shoot/sim';
@@ -10,6 +10,8 @@ export const VIEW_HALF_WIDTH = 480;
 export const VIEW_HALF_HEIGHT = 270;
 /** Distance at which gunfire is heard, in world pixels. */
 export const HEARING_RADIUS = 900;
+/** Distance at which an explosion is heard, in world pixels. */
+export const BLAST_HEARING_RADIUS = 1800;
 /** How long an enemy's last known position is kept, in ticks. */
 export const MEMORY_TICKS = 8 * TICK_RATE;
 
@@ -56,7 +58,7 @@ export class Memory {
     return this.#clue;
   }
 
-  /** Remembers the nearest visible enemy, or enemy gunfire heard this tick. */
+  /** Remembers the nearest visible enemy, or enemy gunfire or an explosion heard this tick. */
   update(
     self: ActorState,
     seen: readonly Sighting[],
@@ -69,6 +71,13 @@ export class Memory {
       this.#clue = { x: nearest.x, y: nearest.y, tick };
     } else {
       for (const event of events) {
+        // A fight is going on there, whoever threw the grenade; its own does not count.
+        if (
+          event.type === 'exploded' &&
+          event.owner !== self.id &&
+          Math.hypot(event.x - self.x, event.y - self.y) <= BLAST_HEARING_RADIUS
+        )
+          this.#clue = { x: event.x, y: event.y, tick };
         if (event.type !== 'shotFired') continue;
         const shooter = actors.find((a) => a.id === event.shooter);
         if (!shooter || shooter.team === self.team) continue;

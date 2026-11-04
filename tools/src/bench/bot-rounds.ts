@@ -1,5 +1,7 @@
 // Headless team-elimination rounds between bots on a real theme map (C1.6, C1.10): how rounds
-// end, whether any bot fired with no enemy in sight, and how long a simulation tick takes.
+// end, whether any bot fired with no enemy in sight, what the combat toolbox did (grenades, fire,
+// map elements) and how long a simulation tick takes. One bot in four is the second character of
+// its side, a flamethrower trooper in Vietnam (Q61).
 import { cpus } from 'node:os';
 import { performance } from 'node:perf_hooks';
 import { DIFFICULTY_LEVELS, canSee } from '@pixel-shoot/bots';
@@ -8,7 +10,7 @@ import { buildCatalog, loadMap, loadTheme } from '@pixel-shoot/content';
 import { createMatchHost } from '@pixel-shoot/match';
 import { COUNTDOWN_TICKS, teamElimination } from '@pixel-shoot/modes';
 import type { Catalog, MapData } from '@pixel-shoot/sim';
-import { TICK_RATE, buildCollisionGrid, builtInBehaviors } from '@pixel-shoot/sim';
+import { TICK_RATE, builtInBehaviors } from '@pixel-shoot/sim';
 import { listLanguages, nodeFileProvider } from '../content/node-files';
 import { repoRoot } from '../paths';
 
@@ -27,6 +29,12 @@ export interface RoundResult {
   readonly shots: number;
   /** Shots fired by a bot with no living enemy in sight within the shot's cone. */
   readonly blindShots: number;
+  readonly grenades: number;
+  readonly explosions: number;
+  /** Map elements that caught fire. */
+  readonly fires: number;
+  /** Map elements destroyed or burnt out. */
+  readonly destroyed: number;
   readonly tickMs: readonly number[];
 }
 
@@ -44,19 +52,25 @@ export async function loadArena(
     throw new Error(`Theme "${themeId}" is invalid: ${issues.map((i) => i.message).join('; ')}`);
   const loaded = await loadMap(files, theme, mapRef);
   if (!loaded.map) throw new Error(`Map "${mapRef}" is invalid.`);
-  const characterOf = (team: number) =>
-    [...theme.characters.values()].find((c) => c.faction === theme.factions[team - 1]?.id)?.id ??
-    '';
+  const charactersOf = (team: number) =>
+    [...theme.characters.values()]
+      .filter((c) => c.faction === theme.factions[team - 1]?.id)
+      .map((c) => c.id);
   return {
     map: loaded.map,
     catalog: buildCatalog(theme),
-    characters: [characterOf(1), characterOf(2)],
+    characters: [charactersOf(1), charactersOf(2)],
   };
+}
+
+/** One bot in four is the side's second character, as in solo (Q61). */
+function rosterCharacter(characters: readonly string[], index: number): string {
+  return (index % 4 === 3 ? characters[1] : undefined) ?? characters[0] ?? '';
 }
 
 /** Plays the first round of a bot-only team elimination match. */
 export function playRound(
-  arena: { map: MapData; catalog: Catalog; characters: readonly string[] },
+  arena: { map: MapData; catalog: Catalog; characters: readonly (readonly string[])[] },
   seed: string,
   perTeam = 8,
   difficulty: DifficultyLevel = 'normal',
@@ -75,16 +89,20 @@ export function playRound(
         host.addParticipant({
           name: { key: 'participant.bot', params: { n } },
           team,
-          character: arena.characters[team - 1] ?? '',
+          character: rosterCharacter(arena.characters[team - 1] ?? [], n),
           kind: 'bot',
           difficulty,
         }),
       );
   host.start();
-  const grid = buildCollisionGrid(arena.map);
+  const { grid } = host.simulation;
   const tickMs: number[] = [];
   let shots = 0;
   let blindShots = 0;
+  let grenades = 0;
+  let explosions = 0;
+  let fires = 0;
+  let destroyed = 0;
   const limit = COUNTDOWN_TICKS + ROUND_SECONDS * TICK_RATE + 2;
   for (let tick = 0; tick < limit; tick++) {
     const before = host.view().actors;
@@ -92,6 +110,10 @@ export function playRound(
     const events = host.step();
     tickMs.push(performance.now() - start);
     for (const event of events) {
+      if (event.type === 'thrown') grenades++;
+      if (event.type === 'exploded') explosions++;
+      if (event.type === 'fireStarted') fires++;
+      if (event.type === 'elementDestroyed') destroyed++;
       if (event.type !== 'shotFired') continue;
       const shooter = before.find((a) => a.id === event.shooter);
       if (!shooter) continue;
@@ -116,11 +138,27 @@ export function playRound(
         seconds,
         shots,
         blindShots,
+        grenades,
+        explosions,
+        fires,
+        destroyed,
         tickMs,
       };
     }
   }
-  return { seed, perTeam, end: 'time', seconds: ROUND_SECONDS, shots, blindShots, tickMs };
+  return {
+    seed,
+    perTeam,
+    end: 'time',
+    seconds: ROUND_SECONDS,
+    shots,
+    blindShots,
+    grenades,
+    explosions,
+    fires,
+    destroyed,
+    tickMs,
+  };
 }
 
 export function summarize(results: readonly RoundResult[]): string[] {
@@ -129,11 +167,14 @@ export function summarize(results: readonly RoundResult[]): string[] {
   const p99 = ticks[Math.floor(ticks.length * 0.99)] ?? 0;
   const eliminations = results.filter((r) => r.end === 'elimination').length;
   const seconds = results.map((r) => r.seconds);
+  const total = (key: 'grenades' | 'explosions' | 'fires' | 'destroyed') =>
+    results.reduce((sum, r) => sum + r[key], 0);
   return [
     `Rounds: ${results.length} (${results[0]?.perTeam ?? 0} vs ${results[0]?.perTeam ?? 0} bots, normal difficulty)`,
     `Ended by elimination before ${ROUND_SECONDS} s: ${eliminations} (${((100 * eliminations) / Math.max(1, results.length)).toFixed(0)} %)`,
     `Round length: average ${(seconds.reduce((s, x) => s + x, 0) / Math.max(1, seconds.length)).toFixed(1)} s, longest ${Math.max(...seconds).toFixed(1)} s`,
     `Shots: ${results.reduce((s, r) => s + r.shots, 0)}, with no enemy in sight: ${results.reduce((s, r) => s + r.blindShots, 0)}`,
+    `Grenades: ${total('grenades')}, explosions: ${total('explosions')}, fires: ${total('fires')}, map elements destroyed: ${total('destroyed')}`,
     `Tick (${2 * (results[0]?.perTeam ?? 0)} participants): average ${average.toFixed(3)} ms, p99 ${p99.toFixed(3)} ms, ${ticks.length} ticks`,
     `Hardware: ${cpus()[0]?.model ?? 'unknown CPU'}, Node ${process.version}`,
   ];

@@ -1,5 +1,6 @@
 // Public entry point. Only what is exported here may be imported by other packages.
 export {
+  BLAST_HEARING_RADIUS,
   HEARING_RADIUS,
   MEMORY_TICKS,
   Memory,
@@ -13,5 +14,6 @@ export { NavGrid, findPath, smoothPath } from './navigation';
 export type { Point } from './navigation';
 export { DIFFICULTIES, DIFFICULTY_LEVELS } from './difficulty';
 export type { Difficulty, DifficultyLevel } from './difficulty';
+export { COVER_SEARCH_TILES, findCover, shielded } from './cover';
 export { BotBrain } from './brain';
 export type { BotSurroundings } from './brain';
