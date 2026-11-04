@@ -61,6 +61,9 @@ export interface Theme {
   readonly nameKey: string;
   readonly defaultLanguage: string;
   readonly factions: ThemeManifest['factions'];
+  readonly fire: ThemeManifest['fire'];
+  /** Effects of the world itself. */
+  readonly worldEffects: ThemeManifest['effects'];
   readonly characters: ReadonlyMap<string, ThemeCharacter>;
   readonly weapons: ReadonlyMap<string, ThemeWeapon>;
   readonly projectiles: ReadonlyMap<string, ThemeProjectile>;
@@ -367,6 +370,8 @@ export async function loadTheme(
       `Unknown effect "${effect}". Known effects (effects.json): ${listOf(effects.keys())}.`,
     );
   };
+  for (const [name, effect] of Object.entries(manifest.effects))
+    checkEffect(effect, manifestFile, `effects.${name}`);
   charactersData.characters.forEach((c, i) =>
     checkEffect(
       c.effects.hit,
@@ -536,6 +541,8 @@ export async function loadTheme(
     nameKey: manifest.nameKey,
     defaultLanguage: manifest.defaultLanguage,
     factions: manifest.factions,
+    fire: manifest.fire,
+    worldEffects: manifest.effects,
     characters,
     weapons,
     projectiles,

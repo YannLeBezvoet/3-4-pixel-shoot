@@ -2,7 +2,7 @@
 // the few values measured on sprites (ARCHITECTURE §8.3): how high and how far ahead the
 // hands hold the weapon, and the weapon's length from grip to muzzle.
 import type { Catalog, CharacterStats, ProjectileStats, WeaponStats } from '@pixel-shoot/sim';
-import { createCatalog } from '@pixel-shoot/sim';
+import { createCatalog, msToTicks } from '@pixel-shoot/sim';
 import { tagName } from '../sprites/conventions';
 import type { SpriteSheet } from '../sprites/sprite-sheet';
 import { originOf, slicePoint } from '../sprites/sprite-sheet';
@@ -60,5 +60,16 @@ export function buildCatalog(theme: Theme): Catalog {
   const projectiles = [...theme.projectiles.values()].map(
     (p) => ({ id: p.id, behavior: p.behavior, params: p.params }) as ProjectileStats,
   );
-  return createCatalog({ characters, weapons, projectiles });
+  const { burnMs, spreadPercent, burningMs, burningDamagePerSecond } = theme.fire;
+  return createCatalog({
+    characters,
+    weapons,
+    projectiles,
+    fire: {
+      burnTicks: msToTicks(burnMs),
+      spreadChance: spreadPercent / 100,
+      characterBurnTicks: msToTicks(burningMs),
+      characterDamagePerSecond: burningDamagePerSecond,
+    },
+  });
 }

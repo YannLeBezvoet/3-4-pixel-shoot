@@ -1,8 +1,8 @@
-// Behaviors are engine code (weapon, projectile and map-element types). Themes pick a
+// Behaviors are engine code (weapon and projectile types). Themes pick a
 // behavior by id and give parameters, which are validated against the behavior's schema.
 import type { z } from 'zod';
 
-export type BehaviorKind = 'weapon' | 'projectile' | 'map-element';
+export type BehaviorKind = 'weapon' | 'projectile';
 
 export interface BehaviorDefinition<Params = unknown> {
   readonly kind: BehaviorKind;

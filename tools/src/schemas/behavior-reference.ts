@@ -1,5 +1,7 @@
 // The behavior reference (docs/reference/behaviors.md), generated from the engine's behavior
-// registry: what each behavior does and the parameters a theme gives it.
+// registry: what each behavior does and the parameters a theme gives it, then the properties of
+// map elements set in Tiled.
+import { TILE_PROPERTIES } from '@pixel-shoot/content';
 import type { BehaviorKind, BehaviorRegistry } from '@pixel-shoot/sim';
 import { z } from 'zod';
 
@@ -20,7 +22,6 @@ interface JsonSchema {
 const SECTIONS: { kind: BehaviorKind; title: string; file: string }[] = [
   { kind: 'weapon', title: 'Weapon behaviors', file: 'weapons.json' },
   { kind: 'projectile', title: 'Projectile behaviors', file: 'projectiles.json' },
-  { kind: 'map-element', title: 'Map-element behaviors', file: 'maps (Tiled)' },
 ];
 
 /** Zod adds the safe-integer limits to every integer; they mean "no limit" here. */
@@ -63,5 +64,18 @@ export function renderBehaviorReference(behaviors: BehaviorRegistry): string {
       }
     }
   }
+  lines.push(
+    '',
+    '## Map elements',
+    '',
+    'Properties of tiles in Tiled tilesets, which tile objects may override ([create a map](../guides/create-a-map.md)).',
+    '',
+    '| Property | Type | Default | Meaning |',
+    '|---|---|---|---|',
+  );
+  for (const [name, property] of Object.entries(TILE_PROPERTIES))
+    lines.push(
+      `| \`${name}\` | ${property.type} | \`${JSON.stringify(property.default)}\` | ${property.description} |`,
+    );
   return `${lines.join('\n')}\n`;
 }

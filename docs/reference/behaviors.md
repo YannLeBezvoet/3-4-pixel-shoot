@@ -80,8 +80,22 @@ A short-lived particle of fire: it hurts and ignites the character it hits, igni
 | `speed` | number > 0, ≤ 1200 | required | Speed in pixels per second (one tile is 48 pixels). |
 | `range` | number > 0, ≤ 1000 | required | Distance in pixels from the muzzle after which the flame disappears. |
 
-## Map-element behaviors
+## Map elements
 
-Used in maps (Tiled).
+Properties of tiles in Tiled tilesets, which tile objects may override ([create a map](../guides/create-a-map.md)).
 
-*None yet.*
+| Property | Type | Default | Meaning |
+|---|---|---|---|
+| `solid` | bool | `false` | Blocks movement, bullets and sight (walls, rocks, huts, tree trunks). |
+| `impassable` | bool | `false` | Blocks movement only; bullets and sight pass (deep water). |
+| `cover` | bool | `false` | Tile objects only: a low obstacle (sandbags) that blocks movement but not sight. Every bullet passes it when the weapon firing it reaches over it; otherwise with the bulletPassPercent chance (Q29). |
+| `bulletPassPercent` | int | `0` | Cover only: chance in percent (0 to 100) that a bullet fired from a weapon not over the object passes it, drawn once per bullet and object. |
+| `low` | bool | `false` | Tile objects only: drawn just above the ground, below characters, their weapons and bullets, instead of being depth-sorted (sandbags). No gameplay effect. |
+| `hp` | int | `0` | Hit points of a destructible element; 0 means damage cannot destroy it. A destructible ground tile needs destroyedTile. |
+| `damageFilter` | string | `""` | What hurts a destructible element, separated by commas: bullet, explosion, fire. Empty means everything. |
+| `destroyedTile` | int | `-1` | Id, in the same tileset, of the tile left once destroyed (rubble). -1 means none: an object then disappears. |
+| `flammable` | bool | `false` | Catches fire, spreads it to adjacent flammable elements and burns out (Q31). Also works on overhead tiles (thatch roofs). A flammable ground tile needs burntTile or destroyedTile. |
+| `burntTile` | int | `-1` | Id, in the same tileset, of the tile left once burnt out. -1 means the destroyed tile, or none. |
+| `explosive` | bool | `false` | Explodes when destroyed (fuel barrels): it needs hp, or flammable to go off when it burns out. |
+| `blastRadius` | int | `144` | Explosive only: radius of the blast in pixels (one tile is 48 pixels). |
+| `blastDamage` | int | `120` | Explosive only: damage at the center of the blast, falling linearly to 0. |

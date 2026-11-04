@@ -55,6 +55,8 @@ File names are fixed. Each JSON file starts with a `$schema` line: VS Code then 
 | `nameKey` | Translation key of the theme name (see §5). |
 | `defaultLanguage` | The language whose translation file must contain every text. |
 | `factions` | The sides. Team 1 plays the first faction, team 2 the second. Each faction needs at least one character. |
+| `fire` (optional) | How fire behaves: `burnMs` (how long a tile or object burns, 5000), `spreadPercent` (chance each second of catching each adjacent flammable element, 30), `burningMs` (how long a character burns, 3000), `burningDamagePerSecond` (8). |
+| `effects` (optional) | Effects of the world, by id from `effects.json`: `explosion` (a blast, unless the projectile has its own `effects.impact`), `fire` (loops on what burns), `smoke` (rises from what burnt out or was destroyed), `bloodDecal` and `bloodPool` (their frames are painted on the ground, for blood falling and under corpses). |
 
 ## 3. `characters.json`
 
@@ -75,7 +77,8 @@ File names are fixed. Each JSON file starts with a `$schema` line: VS Code then 
 ```
 
 - `sprite` is a path inside the theme folder **without extension**: the game reads `<path>.png` and `<path>.json`, exported from Aseprite. A character sprite needs the animations `idle`, `walk` and `death` in the 5 drawn directions and a `hand` slice ([create a sprite](create-a-sprite.md)).
-- `weapon` is the id of the character's default weapon in `weapons.json`.
+- `weapon` is the id of the character's primary weapon in `weapons.json`: a `firearm` or a `flamethrower`.
+- `throwable` (optional) is the id of a thrown weapon in `weapons.json`, carried along with the primary one.
 - Optional gameplay values (Q54), with their defaults:
 
   | Field | Type | Default | Meaning |

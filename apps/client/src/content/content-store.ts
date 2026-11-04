@@ -44,7 +44,9 @@ export interface ThemeAssets {
 function mapImages(map: MapData): Set<string> {
   const paths = new Set<string>();
   for (const type of map.tileTypes) if (type.visual) paths.add(type.visual.image);
-  for (const object of map.objects) if (object.visual) paths.add(object.visual.image);
+  for (const object of map.objects)
+    for (const visual of [object.visual, object.destroyedVisual, object.burntVisual])
+      if (visual) paths.add(visual.image);
   return paths;
 }
 

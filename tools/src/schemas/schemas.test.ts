@@ -36,6 +36,14 @@ describe('renderSchemas', () => {
       { name: 'cover', type: 'bool', value: false },
       { name: 'bulletPassPercent', type: 'int', value: 0 },
       { name: 'low', type: 'bool', value: false },
+      { name: 'hp', type: 'int', value: 0 },
+      { name: 'damageFilter', type: 'string', value: '' },
+      { name: 'destroyedTile', type: 'int', value: -1 },
+      { name: 'flammable', type: 'bool', value: false },
+      { name: 'burntTile', type: 'int', value: -1 },
+      { name: 'explosive', type: 'bool', value: false },
+      { name: 'blastRadius', type: 'int', value: 144 },
+      { name: 'blastDamage', type: 'int', value: 120 },
     ]);
     expect(types.get('spawn')).toMatchObject({ useAs: ['object'], members: [{ name: 'team', type: 'int', value: 1 }] });
     expect(types.get('ground')?.useAs).toEqual(['layer']);
@@ -50,6 +58,11 @@ describe('renderSchemas', () => {
     expect(reference).toContain('| `reserveMagazines` | whole number ≥ 0 or `null` | `null` |');
     expect(reference).toContain('### `bullet`');
     expect(reference).toContain('| `speed` | number > 0, ≤ 6000 | required |');
-    expect(reference).toContain('## Map-element behaviors\n\nUsed in maps (Tiled).\n\n*None yet.*');
+    expect(reference).toContain('### `flamethrower`');
+    expect(reference).toContain('### `thrown`');
+    expect(reference).toContain('### `grenade`');
+    expect(reference).toContain('### `flame`');
+    expect(reference).toContain('## Map elements');
+    expect(reference).toContain('| `damageFilter` | string | `""` |');
   });
 });

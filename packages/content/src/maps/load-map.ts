@@ -2,6 +2,7 @@
 // (decision 0008). Supports a documented subset of Tiled and explains everything it refuses,
 // naming the file, the layer, the object and its position.
 import type {
+  ElementProperties,
   Footprint,
   MapData,
   MapObject,
@@ -10,7 +11,7 @@ import type {
   TileType,
   TileVisual,
 } from '@pixel-shoot/sim';
-import { TILE_SIZE, TileFlag } from '@pixel-shoot/sim';
+import { DamageFilter, TILE_SIZE, TileFlag } from '@pixel-shoot/sim';
 import type { FileProvider } from '../files/file-provider';
 import { joinPath } from '../files/file-provider';
 import { readJson } from '../files/read-json';
@@ -72,6 +73,12 @@ const dirOf = (file: string) => file.split('/').slice(0, -1).join('/');
 const where = (x: number, y: number) => `(${Math.round(x)}, ${Math.round(y)})`;
 const listOf = (items: Iterable<string>) => [...items].map((i) => `"${i}"`).join(', ');
 
+/** The value type of a property, from its default. */
+type ValueOf<T> = T extends boolean ? boolean : T extends number ? number : string;
+type PropertyValues<D extends Record<string, PropertyDefinition>> = {
+  [K in keyof D]: ValueOf<D[K]['default']>;
+};
+
 /**
  * Reads typed properties by name, reporting wrong types and warning about unknown names
  * (usually typos). Missing properties take their default.
@@ -82,10 +89,10 @@ function readProperties<D extends Record<string, PropertyDefinition>>(
   file: string,
   location: string,
   issues: IssueCollector,
-): { values: { [K in keyof D]: D[K]['default'] }; set: Set<string> } {
+): { values: PropertyValues<D>; set: Set<string> } {
   const values = Object.fromEntries(
     Object.entries(definitions).map(([name, d]) => [name, d.default]),
-  ) as { [K in keyof D]: D[K]['default'] };
+  ) as PropertyValues<D>;
   const set = new Set<string>();
   for (const property of list) {
     const definition = definitions[property.name];
@@ -136,6 +143,53 @@ function passPercent(value: number, file: string, location: string, issues: Issu
   return Math.min(100, Math.max(0, value));
 }
 
+type TileValues = PropertyValues<typeof TILE_PROPERTIES>;
+
+/** The `DamageFilter` bits of a property value, reporting names it does not know. */
+function damageFilter(value: string, file: string, location: string, issues: IssueCollector) {
+  if (value.trim() === '') return undefined;
+  let bits = 0;
+  for (const name of value.split(',').map((part) => part.trim())) {
+    if (name in DamageFilter) bits |= DamageFilter[name as keyof typeof DamageFilter];
+    else
+      issues.error(
+        file,
+        location,
+        `Property "damageFilter" names "${name}". What can hurt an element: ${listOf(Object.keys(DamageFilter))}.`,
+      );
+  }
+  return bits;
+}
+
+/** The element a tile or object is, from its properties; undefined when it is a plain one. */
+function elementOf(
+  values: TileValues,
+  file: string,
+  location: string,
+  issues: IssueCollector,
+): ElementProperties | undefined {
+  if (values.hp < 0)
+    issues.error(file, location, `Property "hp" must be 0 or more, got ${values.hp}.`);
+  if (values.blastRadius <= 0 || values.blastDamage <= 0)
+    issues.error(file, location, 'Properties "blastRadius" and "blastDamage" must be above 0.');
+  if (values.explosive && values.hp <= 0 && !values.flammable)
+    issues.warning(
+      file,
+      location,
+      'It is explosive but nothing can destroy it: give it "hp" or make it "flammable".',
+    );
+  const filter = damageFilter(values.damageFilter, file, location, issues);
+  const element: ElementProperties = {
+    ...(values.hp > 0 && { hp: values.hp }),
+    ...(filter !== undefined && { damageFilter: filter }),
+    ...(values.flammable && { flammable: true }),
+    ...(values.explosive && {
+      explosive: { radius: values.blastRadius, damage: values.blastDamage },
+    }),
+  };
+  return Object.keys(element).length > 0 ? element : undefined;
+}
+
 /** Names of the flags set, for messages: "solid", "cover"… */
 const flagNames = (flags: number) =>
   Object.entries(TILE_FLAG_PROPERTIES)
@@ -158,6 +212,8 @@ interface TileProperties {
   readonly flags: number;
   readonly low: boolean;
   readonly bulletPassPercent: number;
+  readonly values: TileValues;
+  readonly element: ElementProperties | undefined;
 }
 
 interface LoadedTileset {
@@ -222,10 +278,19 @@ async function loadTileset(
       }
       footprints.push({ x: shape.x, y: shape.y, width: shape.width, height: shape.height, flags });
     }
+    for (const name of ['destroyedTile', 'burntTile'] as const)
+      if (values[name] < -1 || values[name] >= tileset.tilecount)
+        issues.error(
+          file,
+          location,
+          `Property "${name}" is ${values[name]}; this tileset has tiles 0 to ${tileset.tilecount - 1}.`,
+        );
     tiles.set(tile.id, {
       flags,
       low: values.low,
       bulletPassPercent: passPercent(values.bulletPassPercent, file, location, issues),
+      values,
+      element: elementOf(values, file, location, issues),
       footprints,
     });
   }
@@ -365,6 +430,29 @@ export async function loadMap(
   // 4. Layers.
   const tileTypes: TileType[] = [{ flags: 0 }];
   const typeIndex = new Map<string, number>();
+  /** The index of a tile in `tileTypes`, adding it and the variants it turns into. */
+  const tileTypeOf = (tileset: LoadedTileset, localId: number): number => {
+    const key = `${tileset.file}:${localId}`;
+    const known = typeIndex.get(key);
+    if (known !== undefined) return known;
+    const index = tileTypes.length;
+    typeIndex.set(key, index);
+    tileTypes.push({ flags: 0 });
+    const tile = tileset.tiles.get(localId);
+    const variant = (id: number | undefined) =>
+      id === undefined || id < 0 ? undefined : tileTypeOf(tileset, id);
+    const destroyedTile = variant(tile?.values.destroyedTile);
+    const burntTile = variant(tile?.values.burntTile);
+    tileTypes[index] = {
+      // Only ground layers count for collision (the grid ignores overhead layers).
+      flags: tile?.flags ?? 0,
+      visual: visualOf(tileset, localId),
+      ...(tile?.element && { element: tile.element }),
+      ...(destroyedTile !== undefined && { destroyedTile }),
+      ...(burntTile !== undefined && { burntTile }),
+    };
+    return index;
+  };
   const layers: TileLayer[] = [];
   const objects: MapObject[] = [];
   const spawns: SpawnArea[] = [];
@@ -442,18 +530,22 @@ export async function loadMap(
           return problem(
             `tile ${localId} of ${tileset.file} is cover, which works on tile objects only: place it in an "objects" layer.`,
           );
-        const key = `${tileset.file}:${localId}`;
-        let index = typeIndex.get(key);
-        if (index === undefined) {
-          index = tileTypes.length;
-          typeIndex.set(key, index);
-          tileTypes.push({
-            // Only ground layers count for collision (the grid ignores overhead layers).
-            flags: tileset.tiles.get(localId)?.flags ?? 0,
-            visual: visualOf(tileset, localId),
-          });
+        const values = tileset.tiles.get(localId)?.values;
+        if (role === 'ground' && values) {
+          if (values.hp > 0 && values.destroyedTile < 0)
+            return problem(
+              `tile ${localId} of ${tileset.file} has "hp" but no "destroyedTile": say which tile is left once destroyed.`,
+            );
+          if (values.flammable && values.burntTile < 0 && values.destroyedTile < 0)
+            return problem(
+              `tile ${localId} of ${tileset.file} is flammable but has no "burntTile": say which tile is left once burnt out.`,
+            );
         }
-        cells.push(index);
+        if (role === 'overhead' && values && values.hp > 0)
+          return problem(
+            `tile ${localId} of ${tileset.file} has "hp", but overhead tiles can only be flammable.`,
+          );
+        cells.push(tileTypeOf(tileset, localId));
       });
       if (firstProblem)
         issues.error(
@@ -518,6 +610,25 @@ export async function loadMap(
         const bulletPassPercent = set.has('bulletPassPercent')
           ? passPercent(values.bulletPassPercent, file, objectAt, issues)
           : (tile?.bulletPassPercent ?? 0);
+        const merged = { ...tile?.values } as TileValues;
+        for (const name of set)
+          (merged as Record<string, unknown>)[name] = values[name as keyof TileValues];
+        const element = tile
+          ? elementOf(merged, file, objectAt, issues)
+          : elementOf(values, file, objectAt, issues);
+        const variantOf = (name: 'destroyedTile' | 'burntTile') => {
+          const id = (tile ? merged : values)[name];
+          if (id < 0) return undefined;
+          if (id < tileset.tilecount) return visualOf(tileset, id);
+          issues.error(
+            file,
+            objectAt,
+            `Property "${name}" is ${id}; this tileset has tiles 0 to ${tileset.tilecount - 1}.`,
+          );
+          return undefined;
+        };
+        const destroyedVisual = variantOf('destroyedTile');
+        const burntVisual = variantOf('burntTile');
         const left = object.x;
         const top = object.y - object.height;
         const shapes = tile?.footprints ?? [];
@@ -533,6 +644,9 @@ export async function loadMap(
           y: object.y,
           visual: visualOf(tileset, localId),
           ...(low ? { low } : {}),
+          ...(element && { element }),
+          ...(destroyedVisual && { destroyedVisual }),
+          ...(burntVisual && { burntVisual }),
           footprints:
             flags === 0
               ? []

@@ -50,6 +50,26 @@ Set on tiles in the tileset editor: give the tile the class **`tile`** (Tile Pro
 
 Unknown property names are reported as warnings: they are usually typos.
 
+## 3b. Map elements: what breaks and what burns
+
+The same properties, in the same places, make a tile or a tile object a **map element** (Q33):
+
+| Property | Effect |
+|---|---|
+| `hp` | Whole number. Destructible: it takes damage until this many hit points are gone. 0 (not set): damage cannot destroy it. |
+| `damageFilter` | Text: what hurts it, separated by commas, among `bullet`, `explosion`, `fire`. Empty: everything. Sandbags: `explosion`. |
+| `destroyedTile` | Whole number: the id, in the same tileset, of the tile left once destroyed (rubble). Needed by a destructible ground tile. On a tile object, without it the object simply disappears. |
+| `flammable` | Catches fire from flamethrowers and from neighbors, burns about 5 s, then leaves its burnt variant. A fire also ignites the characters standing in it. Also works on tiles of an `overhead` layer: a thatch roof burns away. |
+| `burntTile` | Whole number: the id, in the same tileset, of the tile left once burnt out. Needed by a flammable ground tile, unless it has `destroyedTile`. On an `overhead` tile, without it the tile disappears. |
+| `explosive` | Blows up when destroyed or burnt out, for whoever destroyed it. Needs `hp` or `flammable`. |
+| `blastRadius` | Whole number, for `explosive`: radius in pixels. 144 (3 tiles) when not set. |
+| `blastDamage` | Whole number, for `explosive`: damage at the center, falling linearly to 0 at the radius. 120 when not set. |
+
+- A destroyed or burnt element stops blocking, unless the tile left behind is itself `solid`. Give rubble and burnt ground no flags.
+- Fire only travels between flammable elements that touch: on the 4 sides of a tile, or around an object's collision shapes. Keep a firebreak of plain ground to stop it; this is how to keep one flamethrower from burning a whole map.
+- Everything comes back at the start of a round.
+- A tile object may set any of these for itself, such as one crate with more hit points, or a barrel that does not explode.
+
 ## 4. Spawn areas
 
 In a `gameplay` layer, draw a **rectangle** (not a point) with the class `spawn` and an `int` property `team` (1, 2…). At the start of each round, the members of a team appear on free tiles inside their team's areas, one per tile (Q52). For team elimination, each team needs room for 8 participants.
@@ -60,6 +80,7 @@ In a `gameplay` layer, draw a **rectangle** (not a point) with the class `spawn`
 - Flipped or rotated tiles and tile objects; resized tile objects.
 - Tile data that is not CSV (Map Properties › Tile Layer Format).
 - Maps larger than 512 × 512 tiles.
+- A destructible ground tile without `destroyedTile`, a flammable ground tile without `burntTile` or `destroyedTile`, an `overhead` tile with `hp`, a `destroyedTile` or `burntTile` outside the tileset, an unknown name in `damageFilter`.
 
 ## 6. Check it
 

@@ -261,6 +261,30 @@ describe('loadTheme', () => {
     ]);
   });
 
+  it('checks the world effects of the manifest', async () => {
+    const { issues } = await load(
+      broken((f) => (json(f, 'theme.json').effects = { fire: 'blaze' })),
+    );
+    expect(issues).toEqual([
+      error(
+        'theme.json',
+        'effects.fire',
+        'Unknown effect "blaze". Known effects (effects.json): flash, puff.',
+      ),
+    ]);
+  });
+
+  it('gives fire its default values (Q63, Q70)', async () => {
+    const { theme } = await load(validTheme());
+    expect(theme?.fire).toEqual({
+      burnMs: 5000,
+      spreadPercent: 30,
+      burningMs: 3000,
+      burningDamagePerSecond: 8,
+    });
+    expect(theme?.worldEffects).toEqual({});
+  });
+
   it('reports an unknown faction', async () => {
     const { issues } = await load(
       broken((f) => (json(f, 'characters.json').characters[1].faction = 'green')),
