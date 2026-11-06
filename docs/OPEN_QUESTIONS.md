@@ -35,6 +35,7 @@
   - Fences are not `low`: they stand in depth order and hide who is behind them, where Q71 draws sandbags below characters. Their picture has gaps, so a soldier and a weapon behind a fence stay visible through it.
   - The collision shape is a band at the foot of the posts (y 30 to 42, full tile width), not the whole tile: the road between the two fences of the village is 84 px wide instead of 48.
   - Bots take a fence for safe cover as they do sandbags: `findCover` does not weigh `bulletPassPercent`, so a bot behind a fence believes itself as safe as behind sandbags.
+  - The see-through circle (Q34) only cuts objects taller than a tile. It used to cut any depth-sorted object in front of the character's chest, so a fence dissolved around a soldier standing in front of it. Fuel barrels are no longer cut either: they are too short to hide anyone.
   - A flamethrower breaks a fence rather than burning it, as it always did: flames deal 10 fire damage, so 4 hits end its 40 hit points in about a third of a second, before the fire has its first chance to spread (one second), and it leaves the broken remains. Bamboo walls and crates go the same way, only slower. Fences only burn out when a fire reaches them from a neighbor. *To decide:* give fences `damageFilter` `bullet,explosion`, so that flames set them alight without hurting them: they would then burn for about 5 s, spread along the line and leave burnt remains.
 
 ## Settled

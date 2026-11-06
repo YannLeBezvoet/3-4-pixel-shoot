@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 ### Changed
 
 - Vietnam theme: fences are tile objects (tileset `fence.tsj`) placed over any ground, instead of ground tiles with grass drawn in; the `river-village` map places them in a `fences` objects layer. They are now `cover` (Q79): sight goes through them, as do 70 % of the bullets from farther away and every bullet from a weapon reaching over them. They keep their 40 hit points and still burn, and they leave their own broken or burnt remains. The ground tilesets keep an empty slot in their place so later tile ids do not move.
+- The see-through circle only cuts objects taller than a tile, so fences and fuel barrels no longer dissolve around a character (Q79).
 
 ### Fixed
 

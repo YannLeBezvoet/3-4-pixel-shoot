@@ -28,7 +28,7 @@ export interface MapView {
   flush(): void;
   /**
    * Which things stand over a point of the ground within a distance: whether an overhead tile
-   * does, and the tall objects whose picture covers it from in front.
+   * does, and the objects taller than a tile whose picture covers it from in front.
    */
   covering(x: number, y: number, distance: number): { overhead: boolean; objects: Sprite[] };
   /** Shows only the chunks that touch the visible rectangle (world pixels). */
@@ -153,6 +153,7 @@ export function createMapView(
         (sprite) =>
           sprite.visible &&
           sprite.parent !== low &&
+          sprite.height > TILE_SIZE &&
           sprite.y > y &&
           sprite.y - sprite.height < y + distance &&
           Math.abs(sprite.x - x) < sprite.width / 2 + distance,
