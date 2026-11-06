@@ -239,9 +239,12 @@ export class MapElements {
     return [...this.#burning.values()];
   }
 
-  /** Sets an element on fire, for `burnTicks` ticks. Returns whether it caught fire. */
+  /**
+   * Sets an element on fire, for `burnTicks` ticks. Returns whether it caught fire. One that has
+   * just burnt out stays in the fires until step 8 consumes it: it does not catch again.
+   */
   ignite(element: MapElement, burnTicks: number, spreadIn: number, fire: FireOrigin): boolean {
-    if (!element.flammable || element.burning > 0) return false;
+    if (!element.flammable || this.#burning.has(element.key)) return false;
     element.burning = burnTicks;
     element.spreadIn = spreadIn;
     element.fire = fire;

@@ -226,6 +226,26 @@ describe('fire on the map', () => {
     expect(sim.elements().every((e) => e.burning === 0)).toBe(true);
   });
 
+  it('never lights an element again as it burns out beside another fire', () => {
+    let fires = 0;
+    for (let seed = 0; seed < 20; seed++) {
+      const { sim, flamer } = world(
+        asciiMap(`
+          ##############
+          #.....ggggggg#
+          ##############
+        `),
+        { seed: `relight-${seed}` },
+      );
+      const events = [...run(sim, 40, new Map([[flamer, FIRE]])), ...run(sim, 3600)];
+      const started = ofType(events, 'fireStarted').map((e) => e.element);
+      expect(new Set(started).size, `seed ${seed}`).toBe(started.length);
+      expect(ofType(events, 'fireEnded'), `seed ${seed}`).toHaveLength(started.length);
+      fires += started.length;
+    }
+    expect(fires).toBeGreaterThan(40);
+  });
+
   it('spreads through objects next to tiles', () => {
     const map = asciiMap(`
       ##########

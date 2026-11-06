@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 
 ## [Unreleased]
 
+### Fixed
+
+- A tile or object burning out could catch fire again from a neighbor in the same tick, which left a flame on it for the rest of the round.
+
 ## [0.2.0] — 2026-11-04
 
 Milestone 2 (combat), merged into `main`.
