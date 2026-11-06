@@ -25,7 +25,7 @@
 
 ### Raised by an owner request (2026-11-05)
 
-- **Q77. Aseprite sources of tilesets.** The new grass replaces the `grass` tile of `themes/vietnam/tilesets/jungle-ground.png` and the ground under `grass-flowers`, `fence` (since then a tile object, Q79) and `rock`. Its source cannot sit next to the tileset: `npm run sprites:export` exports every `.aseprite` file under `themes/` as a sprite sheet and JSON next to it, so a `jungle-ground.aseprite` would overwrite the tileset image with a packed sheet. Until this is settled, the source stays outside the repository history, in the untracked folder `drafts/grass/`. *Proposal:* limit the export to `themes/*/sprites/` and keep each tileset's source next to its image, as `themes/<id>/tilesets/<name>.aseprite`, exported to PNG by hand. Alternative: a separate `art/` folder outside `themes/`.
+- **Q77. Aseprite sources of tilesets.** The new grass replaces the `grass` tile of `themes/vietnam/tilesets/jungle-ground.png` and the ground under `grass-flowers`, `fence` (since then a tile object, Q79) and `rock`. Its source cannot sit next to the tileset: `npm run sprites:export` exports every `.aseprite` file under `themes/` as a sprite sheet and JSON next to it, so a `jungle-ground.aseprite` would overwrite the tileset image with a packed sheet. Until this is settled, the source stays outside the repository history, in the folder `drafts/grass/`, ignored by git: it exists only on the owner's machine. *Proposal:* limit the export to `themes/*/sprites/` and keep each tileset's source next to its image, as `themes/<id>/tilesets/<name>.aseprite`, exported to PNG by hand. Alternative: a separate `art/` folder outside `themes/`.
 
 ### Raised by an owner request (2026-11-06)
 
