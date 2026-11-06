@@ -47,6 +47,22 @@
    ]
   },
   {
+   "id": 10,
+   "type": "tile",
+   "properties": [
+    {
+     "name": "burntTile",
+     "type": "int",
+     "value": 7
+    },
+    {
+     "name": "flammable",
+     "type": "bool",
+     "value": true
+    }
+   ]
+  },
+  {
    "id": 11,
    "type": "tile",
    "properties": [

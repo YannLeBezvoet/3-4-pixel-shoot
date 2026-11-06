@@ -23,6 +23,14 @@
 - **Q75. Solo setup and HUD.** *Proposal (implemented, awaiting confirmation):* the character is chosen among those of the player's side, in the order of `characters.json`, and the choice is only shown when there are several. The second character of a side is the one bots play one time in four. The HUD shows, bottom right, the throwables left, the current weapon and the ammunition, with `Fuel 62%` for a flamethrower. A flamethrower is not refilled by itself before it is empty, like a magazine.
 - **Q76. Bots and fire.** *Proposal (implemented, awaiting confirmation):* bots do not avoid fire: they walk through burning ground and burn. Teaching them to go around it is left for later (it would need fire in their navigation). Under Q67, a bot throws at most every 6 s. Bots do not throw at an enemy merely because it stands behind a wall, only behind `cover`, or in a group. Not in the plan: bots hear explosions within 1,800 px, twice as far as gunfire, and go there. Without it, the last survivors of a round wandered without finding each other, and only 94 of 100 bot rounds ended by elimination (C1.6 asks for 95); with it, 99.
 
+### Raised by an owner request (2026-11-05)
+
+- **Q77. Aseprite sources of tilesets.** The new grass replaces the `grass` tile of `themes/vietnam/tilesets/jungle-ground.png` and the ground under `grass-flowers`, `fence` and `rock`. Its source cannot sit next to the tileset: `npm run sprites:export` exports every `.aseprite` file under `themes/` as a sprite sheet and JSON next to it, so a `jungle-ground.aseprite` would overwrite the tileset image with a packed sheet. Until this is settled, the source stays outside the repository history, in the untracked folder `drafts/grass/`. *Proposal:* limit the export to `themes/*/sprites/` and keep each tileset's source next to its image, as `themes/<id>/tilesets/<name>.aseprite`, exported to PNG by hand. Alternative: a separate `art/` folder outside `themes/`.
+
+### Raised by an owner request (2026-11-06)
+
+- **Q78. Tall grass on two grounds.** The new tall grass is a clump drawn inside its tile, so that a lone cell does not read as a square. Its picture includes the ground, and 145 of the 231 cells of `river-village.tmj` are on grass, the other 86 on jungle floor: one opaque tile cannot suit both. *Proposal (implemented, awaiting confirmation):* two tiles with the same properties in `jungle-ground`, id 22 on grass and id 10, the slot left free by sandbags, on jungle floor. The 86 cells surrounded mostly by jungle floor moved to id 10. Alternative: a second ground layer holding one transparent tall grass tile over any ground, which changes the structure of the map and needs a check that fire works on stacked layers.
+
 ## Settled
 
 On 2026-11-03 the owner accepted every proposal below as written (Q1–Q47).

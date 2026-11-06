@@ -52,8 +52,8 @@ describe('the Vietnam theme', () => {
   it('does not burn grass, floors or trees (Q63)', async () => {
     const { map } = await loadArena();
     const flammable = map.tileTypes.filter((t) => t.element?.flammable).length;
-    // Tall grass, thatch roofs and their edge, bamboo walls, crates, fences.
-    expect(flammable).toBe(6);
+    // Tall grass on both grounds (Q78), thatch roofs and their edge, bamboo walls, crates, fences.
+    expect(flammable).toBe(7);
     expect(map.objects.some((o) => !o.low && !o.element && o.footprints.length > 0)).toBe(true);
     expect(map.objects.some((o) => o.element?.flammable)).toBe(false);
   });
