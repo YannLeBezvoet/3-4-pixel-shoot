@@ -1,0 +1,76 @@
+{
+ "type": "tileset",
+ "version": "1.10",
+ "tiledversion": "1.11.2",
+ "name": "fence",
+ "tilewidth": 48,
+ "tileheight": 48,
+ "tilecount": 3,
+ "columns": 3,
+ "image": "fence.png",
+ "imagewidth": 144,
+ "imageheight": 48,
+ "margin": 0,
+ "spacing": 0,
+ "tiles": [
+  {
+   "id": 0,
+   "type": "tile",
+   "properties": [
+    {
+     "name": "bulletPassPercent",
+     "type": "int",
+     "value": 70
+    },
+    {
+     "name": "burntTile",
+     "type": "int",
+     "value": 2
+    },
+    {
+     "name": "cover",
+     "type": "bool",
+     "value": true
+    },
+    {
+     "name": "destroyedTile",
+     "type": "int",
+     "value": 1
+    },
+    {
+     "name": "flammable",
+     "type": "bool",
+     "value": true
+    },
+    {
+     "name": "hp",
+     "type": "int",
+     "value": 40
+    }
+   ],
+   "objectgroup": {
+    "draworder": "index",
+    "id": 2,
+    "name": "",
+    "opacity": 1,
+    "type": "objectgroup",
+    "visible": true,
+    "x": 0,
+    "y": 0,
+    "objects": [
+     {
+      "id": 1,
+      "name": "",
+      "type": "",
+      "rotation": 0,
+      "visible": true,
+      "x": 0,
+      "y": 30,
+      "width": 48,
+      "height": 12
+     }
+    ]
+   }
+  }
+ ]
+}

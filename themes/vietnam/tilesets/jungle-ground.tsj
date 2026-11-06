@@ -125,37 +125,6 @@
    ]
   },
   {
-   "id": 14,
-   "type": "tile",
-   "properties": [
-    {
-     "name": "burntTile",
-     "type": "int",
-     "value": 7
-    },
-    {
-     "name": "destroyedTile",
-     "type": "int",
-     "value": 15
-    },
-    {
-     "name": "flammable",
-     "type": "bool",
-     "value": true
-    },
-    {
-     "name": "hp",
-     "type": "int",
-     "value": 40
-    },
-    {
-     "name": "solid",
-     "type": "bool",
-     "value": true
-    }
-   ]
-  },
-  {
    "id": 18,
    "type": "tile",
    "properties": [

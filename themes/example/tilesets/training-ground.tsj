@@ -69,17 +69,6 @@
    ]
   },
   {
-   "id": 14,
-   "type": "tile",
-   "properties": [
-    {
-     "name": "solid",
-     "type": "bool",
-     "value": true
-    }
-   ]
-  },
-  {
    "id": 23,
    "type": "tile",
    "properties": [

@@ -5,6 +5,7 @@ import { createRng } from '@pixel-shoot/shared';
 import type { GroundTile } from './tiles';
 import {
   BARREL_FOOTPRINT,
+  FENCE_FOOTPRINT,
   GROUND_COLUMNS,
   GROUND_TILES,
   SANDBAGS_FOOTPRINT,
@@ -23,7 +24,6 @@ const SOLID: readonly GroundTile[] = [
   'stone-wall-front',
   'bamboo-wall',
   'crate',
-  'fence',
   'rock',
 ];
 const IMPASSABLE: readonly GroundTile[] = ['water'];
@@ -70,8 +70,6 @@ function elementProperties(tile: GroundTile) {
       return destructible(60, 'bamboo-wall-destroyed');
     case 'crate':
       return destructible(80, 'rubble');
-    case 'fence':
-      return destructible(40, 'rubble');
     case 'tall-grass':
       return [burnt, flammable];
     case 'thatch-roof':
@@ -188,6 +186,28 @@ export const sandbagsTileset = () =>
     2,
   );
 
+/**
+ * Fences are cover (Q29, Q79): sight goes through them, and so do bullets from a weapon reaching
+ * over them and 70 % of the others. They burn and break (Q33, Q63, Q70), leaving their own remains
+ * on whatever ground they stand on. Not low: they stand in depth order, so they hide who is behind.
+ */
+export const fenceTileset = () =>
+  objectTileset(
+    'fence',
+    T,
+    T,
+    FENCE_FOOTPRINT,
+    [
+      property('bulletPassPercent', 'int', 70),
+      property('burntTile', 'int', 2),
+      property('cover', 'bool', true),
+      property('destroyedTile', 'int', 1),
+      property('flammable', 'bool', true),
+      property('hp', 'int', 40),
+    ],
+    3,
+  );
+
 /** Fuel barrels blow up when destroyed (Q33, Q70), leaving a scorch mark. */
 export const fuelBarrelTileset = () =>
   objectTileset(
@@ -219,6 +239,9 @@ export const BARRELS: readonly { x: number; y: number }[] = [
   { x: 58, y: 32 },
   { x: 62, y: 39 },
 ];
+
+/** Tiles of the fence (tile objects), south of the village. */
+const FENCE: Rect = { x: 63, y: 40, w: 7, h: 1 };
 
 export const SPAWNS: readonly (Rect & { team: number })[] = [
   { team: 1, x: 2, y: 26, w: 6, h: 8 },
@@ -338,7 +361,8 @@ export function vietnamMap(): string {
     [51, 37],
   ] as const)
     set(x, y, 'crate');
-  fill({ x: 63, y: 40, w: 7, h: 1 }, 'fence');
+  fill(FENCE, 'grass');
+  reserve(FENCE);
   fill({ x: 22, y: 36, w: 5, h: 1 }, 'stone-wall-top');
   fill({ x: 22, y: 37, w: 5, h: 1 }, 'stone-wall-front');
   set(24, 37, 'rubble');
@@ -395,6 +419,7 @@ export function vietnamMap(): string {
   const treeGid = GROUND_TILES.length + 1;
   const sandbagsGid = treeGid + 1;
   const barrelGid = sandbagsGid + 2;
+  const fenceGid = barrelGid + 2;
   let nextObjectId = 1;
   const treeObjects = trees.map(({ x, y }) => ({
     id: nextObjectId++,
@@ -409,30 +434,26 @@ export function vietnamMap(): string {
     width: 2 * T,
     height: 3 * T,
   }));
-  const sandbagObjects = sandbags.map(({ x, y }) => ({
-    id: nextObjectId++,
-    gid: sandbagsGid,
-    name: '',
-    type: '',
-    rotation: 0,
-    visible: true,
-    x: x * T,
-    y: (y + 1) * T,
-    width: T,
-    height: T,
-  }));
-  const barrelObjects = BARRELS.map(({ x, y }) => ({
-    id: nextObjectId++,
-    gid: barrelGid,
-    name: '',
-    type: '',
-    rotation: 0,
-    visible: true,
-    x: x * T,
-    y: (y + 1) * T,
-    width: T,
-    height: T,
-  }));
+  /** Tile objects filling the given tiles. */
+  const tileObjects = (tiles: readonly { x: number; y: number }[], gid: number) =>
+    tiles.map(({ x, y }) => ({
+      id: nextObjectId++,
+      gid,
+      name: '',
+      type: '',
+      rotation: 0,
+      visible: true,
+      x: x * T,
+      y: (y + 1) * T,
+      width: T,
+      height: T,
+    }));
+  const sandbagObjects = tileObjects(sandbags, sandbagsGid);
+  const barrelObjects = tileObjects(BARRELS, barrelGid);
+  const fenceObjects = tileObjects(
+    Array.from({ length: FENCE.w }, (_, i) => ({ x: FENCE.x + i, y: FENCE.y })),
+    fenceGid,
+  );
   const spawnObjects = SPAWNS.map((spawn) => ({
     id: nextObjectId++,
     name: `team ${spawn.team}`,
@@ -484,7 +505,7 @@ export function vietnamMap(): string {
       height: H,
       tilewidth: T,
       tileheight: T,
-      nextlayerid: 7,
+      nextlayerid: 8,
       nextobjectid: nextObjectId,
       properties: [property('nameKey', 'string', 'map.river-village')],
       tilesets: [
@@ -492,12 +513,14 @@ export function vietnamMap(): string {
         { firstgid: treeGid, source: '../tilesets/jungle-tree.tsj' },
         { firstgid: sandbagsGid, source: '../tilesets/sandbags.tsj' },
         { firstgid: barrelGid, source: '../tilesets/fuel-barrel.tsj' },
+        { firstgid: fenceGid, source: '../tilesets/fence.tsj' },
       ],
       layers: [
         tileLayer(1, 'ground', 'ground', ground.map(groundGid)),
         objectLayer(2, 'trees', 'objects', treeObjects),
         objectLayer(5, 'sandbags', 'objects', sandbagObjects),
         objectLayer(6, 'barrels', 'objects', barrelObjects),
+        objectLayer(7, 'fences', 'objects', fenceObjects),
         tileLayer(
           3,
           'roofs',

@@ -1,5 +1,6 @@
-// Placeholder jungle tileset (48×48 tiles, 8 columns), a 2×3-tile tree and sandbags. The tree and
-// the sandbags are tile objects: drawn on a transparent background, placed over any ground.
+// Placeholder jungle tileset (48×48 tiles, 8 columns), a 2×3-tile tree, sandbags and a fence. The
+// tree, the sandbags and the fence are tile objects: drawn on a transparent background, placed
+// over any ground.
 import { createRng } from '@pixel-shoot/shared';
 import { Canvas } from '../canvas';
 import type { Color, ColorPicker } from '../canvas';
@@ -38,7 +39,8 @@ export const GROUND_TILES = [
   'bamboo-wall',
   'bamboo-wall-destroyed',
   'crate',
-  'fence',
+  // Formerly a fence, now a tile object (drawFenceTiles); left empty for the same reason.
+  'free',
   'rubble',
   'bridge',
   'ford',
@@ -133,13 +135,6 @@ export function drawGroundTileset(p: ColorPicker): Canvas {
     c.line(x + 6, y + 14, x + 41, y + 41, p.hex('9e4539'));
     c.line(x + 41, y + 14, x + 6, y + 41, p.hex('9e4539'));
     c.rect(x + 6, y + 14, 36, 1, outline);
-  }
-  {
-    const [x, y] = at('fence');
-    noise(c, x, y, grass, [grassDark], 'fence-ground');
-    for (let i = 4; i < T; i += 12) c.rect(x + i, y + 14, 4, 26, p.hex('9e4539'));
-    c.rect(x, y + 20, T, 3, p.hex('cd683d'));
-    c.rect(x, y + 30, T, 3, p.hex('cd683d'));
   }
   noise(
     c,
@@ -280,6 +275,56 @@ export function drawSandbagRubble(p: ColorPicker): Canvas {
   for (let i = 0; i < 7; i++)
     c.ellipse(rng.int(10, 38), rng.int(6, 42), rng.int(4, 7), rng.int(2, 4), rng.pick(sand));
   for (let i = 0; i < 40; i++) c.set(rng.int(6, 42), rng.int(3, 45), sand[0] as (typeof sand)[0]);
+  return c;
+}
+
+/**
+ * Collision of a fence: a band at the foot of its posts, the tile's full width so a line of fences
+ * leaves no gap. A soldier of radius 10 stopped south of it stands below the object's base (the
+ * tile's bottom), so it is drawn in front of the fence, and behind it from the north.
+ */
+export const FENCE_FOOTPRINT = { x: 0, y: 30, width: T, height: 12 } as const;
+
+/** Left edge of each post of a fence, in its tile. */
+const FENCE_POSTS = [4, 16, 28, 40];
+
+/** A fence on a transparent background; its rails reach the tile's edges, so tiles join. */
+function drawFence(p: ColorPicker): Canvas {
+  const c = new Canvas(T, T);
+  for (const x of FENCE_POSTS) c.rect(x, 14, 4, 26, p.hex('9e4539'));
+  c.rect(0, 20, T, 3, p.hex('cd683d'));
+  c.rect(0, 30, T, 3, p.hex('cd683d'));
+  c.outline(p.hex('2e222f'));
+  return c;
+}
+
+/** What is left of a fence, flat on a transparent background: stumps and scattered planks. */
+function drawFenceRemains(seed: string, post: Color, planks: Color[]): Canvas {
+  const c = new Canvas(T, T);
+  const rng = createRng(seed);
+  for (const x of FENCE_POSTS) c.rect(x, 34, 4, rng.int(3, 6), post);
+  for (let i = 0; i < 10; i++) {
+    const x = rng.int(3, 44);
+    const y = rng.int(24, 44);
+    c.line(x, y, x + rng.int(-7, 7), y + rng.int(-2, 2), rng.pick(planks));
+  }
+  return c;
+}
+
+/** A fence, then what is left once broken, then once burnt. */
+export function drawFenceTiles(p: ColorPicker): Canvas {
+  const c = new Canvas(3 * T, T);
+  c.blit(drawFence(p), 0, 0);
+  c.blit(
+    drawFenceRemains('fence-broken', p.hex('9e4539'), [p.hex('cd683d'), p.hex('9e4539')]),
+    T,
+    0,
+  );
+  const ash = [p.hex('2e222f'), p.hex('3e3546'), p.hex('625565')];
+  const burnt = drawFenceRemains('fence-burnt', p.hex('2e222f'), ash);
+  const rng = createRng('fence-embers');
+  for (let i = 0; i < 6; i++) burnt.set(rng.int(4, 43), rng.int(30, 42), p.hex('fb6b1d'));
+  c.blit(burnt, 2 * T, 0);
   return c;
 }
 

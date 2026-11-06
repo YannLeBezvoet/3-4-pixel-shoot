@@ -173,6 +173,22 @@ describe('fire on the map', () => {
     expect(sim.grid.footprintsAt(3, 1)).toEqual([]);
   });
 
+  it('burns flammable cover down: the flame stops against it (Q79)', () => {
+    const map = asciiMap(`
+      ##########
+      #..s.....#
+      ##########
+    `);
+    const { sim, flamer } = world({
+      ...map,
+      objects: map.objects.map((o) => ({ ...o, element: { flammable: true } })),
+    });
+    run(sim, 20, new Map([[flamer, FIRE]]));
+    const events = run(sim, BURN_TICKS);
+    expect(ofType(events, 'elementDestroyed')[0]).toMatchObject({ burnt: true, object: 1 });
+    expect(sim.grid.footprintsAt(3, 1)).toEqual([]);
+  });
+
   it('does not ignite what is not flammable', () => {
     const { sim, flamer } = world(
       asciiMap(`

@@ -1,7 +1,10 @@
 // The Vietnam theme as the settled questions describe it: what it carries, what burns, what breaks.
-import { DamageFilter, createSimulation } from '@pixel-shoot/sim';
+import type { MapObject } from '@pixel-shoot/sim';
+import { DamageFilter, TileFlag, createSimulation } from '@pixel-shoot/sim';
 import { describe, expect, it } from 'vitest';
 import { loadArena } from '../bench/bot-rounds';
+
+const isFence = (object: MapObject) => object.visual?.image === 'tilesets/fence.png';
 
 describe('the Vietnam theme', () => {
   it('gives each faction a rifleman and a flamethrower trooper, with grenades (Q61, Q70)', async () => {
@@ -43,18 +46,32 @@ describe('the Vietnam theme', () => {
     for (const barrel of barrels) expect(barrel.element?.hp).toBe(30);
 
     const hitPoints = new Set(map.tileTypes.map((t) => t.element?.hp));
-    for (const hp of [40, 60, 80]) expect(hitPoints).toContain(hp);
+    for (const hp of [60, 80]) expect(hitPoints).toContain(hp);
 
     const sim = createSimulation({ map, catalog, seed: 'vietnam' });
     expect(sim.elements().length).toBeGreaterThan(200);
   });
 
+  it('has fences that are cover, break and burn (Q29, Q33, Q63, Q79)', async () => {
+    const { map } = await loadArena();
+    const fences = map.objects.filter(isFence);
+    expect(fences.length).toBeGreaterThan(0);
+    for (const fence of fences) {
+      expect(fence.element).toMatchObject({ hp: 40, flammable: true });
+      expect(fence.low).toBeFalsy();
+      expect(fence.destroyedVisual).toBeDefined();
+      expect(fence.burntVisual).toBeDefined();
+      expect(fence.footprints).toHaveLength(1);
+      expect(fence.footprints[0]).toMatchObject({ flags: TileFlag.cover, bulletPassPercent: 70 });
+    }
+  });
+
   it('does not burn grass, floors or trees (Q63)', async () => {
     const { map } = await loadArena();
     const flammable = map.tileTypes.filter((t) => t.element?.flammable).length;
-    // Tall grass on both grounds (Q78), thatch roofs and their edge, bamboo walls, crates, fences.
-    expect(flammable).toBe(7);
+    // Tall grass on both grounds (Q78), thatch roofs and their edge, bamboo walls, crates.
+    expect(flammable).toBe(6);
     expect(map.objects.some((o) => !o.low && !o.element && o.footprints.length > 0)).toBe(true);
-    expect(map.objects.some((o) => o.element?.flammable)).toBe(false);
+    expect(map.objects.filter((o) => o.element?.flammable).every(isFence)).toBe(true);
   });
 });

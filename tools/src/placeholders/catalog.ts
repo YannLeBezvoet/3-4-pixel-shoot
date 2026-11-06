@@ -18,9 +18,16 @@ import {
 } from './art/effects';
 import type { SoldierPose, SoldierStyle } from './art/soldier';
 import { drawSoldier } from './art/soldier';
-import { drawFuelBarrel, drawGroundTileset, drawJungleTree, drawSandbagTiles } from './art/tiles';
+import {
+  drawFenceTiles,
+  drawFuelBarrel,
+  drawGroundTileset,
+  drawJungleTree,
+  drawSandbagTiles,
+} from './art/tiles';
 import { exampleMap } from './art/example-map';
 import {
+  fenceTileset,
   fuelBarrelTileset,
   groundTileset,
   sandbagsTileset,
@@ -284,10 +291,12 @@ export function vietnamPlaceholders(p: ColorPicker): PlaceholderFile[] {
     { path: `${root}/tilesets/jungle-tree.png`, content: imageOnly(drawJungleTree(p)) },
     { path: `${root}/tilesets/sandbags.png`, content: imageOnly(drawSandbagTiles(p)) },
     { path: `${root}/tilesets/fuel-barrel.png`, content: imageOnly(drawFuelBarrel(p)) },
+    { path: `${root}/tilesets/fence.png`, content: imageOnly(drawFenceTiles(p)) },
     { path: `${root}/tilesets/jungle-ground.tsj`, content: groundTileset() },
     { path: `${root}/tilesets/jungle-tree.tsj`, content: treeTileset() },
     { path: `${root}/tilesets/sandbags.tsj`, content: sandbagsTileset() },
     { path: `${root}/tilesets/fuel-barrel.tsj`, content: fuelBarrelTileset() },
+    { path: `${root}/tilesets/fence.tsj`, content: fenceTileset() },
     { path: `${root}/maps/river-village.tmj`, content: vietnamMap() },
   ];
 }
