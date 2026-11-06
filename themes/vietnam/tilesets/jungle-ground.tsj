@@ -72,6 +72,11 @@
      "value": 7
     },
     {
+     "name": "damageFilter",
+     "type": "string",
+     "value": "bullet,explosion"
+    },
+    {
      "name": "destroyedTile",
      "type": "int",
      "value": 12
@@ -101,6 +106,11 @@
      "name": "burntTile",
      "type": "int",
      "value": 7
+    },
+    {
+     "name": "damageFilter",
+     "type": "string",
+     "value": "bullet,explosion"
     },
     {
      "name": "destroyedTile",

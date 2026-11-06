@@ -55,12 +55,16 @@ export function stringify(value: unknown, width: number): string {
 
 const tileId = (tile: GroundTile) => GROUND_TILES.indexOf(tile);
 
-/** What burns and what breaks in the Vietnam theme, with the values of Q33, Q63 and Q70. */
+/** Flames set what burns alight rather than hurting it, so that it burns and spreads (Q79). */
+const notHurtByFire = () => property('damageFilter', 'string', 'bullet,explosion');
+
+/** What burns and what breaks in the Vietnam theme, with the values of Q33, Q63, Q70 and Q79. */
 function elementProperties(tile: GroundTile) {
   const burnt = property('burntTile', 'int', tileId('burnt-ground'));
   const flammable = property('flammable', 'bool', true);
   const destructible = (hp: number, destroyed: GroundTile) => [
     burnt,
+    notHurtByFire(),
     property('destroyedTile', 'int', tileId(destroyed)),
     flammable,
     property('hp', 'int', hp),
@@ -188,8 +192,9 @@ export const sandbagsTileset = () =>
 
 /**
  * Fences are cover (Q29, Q79): sight goes through them, and so do bullets from a weapon reaching
- * over them and 70 % of the others. They burn and break (Q33, Q63, Q70), leaving their own remains
- * on whatever ground they stand on. Not low: they stand in depth order, so they hide who is behind.
+ * over them and 70 % of the others. Bullets and blasts break them; flames only set them alight, so
+ * that they burn and spread (Q33, Q63, Q70, Q79). Either way they leave their own remains on
+ * whatever ground they stand on. Not low: they stand in depth order, so they hide who is behind.
  */
 export const fenceTileset = () =>
   objectTileset(
@@ -201,6 +206,7 @@ export const fenceTileset = () =>
       property('bulletPassPercent', 'int', 70),
       property('burntTile', 'int', 2),
       property('cover', 'bool', true),
+      notHurtByFire(),
       property('destroyedTile', 'int', 1),
       property('flammable', 'bool', true),
       property('hp', 'int', 40),

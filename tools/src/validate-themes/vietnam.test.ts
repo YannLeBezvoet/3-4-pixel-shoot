@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { loadArena } from '../bench/bot-rounds';
 
 const isFence = (object: MapObject) => object.visual?.image === 'tilesets/fence.png';
+/** What burns and breaks is broken by bullets and blasts; flames only set it alight (Q79). */
+const NOT_FIRE = DamageFilter.bullet | DamageFilter.explosion;
 
 describe('the Vietnam theme', () => {
   it('gives each faction a rifleman and a flamethrower trooper, with grenades (Q61, Q70)', async () => {
@@ -45,8 +47,10 @@ describe('the Vietnam theme', () => {
     expect(barrels).toHaveLength(5);
     for (const barrel of barrels) expect(barrel.element?.hp).toBe(30);
 
-    const hitPoints = new Set(map.tileTypes.map((t) => t.element?.hp));
-    for (const hp of [60, 80]) expect(hitPoints).toContain(hp);
+    const destructible = map.tileTypes.filter((t) => t.element?.hp !== undefined);
+    expect(destructible.map((t) => t.element?.hp).sort()).toEqual([60, 80]);
+    for (const tile of destructible)
+      expect(tile.element).toMatchObject({ flammable: true, damageFilter: NOT_FIRE });
 
     const sim = createSimulation({ map, catalog, seed: 'vietnam' });
     expect(sim.elements().length).toBeGreaterThan(200);
@@ -57,7 +61,7 @@ describe('the Vietnam theme', () => {
     const fences = map.objects.filter(isFence);
     expect(fences.length).toBeGreaterThan(0);
     for (const fence of fences) {
-      expect(fence.element).toMatchObject({ hp: 40, flammable: true });
+      expect(fence.element).toMatchObject({ hp: 40, flammable: true, damageFilter: NOT_FIRE });
       expect(fence.low).toBeFalsy();
       expect(fence.destroyedVisual).toBeDefined();
       expect(fence.burntVisual).toBeDefined();

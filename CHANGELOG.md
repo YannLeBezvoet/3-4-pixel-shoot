@@ -7,8 +7,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 
 ### Changed
 
-- Vietnam theme: fences are tile objects (tileset `fence.tsj`) placed over any ground, instead of ground tiles with grass drawn in; the `river-village` map places them in a `fences` objects layer. They are now `cover` (Q79): sight goes through them, as do 70 % of the bullets from farther away and every bullet from a weapon reaching over them. They keep their 40 hit points and still burn, and they leave their own broken or burnt remains. The ground tilesets keep an empty slot in their place so later tile ids do not move.
+- Vietnam theme: fences are tile objects (tileset `fence.tsj`) placed over any ground, instead of ground tiles with grass drawn in; the `river-village` map places them in a `fences` objects layer. They are now `cover` (Q79): sight goes through them, as do 70 % of the bullets from farther away and every bullet from a weapon reaching over them. They keep their 40 hit points. Bullets and explosions break them, but flames no longer hurt them: they set them alight, even from a soldier standing against the fence, so it burns for about 5 s, spreads along the line and leaves burnt remains. They leave their own broken or burnt remains. The ground tilesets keep an empty slot in their place so later tile ids do not move.
 - The see-through circle only cuts objects taller than a tile, so fences and fuel barrels no longer dissolve around a character (Q79).
+- Vietnam theme: flames no longer hurt bamboo walls and crates: they set them alight, even from a soldier pressed against them, so huts burn rather than shatter and a flamethrower takes about 5 s to open a way through instead of half a second (Q79). Bullets and explosions still break them.
 
 ### Fixed
 

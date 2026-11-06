@@ -33,6 +33,11 @@
      "value": true
     },
     {
+     "name": "damageFilter",
+     "type": "string",
+     "value": "bullet,explosion"
+    },
+    {
      "name": "destroyedTile",
      "type": "int",
      "value": 1
