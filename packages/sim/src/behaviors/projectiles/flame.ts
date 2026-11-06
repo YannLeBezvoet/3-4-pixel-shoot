@@ -44,6 +44,11 @@ export function updateFlame(world: WorldState, id: EntityId, flame: Projectile):
   if (!position) return;
   const { owner, team, weapon } = flame;
   const origin = { owner, team, weapon };
+  // Cover it was fired over never stops it (Q29), but it goes through it all the same (Q79).
+  for (const object of flame.passed) {
+    const element = world.elements.ofObject(object);
+    if (element) igniteElement(world, element, origin);
+  }
   const distance = Math.min(flame.speed, flame.remaining);
   const toX = position.x + flame.dirX * distance;
   const toY = position.y + flame.dirY * distance;

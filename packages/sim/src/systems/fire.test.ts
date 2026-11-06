@@ -3,6 +3,7 @@ import type { SimEvent } from '../core/events';
 import type { InputCommand } from '../core/input';
 import { Button, NEUTRAL_INPUT } from '../core/input';
 import type { MapData } from '../map/map-data';
+import { DamageFilter } from '../map/map-data';
 import { asciiMap } from '../testing/ascii-map';
 import type { TestCatalogOptions } from '../testing/test-catalog';
 import { testCatalog } from '../testing/test-catalog';
@@ -14,7 +15,7 @@ const BURN_TICKS = 300;
 
 function world(
   map: MapData,
-  options: { seed?: string; friendlyFire?: boolean; catalog?: TestCatalogOptions } = {},
+  options: { seed?: string; friendlyFire?: boolean; catalog?: TestCatalogOptions; x?: number } = {},
 ) {
   const sim = createSimulation({
     map,
@@ -22,7 +23,7 @@ function world(
     seed: options.seed ?? 'fire',
     rules: { friendlyFire: options.friendlyFire ?? false },
   });
-  const flamer = sim.spawnActor({ team: 1, character: 'trooper', x: 72, y: 72 });
+  const flamer = sim.spawnActor({ team: 1, character: 'trooper', x: options.x ?? 72, y: 72 });
   return { sim, flamer };
 }
 
@@ -173,7 +174,9 @@ describe('fire on the map', () => {
     expect(sim.grid.footprintsAt(3, 1)).toEqual([]);
   });
 
-  it('burns flammable cover down: the flame stops against it (Q79)', () => {
+  const fence = { hp: 40, damageFilter: DamageFilter.bullet | DamageFilter.explosion };
+
+  it('burns down cover that fire cannot hurt: the flame stops against it (Q79)', () => {
     const map = asciiMap(`
       ##########
       #..s.....#
@@ -181,12 +184,53 @@ describe('fire on the map', () => {
     `);
     const { sim, flamer } = world({
       ...map,
-      objects: map.objects.map((o) => ({ ...o, element: { flammable: true } })),
+      objects: map.objects.map((o) => ({ ...o, element: { ...fence, flammable: true } })),
     });
-    run(sim, 20, new Map([[flamer, FIRE]]));
+    const firing = run(sim, 60, new Map([[flamer, FIRE]]));
+    expect(ofType(firing, 'fireStarted')).toHaveLength(1);
+    expect(ofType(firing, 'elementDestroyed')).toEqual([]);
     const events = run(sim, BURN_TICKS);
     expect(ofType(events, 'elementDestroyed')[0]).toMatchObject({ burnt: true, object: 1 });
     expect(sim.grid.footprintsAt(3, 1)).toEqual([]);
+  });
+
+  it('lights the cover it is fired over, whose far side the muzzle reaches (Q79)', () => {
+    const map = asciiMap(`
+      ##########
+      #.s......#
+      ##########
+    `);
+    const { sim, flamer } = world({
+      ...map,
+      objects: map.objects.map((o) => ({
+        ...o,
+        element: { ...fence, flammable: true },
+        footprints: o.footprints.map((f) => ({ ...f, x: 84, width: 6 })),
+      })),
+    });
+    const firing = run(sim, 5, new Map([[flamer, FIRE]]));
+    expect(ofType(firing, 'fireStarted')).toMatchObject([{ x: 87 }]);
+  });
+
+  it('lights the obstacle it stands against, though no flame leaves the nozzle (Q79)', () => {
+    const map = asciiMap(`
+      ##########
+      #.c......#
+      ##########
+    `);
+    const { sim, flamer } = world(
+      {
+        ...map,
+        objects: map.objects.map((o) => ({ ...o, element: { ...fence, flammable: true } })),
+      },
+      { x: 93 },
+    );
+    const firing = run(sim, 30, new Map([[flamer, FIRE]]));
+    expect(ofType(firing, 'shotFired').every((e) => e.projectile === undefined)).toBe(true);
+    expect(ofType(firing, 'fireStarted')).toHaveLength(1);
+    expect(ofType(firing, 'elementDestroyed')).toEqual([]);
+    const events = run(sim, BURN_TICKS);
+    expect(ofType(events, 'elementDestroyed')[0]).toMatchObject({ burnt: true, object: 1 });
   });
 
   it('does not ignite what is not flammable', () => {

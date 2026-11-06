@@ -189,6 +189,11 @@ export class MapElements {
     return this.#elements.get(key);
   }
 
+  /** The element of a map object, as long as the object stands. */
+  ofObject(id: number): MapElement | undefined {
+    return this.#byObject.get(id);
+  }
+
   /** Elements touching a square around a point, each once, in tile order. */
   near(x: number, y: number, radius: number): MapElement[] {
     const { width, height } = this.#map;

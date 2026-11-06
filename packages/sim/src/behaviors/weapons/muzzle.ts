@@ -4,6 +4,7 @@ import { degToRad } from '@pixel-shoot/shared';
 import type { DamageSource } from '../../core/events';
 import type { EntityId } from '../../core/entities';
 import { TICK_RATE } from '../../core/time';
+import { igniteElement } from '../../systems/fire';
 import type { WeaponStats } from '../../world/catalog';
 import type { Actor, WorldState } from '../../world/state';
 import { resolveTrace, traceProjectile } from '../../world/trace';
@@ -85,7 +86,7 @@ export function fireProjectile(
     angle,
     projectile: entity,
   });
-  if (blocked)
+  if (blocked) {
     resolveTrace(world, blocked, {
       projectile: undefined,
       kind: shot.projectile,
@@ -97,5 +98,9 @@ export function fireProjectile(
       z,
       angle,
     });
+    // No flame leaves the nozzle, but what it is pressed against catches all the same (Q79).
+    if (shot.source === 'fire' && blocked.kind === 'obstacle' && blocked.element)
+      igniteElement(world, blocked.element, { owner: id, team: actor.team, weapon: stats.id });
+  }
   return entity;
 }
